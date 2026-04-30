@@ -11,6 +11,14 @@ if HF_DISABLE_SSL == "1":
     os.environ["REQUESTS_CA_BUNDLE"] = ""
     import ssl as _ssl
     _ssl._create_default_https_context = _ssl._create_unverified_context
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    import requests as _requests
+    _old_request = _requests.Session.request
+    def _patched_request(self, method, url, *args, **kwargs):
+        kwargs.setdefault("verify", False)
+        return _old_request(self, method, url, *args, **kwargs)
+    _requests.Session.request = _patched_request
 
 import shutil
 import subprocess
@@ -594,8 +602,6 @@ def run_pipeline(force: bool = False):
             f"索引结果: 新增 {added} | 更新 {updated} | "
             f"跳过(未变) {skipped} | 删除(过期) {deleted}"
         )
-
-        cleanup_orphaned_records(vectorstore, record_manager, current_sources)
 
         total_after = vectorstore._collection.count()
         logger.info(f"向量数据库当前记录数: {total_after}")
