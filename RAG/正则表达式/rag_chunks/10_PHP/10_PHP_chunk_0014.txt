@@ -1,0 +1,76 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 14/52
+---
+preg_match('/href \s*=\s*(?;"([^"]*)"I'([^\']*)\v I([^\s\'">]+))/ix', Stag,
+
+Smatches,
+
+RPEG_OFFSET_CAPTURE); 如果stag 包含：
+
+<a name=bloglink href='http://regex .info/blog/'rel="nofollow">
+
+匹配成功之后，Smatches的内容是：
+
+array
+
+/*全局匹配的数据*/
+
+0=>array(0=>"href='http://regex.info/blog/'",
+
+1=>17 ),
+
+/*第1组括号的匹配数据 */
+
+1=>array(0=>"",
+
+1=>-1 ),
+
+/*第2组括号的匹配数据*/
+
+2 =>array(0=>"http://regex.info/blog/",
+
+1=>23 )
+
+)
+
+Smatches[0][0 ]包含正则表达式匹配的所有文本，$matches[ 0][1] 表示匹配文本在目标 字符串中的偏移值，按字节计数。
+
+为了清晰起见，另一种获得$matches[0][0] 的办法是：
+
+substr($tag,$matches[0][1],strlen($matches[0][0]));
+
+$matches[1][1] 是-1,表示第1组捕获括号没有参与匹配。第3组也没有参与，但是因为
+
+之前提到的理由(450),结尾未参与匹配的捕获括号匹配的文本不会包含在smatches 中。
+
+offset 参数
+
+如果preg_match 中设置了offset 参数，引擎会从目标字符串的对应位置开始(如果offset 是负数，则从字符串的末尾开始倒数)。默认情况下，offset 是0(也就是说，从目标字符串 的开头开始)。
+
+使用方法
+
+preg_match_all(pattern,subject ,matches [,flags [,offset ]])
+
+参数简介
+
+pattern 分隔符包围起来的正则表达式，可能出现修饰符(444)。
+
+subject 需要检索的目标字符串。
+
+matches 用来保存匹配数据的变量 (必须出现)。
+
+flags 非强制出现，标志位设定整个函数的功能：
+
+PREG_OFFSET_CAPTURE(456)
+
+和/或任意：
+
+PREG_PATTERN_ORDER(455)
+
+PREG_SET_ORDER(456)
+
+offset 非强制出现，从0开始，表示目标字符串中匹配尝试开始的位置( 与preg_ match
+
+的offset 参数相等453)。

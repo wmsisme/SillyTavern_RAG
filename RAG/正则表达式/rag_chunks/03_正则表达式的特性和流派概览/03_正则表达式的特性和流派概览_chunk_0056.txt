@@ -1,0 +1,58 @@
+---
+章节: 第3章：正则表达式的特性和流派概览
+章节ID: 03_正则表达式的特性和流派概览
+切片序号: 56/83
+---
+\p{Sm}
+
+\p{Sc}
+
+\p{Sk}
+
+\p{So}	\p{Math_Symbol}——数学符号、+、÷、表示分数的横线。
+
+\p{Currency_Symbol}——货币符号、$、?、￥、 …。
+
+\p{Modifier_symbol}——大多数版本中它表示组合字符，但是作为功能完整的 字符，它们有自己的意义。
+
+\p{Other_symbol}——各种印刷符号、框图符号、盲文符号，以及非字母形式的 中文字符，等等。
+
+\p{Nd}
+
+\p{N1}
+
+\p{No}	\p{Decimal_Digit_Number}——各种字母表中从0到9的数字(不包括中文、 日文和韩文)。
+
+\p{Letter_Number}——几乎所有的罗马数字。
+
+\p{Other_Number}——作为加密符号(superscripts)和记号的数字，非阿拉伯数 字的数字表示字符(不包括中文、日文、韩文中的字符)。
+
+\p{Pd}
+
+\p{Ps}
+
+\p{Pe}
+
+\p{Pi}
+
+\p{Pf}
+
+\p{Pc}
+
+\p{Po}	\p{Dash_Punctuation}——各种格式的连字符(hyphen)和短划线(dash)。 \p{Open_Punctuation}—(、和《等字符。
+
+\p{Close_Punctuation}——)、 和》等字符。
+
+\p{Initial_Punctuation)—《、“、<等字符。
+
+\p{Final_Punctuation}——》、'、>等字符。
+
+\p{Connector_Punctuation}——少数有特殊语法含义的标点，如下画线。
+
+\p(other_Punctuation)——用于表示其他所有标点字符：!、&、.、:、等。
+
+\p{Cc}
+
+\p{Cf}
+
+\p{Co}

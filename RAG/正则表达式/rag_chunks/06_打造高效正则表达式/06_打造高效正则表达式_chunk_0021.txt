@@ -1,0 +1,54 @@
+---
+章节: 第6章：打造高效正则表达式
+章节ID: 06_打造高效正则表达式
+切片序号: 21/74
+---
+Benchmarking with Tcl
+
+下面是Tcl的测试代码：
+
+set TimesToDo 1000
+
+set TestString""
+
+for{set i 1000}($i>0}〔incr i-1}{
+
+append TestString "abababdedfg" }
+
+set Count STimesToDo
+
+set StartTime [clock clicks -milliseconds]
+
+for(}{SCount >0}{incr Count -1}{
+
+regexp {^(a|bicldlelflg)+$}$TestString
+
+se t EndTime [clock clicks -milli seconds]
+
+set Seconds [expr($EndTime -$StartTime)/1000.0]
+
+puts [format"Alternation takes 8.3f seconds"$Seconds]
+
+set Count $TimesToDo
+
+set StartTime [clock clicks -milliseconds]
+
+for(}($Count >0}(incr Count -1}{
+
+regexp{^[a-g]+$}$TestString }
+
+set EndTime [clock clicks -milliseconds]
+
+set Seconds [expr($EndTime -$StartTime)/1000.0]
+
+puts [format "Character class takes 8.3f seconds" $Seconds]
+
+在我的机器上，结果如下：
+
+Alternation takes 0.362 seconds
+
+Character class takes 0.352 seconds
+
+神奇的是，两者速度相当。还记得吗，我们在第145页说过，Tcl 使用的是NFA/DFA 混合 引擎，对DFA引擎来说，这两个表达式是没有区别的。本章所举的大部分例子并不适用于 Tcl, 详细信息请参考第243页。
+
+常见优化措施

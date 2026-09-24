@@ -1,0 +1,24 @@
+---
+章节: 第4章：表达式的匹配原理
+章节ID: 04_表达式的匹配原理
+切片序号: 46/55
+---
+绝对最长
+
+这里说的“最长”不限于多选结构。看看NFA 如何用'one(self)? (selfsufficient)?」
+
+来匹配字符串 oneselfsufficient 。NFA 首先匹配onej , 然后是匹配优先的'(self)?],
+
+留下( selfsufficient)?j 来匹配sufficient 。 它显然无法匹配，但整个表达式并不会因 此匹配失败，因为这个元素不是必须匹配的。所以，传统型NFA 返回oneself sufficient,
+
+放弃没有尝试的状态 (POSIX NFA的情况与此不同，我们稍后将会看到)。
+
+178 第 4 章 ： 表 达 式 的 匹 配 原 理
+
+与此相反，DFA 会返回更长的结果：oneselfsufficient 。 如果最开始的(self)? 因为
+
+某些原因无法匹配，NFA 也会返回跟 DFA 一样的结果，因为' (self)?」 无法匹配， (selfsufficient)?」 就能成功匹配。传统型NFA 不会这样，但是 DFA 则会这样，因为会 选择最长的可能匹配。DFA 同时记录多个匹配，在任何时候都清楚所有的匹配可能，所以 它能做到这一点。
+
+我选这个简单的例子是因为它很容易理解，但是我希望读者能够明白，这个问题在现实中 很重要。举例来说，如果希望匹配连续多行文本，常见的情况是，一个逻辑行( logical line) 可以分为许多现实的行，每一行以反斜线结尾，例如：
+
+SRC=array.c builtin.c eval.c field.c gawkmisc.c io.c main.c missing. c msg.c node. c re.c version.c

@@ -1,0 +1,166 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 3/51
+---
+表8-1:方法名索引(按字母、页码排序)
+
+380 appendReplacement
+
+381 appendTail
+
+372 compile
+
+377 end
+
+375 find
+
+394 flags
+
+377 group
+
+377 groupCount
+
+388 hasAnchoringBounds
+
+387 hasTransparentBounds
+
+390 hitEnd
+
+376 lookingAt	373 matcher
+
+376 matcher(Matcher)
+
+395 matcher(Pattern)
+
+393 pattern(Matcher)
+
+394 pattern(Pattern)
+
+395 quote
+
+379 QuoteReplacement
+
+386 region
+
+386 regionEnd
+
+386 regionStart
+
+378 replaceAl1
+
+382 replaceAllRegion	379 replaceFirst
+
+390 reguireEnd
+
+392 reset
+
+395 split
+
+377 start
+
+394 text
+
+377 toMatcheResult
+
+393 tostring(Matcher)
+
+394 toString(Pattern)
+
+388 useAnchoringBounds
+
+393 usePattern
+
+387 useTransparentBounds
+
+这张表格供简要查询，详细的API讲解从第371页开始。
+
+在这里我还是要强调，尽管第367页的表格查阅起来很方便，第3章第114和第123页的 表格也是如此，但本书的目的不是作为参考手册，而是“掌握”正则表达式的详细教程。
+
+前面几章已经出现过 java.util .regex 的例子(81、95、98、217、235),本章在讲解 各种类及其实际应用时会给出更多的例子。不过，首先还是来看 Java 支持的正则流派，以 及对应的修饰符。
+
+Java的正则流派
+
+ava 's Regex Flaor
+
+java.util.r egex 使用传统型NFA, 所以第4、5、6章介绍的丰富特性都适用于它。下页 的表8-2总结了它的元字符。此流派的某些方面已经发生了变化，原因是各种匹配模式，匹 配模式的启用通过各种 method 和 factory 来设定标志位，或者内嵌在表达式中的 (? mods-mods) 和(?mods-mods:…) 修饰符。这些模式在第368页的表8-3中有列出。
+
+下面是对表8-2的说明：
+
+①只有在字符组内部，\b 才代表退格字符。在其他场合，\b 都代表单词分界符。
+
+表中给出的是“纯 (raw)” 反斜线，但是用作Java正则表达式的字符串时必须使用双 反斜线。例如，表中的'\n 在Java 的字符串中必须写作“\\n” 。请参考“作为正则表 达式的字符串”(101)。
+
+\x##容许且只容许出现两位十六进制数字，所以'\xFCber 匹配‘über'。
+
+表8-2:java.util.regex的正则流派
+
+字符缩略表示法
+
+⑦115 (c)
+
+字符组及相关结构 118(c)
+
+119
+
+⑦120(c) 121(c)
+
+锚点及其他零长度
+
+370
+
+370
+
+370
+
+133
+
+133
+
+注释及模式修饰符
+
+135
+
+⑦135
+
+⑦368(c)
+
+113(c)
+
+分组及捕获
+
+137
+
+137
+
+139
+
+139
+
+141
+
+141
+
+142	\a [\b]le \f \n \r \t \Ooctal \x##\u####\cchar
+
+字符组：[…][^…](可包含集合运算符125)
+
+几乎任何字符：点号(根据模式的不同，有各种含义)
+
+字符组缩略表示法②:\w \d \s \W \D \S
+
+Unicode属性和区块：\p{Prop}\P{Prop}
+
+断言
+
+行/字符串起始位置：^\A
+
+行/字符串结束位置：$\z \Z 当前匹配的起始位置：\G
+
+单词分界符④:\b\B
+
+环视结构⑤:(?=…)(?!…)(?<=…)(?<!…)
+
+模式修饰符：(?mods-mods)容许出现的模式：xd s miu
+
+模式修饰范围：(?mods-mods:…)

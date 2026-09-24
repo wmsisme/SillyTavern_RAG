@@ -1,0 +1,48 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 19/37
+---
+End While
+
+RegexObj. Replace (target,replacement)	Return	type:String
+
+RegexObj .Replace (target,replacement,count)
+
+RegexObj .Replace(target ,replacement,count	,offset)
+
+Replace 方法会在目标字符串中进行查找-替换，返回(有可能已经变化的)字符串副本。它 应用的是Regex 对象的正则表达式，返回的不是Match 对象，而是替换的结果。匹配的文 本被什么内容替换，取决于replacement 参数。replacement 参数可以重载：它可以是一个字 符串，也可以是MatchEvaluator 委托( delegate) 。如果replacement是一个字符串，它会 按照下一页补充内容的说明进行处理。例如：
+
+Dim R_Capword as New Regex("\b[A-Z]\w*")
+
+.*
+
+Text =R_CapWord.Replace(Text,"<B>$0</B>")
+
+把每一个大写单词两边加上<B> …</B>。
+
+如果设置了count, 就只会进行count次替换(默认情况是进行所有的替换)。如果只希望替 换第一次匹配，可以将count 设置为1。如果我们知道只会有一次匹配，把count明确设置 为1的效率会更高，因为不需要对字符串的其他部分进行查找和处理。把count 设置为-1 表示“所有匹配都必须替换”(它等价于没有设置count)。
+
+如果设置了 offset (一个整数),则应用正则表达式时，目标字符串中对应数目的字符会被 忽略。这些忽略的字符会直接被复制到结果中。
+
+例如，这段代码会去掉多余的空白字符(也就是将连续的多个空白字符替换为单个空格):
+
+Dim AnywS as New Regex("\s+")
+
+***
+
+Target =AnywS.Replace(Target,”")
+
+'some……random…spacing ’被 替 换 为 ‘some·randomspacing' 。 下 面 代 码 的 结 果 相
+
+同，只是它会保留行开头任意数目的空白字符。
+
+Dim Dim
+
+***+*
+
+AnywS
+
+LeadingwS
+
+as as

@@ -1,0 +1,50 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 27/52
+---
+数组参数的排序问题 如果pattern 和 replacement 都是字符串，它们会根据数组的内部顺序 配对，这种顺序通常就是它们添加到数组中的先后顺序 (pattern 数组中添加的第1个元素 对应 replacement 数组中的第1个元素，依次类推)。也就是说，对于array() 创建的“文 本数组”来说，排序没有问题，例如：
+
+Ssubject ="this has 7 words and 31 letters";
+
+$result =preg_replace(array('/[a-z]+/','/\d+/'),
+
+array(' word<$0>',' num<$0>'),
+
+$subject);
+
+print"result:$result\n";
+
+[ a-z]+J 对应‘word<$0>',下面的'\d+1对应 'num<$0>', 结果就是
+
+result:word<this>word<has>num<7>word<words>word<and>num<31>word<letters>
+
+相反，如果pattern 或 replacement 数组是多次填充的，数组的内部顺序可能就不同于 keys 的顺序(也就是说，由 keys 表示的数字顺序)。 所以前一页的程序使用数组模拟 preg_replacement 的程序要使用each 来按照数组的内部顺序遍历整个数组，而不关心它 们的 keys 如何。
+
+如果pattern 或 replacement 数组的内部顺序不同于你希望匹配的顺序，可以使用ksort() 函数来确保每个数组的实际顺序和外表顺序是相同的。
+
+如果pattern和 replacement 都是数组，而pattern 中元素的数目多于replacement 中的元素， 则会在replacement 数组中产生对应的空字符串，来进行配对。
+
+◆请翻到下页查看答案。
+
+preg_replace_callback
+
+使用方法
+
+preg_r eplace_callback(pattern,callback, subject [,limit[,count ]])
+
+参数简介
+
+pattern 分隔符包围起来的正则表达式，可能出现修饰符(444)。也可能是字符串数组。
+
+callback PHP 回调函数，每次匹配成功，就执行它，生成replacement 字符串。
+
+subject 需要搜索的目标字符串。也可能是字符串数组(依次处理)。
+
+limit 非强制出现，设定替换操作的上限(460)。
+
+count 非强制出现，用来保存实际发生替换的次数(只在PHP 5.1.0中提供)。
+
+返回值
+
+如果subject 是字符串，返回值就是字符串(其实是subject 的一个副本，可能经过了修改)。 如果subject 是字符串数组，返回值就是数组(每个元素都是subject 中对应元素的副本，可 能发生了修改)。

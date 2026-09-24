@@ -1,0 +1,48 @@
+---
+章节: 第2章：入门示例拓展
+章节ID: 02_入门示例拓展
+切片序号: 15/56
+---
+现在，大小写的情况都能应付了。最终的程序如下所示。这个例子告诉我们，正则表达式 的使用方式，可能会影响到程序的其他部分。
+
+示例2-2:温度转换程序——最终版本
+
+print“Enter a temperature(e.g.,32F,100C):\n”;
+
+$input =<STDIN>; #接收用户输入的一行文本
+
+chomp($input); # 去掉$input 末尾的换行
+
+if($input =~m/^([-+]?[0-9]+(\.[0-9]*)?)\s*([CF])$/i) {
+
+# 如果运行到此，则已经匹配，$1保存数值，$3保存C 或者F
+
+$InputNum =$1; # 把数据保存到已命名的变量
+
+Stype =$3; #.. … 保证程序的可读性
+
+if($type =~m/c/i){ #Is it“C”or"C"?
+
+#输入的是摄氏温度，计算华氏温度
+
+$celsius =$InputNum;
+
+$fahrenheit=($celsius *9 /5)+32;
+
+}else {
+
+#如果不是“C”, 则必定是“F”, 所以计算摄氏温度
+
+$fahrenheit=$InputNum;
+
+$celsius =($fahrenheit-32)*5 /9;
+
+}
+
+#现在两个值都有了，输出结果：
+
+printf“8.2f C is 8.2f F\n”,$celsius,Sfahrenheit; }else{
+
+#开始的表达式无法匹配，发出誉报
+
+print“Expecting a number followed by \“C\”or \"F\”,\n”; print“so I don't understand \"$input\”.\n”;

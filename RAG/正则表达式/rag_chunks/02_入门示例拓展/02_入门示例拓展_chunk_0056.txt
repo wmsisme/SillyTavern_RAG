@@ -1,0 +1,53 @@
+---
+章节: 第2章：入门示例拓展
+章节ID: 02_入门示例拓展
+切片序号: 56/56
+---
+String replacel =“\033[7m$1\033[m$2\033[7m$3\033[m”;
+
+Pattern regex2 = Pattern.compile (“(?:[^\e]*\\n)+”, Pattern.MULTILINE);
+
+Pattern regex3= Pattern. compile( "([^\n]+)", Pattern.MULTILINE);
+
+// 对于命令行的每个参数进行如下处理..…
+
+for(int i=0;i<args.length;i++)
+
+{
+
+try{
+
+BufferedReader in = new BufferedReader(new FileReader(args[i]));
+
+String text;
+
+//For each paragraph of each file … .
+
+while((text =getPara(in))!=null)
+
+{
+
+// 应用3条替换规则
+
+text =regex1.matcher(text).replaceAl1(replace1);
+
+text = regex2. matcher(text).replaceAll("“);
+
+text =regex3.matcher(text). replaceAll (args [i]+“;$1”);
+
+// 显示结果
+
+System.out.print(text);
+
+}catch(IOException e){
+
+System.err.println(“can't read["+args[i]+"]:“+e .getMessage());
+
+}
+
+// 用于读入“一段”文本的子程序
+
+static String getPara(BufferedReader {
+
+正则表达式的特性和流派概览
+\

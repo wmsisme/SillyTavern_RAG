@@ -1,0 +1,34 @@
+---
+章节: 第2章：入门示例拓展
+章节ID: 02_入门示例拓展
+切片序号: 55/56
+---
+在程序的上部我们看到，在 Perl 中使用的3个正则表达式在 Java 中作为字符串传递给 Pattern. compile 程序。通过比较我们发现，Java 版本的正则表达式包含了更多的反斜线， 原因是Java要求正则表达式必须以字符串方式提供。正则表达式中的反斜线必须转义，以 避免Java在解析字符串时按照自己的方式处理它们。
+
+我们还应该注意到，正则表达式不是在程序处理文本的主体部分出现，而是在开头的初始 化部分出现的。Pattern. compile 函数所作的仅仅是分析这些作为正则表达式的字符串，
+
+构建一个“已编译的版本 ( compiled version)”, 将其赋给 Pattern 变量(例如regex1)。
+
+然后，在处理文本的主体部分，已编译的版本通过 regex1.matcher (text) 应用到文本之 上，得到的结果用于替换。同样，我们会在下一章探究其中的细节，在这里我们只需要了 解，在学习任何一门支持正则表达式的语言时，我们需要注意两点：正则表达式的流派，
+
+以及该语言运用正则表达式的方式。
+
+使用正则表达式修改文本 81
+
+示例2-4:用Java解决重复单词的问题
+
+import java.io.*;
+
+import java.util.regex.Pattern;
+
+import java.util. regex .Matcher;
+
+public class TwoWord {
+
+public static void main(String []args) {
+
+Pattern regex1 =Pattern.compile(
+
+“\\b([a-z]+)((?:\\s+\<[^>]+\\>)+)(\1\\b)”,
+
+Pattern.CASE_INSENSITIVE);

@@ -1,0 +1,48 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 15/52
+---
+返回值
+
+preg_ match_all 返回匹配的次数。
+
+不 包 含 任 何 内 容 的 匹 配 ， 还 是 无 法 匹 配
+
+preg_match返回的$matches中，空字符串表示对应的括号没有参与匹配(当然，数
+
+组末尾的空字符串会被忽略)。因为匹配结果也可能是空字符串，我希望没有参与匹配 的括号捕获的文本是NULL。
+
+所以，我自己编写了一个preg_match(我称其为reg_match),首先使用PREG_OFFSET_ CAPTURE标志位来获得所有括号内的自表达式匹配结果的详细信息，然后根据这些信 息在$matches中将对应的值设为NULL:
+
+function reg_match($regex,$subject,&$matches,$offset =0)
+
+{
+
+$result =preg_match($regex,$subject,$matches,
+
+PREG_OFFSET_CAPTURE,Soffset);
+
+if(Sresult){
+
+$f=create_function('&SX','$X =SX[1]<0?NULL:$X[0];'); array_walk($matches,$f);
+
+}
+
+return $result; }
+
+reg_match的结果等于在不指定任何标志位的情况下调用preg_match,区别在于，如 果某组括号没有参与匹配，在preg_match中对应的元素为空字符串，而在reg_match 中变成了NULL。
+
+讲解
+
+preg_match_all 类似于preg_match, 只是在找到第一个匹配之后，它会继续搜索字符串， 找到其他的匹配。每个匹配都会创建一个包含匹配数据的数组，所以最后matches 变量就 是一个二维数组，其中的每个子数组对应一次匹配。
+
+这里有个简单的例子：
+
+if
+
+print
+
+"whoa,document has more than one <title>!\n";
+
+preg_match_al l 要求必须出现第3个参数(也就是用来收集所有成功的匹配信息的变量)。 所以，这个例子中虽然没有用到$all_m atches, 但仍然必须设置这个变量。

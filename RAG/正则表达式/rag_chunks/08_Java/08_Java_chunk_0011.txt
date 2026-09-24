@@ -1,0 +1,18 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 11/51
+---
+注 2 : 尤其是在页面宽度固定的书籍中安排代码的时候——我对此深有体会。
+
+建
+
+调 用Patern.compile 可能抛出两种类型的异常：如果正则表达式不合规则，抛出Pattern- SyntaxException, 选项不合规则，抛出IllegalArgumentException。
+
+Pattern的matcher 方法
+
+Pattern's mtcher mcthod
+
+下 一 节 ( 3 9 4 )我们会看到，Pattern 提供了某些简便的方法，但是大多数情况下，我们 只需要一个方法完成所有工作：matcher 。 它接受一个参数：需要检索的字符串(注3)。 此时并没有确切应用这个正则表达式，而只是为将pattern 应用到特定的字符串做准备。 matcher 方法返回一个Matcher 对象。
+
+Matcher 对象

@@ -1,0 +1,55 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 3/69
+---
+\p{Assigned} 125-126
+Perl 288
+\p{Basic _Latin} 124
+\p{Box_Drawing) 124
+\p{C} 122
+Java 369
+\p{Cc) 123
+\p{Cf} 123
+\p{Cherokee} 122
+\p(Close _Punctuation) 123
+\p{Cn} 123,125-126,369,408
+Java 369
+\p{Co} 123
+\p{C onnector_Punctuation} 123
+\p(Control} 123
+\p(Currency} 124
+\p{Currency_Symbol} 123 \p{Cyrillic) 122,124
+\p{Dash _Punctuation} 123
+\p(Decimal_Digit_Number} 123 \p{ Dingbats} 124
+\p{Enclosing_Mark} 123
+\p{Final_Punctuation) 123
+\p{Format } 123
+\p{Gujarati} 122
+\p{Han) 122
+\p{Hangu1_ Jamo} 124
+\p{ Hebrew) 122,124 \p{Hiragana) 122
+\p{InArrows} 124
+\p{InBasic_Latin] 124
+\p{InBox_ Drawing } 124
+\p{InCurrency} 124
+\p{InCyrillic} 124
+\p{InDingbats) 124
+\p{I nHangul_Jamo) 124
+\p{InHebrew} 124
+\ p{Inherit ed} 122
+\p{Initial_Punctuation} 123
+\p(InKatakana} 124
+\p{InTamil) 124
+\p(InTibetan} 124
+\p{IsCherokee } 122
+\p{IsComnon} 122
+\p{IsCyrillic] 122
+\p{I sGujarati} 122
+\p(IsHan} 122
+\p{IsHebrew} 122
+\p(I sHiragana } 122
+\p{IsKatakana ) 122
+\p{IsLatin} 122
+\p{ISThai} 122
+\p(ISTibetan} 124

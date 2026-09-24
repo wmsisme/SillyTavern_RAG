@@ -1,0 +1,42 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 41/52
+---
+每次需要的时候重新写这个函数太麻烦，于是我将它封装到一个函数中(我希望它会成为 preg 套件中的内建函数)。
+
+有兴趣的读者不妨想想函数尾部preg_replace_callback 使用的正则表达式：它如何工
+
+作，以及回调函数如何遍历整个 pattern 字符串，转义每个未转义的斜线，而不修改已转义 的斜线。
+
+对未知的Pattern 参数进行语法检查
+
+Syntax-Checking an Unknown Pattern Argument
+
+在正则表达式两端添加分隔符之后，我们确信它适于用作preg 函数的pattern 参数了，但是 原来的正则表达式还没有经过语法正确性检验。
+
+举例来说，如果原始的正则表达式是'*.txt’, 因为某些人希望使用文件群组功能 (74)
+
+而不是正则表达式，那么preg_regex_to_pattern 返回的就是/*. txt/ 。 这个正则表达式 当然不合法，所以程序会发出警报(如果启用了警报功能):
+
+Compilation failed:nothing to repeat at offset 0
+
+PHP没有内建检测pattern 参数及其正则表达式的语意是否合法的函数，不过我为读者提供 了一个。
+
+preg_ pattern_error 会对pattern 参数进行简单测试，试图使用此正则表达式——在函数 当中有一行调用preg _match 。函数的其他部分使用关注PHP的管理功能处理preg_m atch 可能显示的错误信息。
+
+/*
+
+* 如果输入的pattern 或其中的正则表达式参数语法不正确，输出错误信息
+
+* 否则(语法正确)返回 false。
+
+*/
+
+function preg_pattern_error($pattern)
+
+{
+
+/*
+
+* 要判断patter n 是否有错，直接尝试使用它。

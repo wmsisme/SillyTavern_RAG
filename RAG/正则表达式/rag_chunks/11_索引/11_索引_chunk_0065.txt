@@ -1,0 +1,51 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 65/69
+---
+\t 49,115-116
+introduced 44
+tag
+matching 200-201
+XML 481
+tag-team matching 132,315 p{Tamil} 124
+Tcl[:<:] 91
+benchmarking 239
+dot 111,113
+flavor overview 92
+hand-tweaking 243,259
+line anchors 113,130
+mode modifiers 135
+regex implementation 183
+regsub 100
+search and replace 100
+strings 104
+version covered 91
+word boundaries 134
+temperature conversion example Java 382
+.NET 425
+Perl 37,283
+PHP 444
+terminators (see line terminators)
+testing engine type 146-147
+text method 394
+text-directed matching 153
+(see also DFA)
+regex appearance 162
+text-to-HTML example 67-77
+then (see conditional) theory of an NFA 180
+Tbere's more tban one way to do it 349
+thisithat example 133,139,243,
+245-247,252,255,260-261
+Thompson,Ken 85-86,111
+thread scheduling Java benchmarking 236 \p{Tibetan) 124
+tied variables 299
+time () 232
+time of day 26
+Time::HiRes 232,358,360
+Time. new 238
+Timer() 237
+timezone PHP 235
+title case 110
+p{Titlecas e_Letter) 123
+TIVo 3

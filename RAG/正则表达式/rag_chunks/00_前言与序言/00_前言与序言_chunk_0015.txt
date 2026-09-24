@@ -1,0 +1,19 @@
+---
+章节: 前言与序言
+章节ID: 00_前言与序言
+切片序号: 15/16
+---
+回车字符
+· 有时候，我会使用下画线或有色背景高亮标注文字文本或正则表达式的一部分。下面 这句话中，下画线的部分表示表达式真正匹配的部分：
+Because catj matches'It·indicates"your·cat·is…'instead of the word 'cat’, we realize...
+这个例子中，下画线的部分高亮标记了表达式中添加的字符：
+
+To make this useful,we can wrap subjectIDatej with parentheses,and append a
+
+colon and a space.This
+
+yields
+
+· 本书包含了大量的细节和例子，所以我设置了超过1200处的交叉引用，帮助读者理 解。它们通常表示为“123”,意思是“请参阅第123页”。举个例子：“…的说明在 表8-2中(367)”。
+
+练 习

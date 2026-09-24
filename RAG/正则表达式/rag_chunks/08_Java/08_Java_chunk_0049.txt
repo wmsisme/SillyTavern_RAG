@@ -1,0 +1,86 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 49/51
+---
+Parsing Comma-Separated Values(CSV)Text
+
+这里是用 java. util .regex 写的解析 CSV 的例子(参见第6章271)。这里的程序使用 占有优先量词(142)取代固化分组，因为这样看起来更清楚。
+
+String regex =// 双引号字段保存到group(1), 非引号字段保存到group(2)
+
+" G(?:^1,) \n"+ 鞋 (? : \n"+
+
+#要么是双引号字段 ... \n"+
+
+\” #开头双引号 \n"+
+
+# ([^\"]*+(?:\"\"[^\"]*+)*+) \n"+
+
+\”#结束双引号 \n"+
+
+" |#...或者是 .. \n"+
+
+#非引用， 非逗号文本 ... \n"+
+
+# ([^\",]*+) \n"+
+
+" ) n";
+
+// 根据上面的表达式创建 matcher, 解析其中的一行CSV 文档
+
+Matcher mMain = Pattern .compile(regex, Pattern.COMMENTS) .matcher(line);
+
+// 创建匹配""」的matcher, 目标文本暂时为虚构
+
+Matcher mQuote =Pattern.compile("\"\"").matcher("");
+
+while(mMain.find())
+
+{
+
+String field;
+
+if(mMain.start(2)>=0)
+
+field = mMain.group(2 );// 非引号字段，直接使用
+
+else
+
+// 引用字段，用单引号替换两个相连的引号
+
+field = mQuote.reset( mMain. group(1)).replaceAl l("\"");
+
+// 现在处理字段的内容 ...
+
+System.out. println( "Field ["+field+"]");
+
+这个程序比第217页的原始程序效率要高很多，原因在于：正则表达式效率更高，按照第6 章第271页介绍的办法，重复使用单个Matcher ( 通过单个参数版本的reset 方法),而没 有不断创建-回收Mather。
+
+Java版本差异
+
+Jazva Version Differences
+
+本章开头已经提到，本书主要针对Java 1.5.0。不过，目前Java 1.4.2 仍然在广泛应用，而 Java 1.6已经整装待发(已经发布了beta 版 ，但不会很快发布正式版)。所以，我得简要地 提一下1.4.2和1.5.0 (Update 7) 之间的差异，以及1.5.0和目前的1.6“build 59g” 的差异。
+
+1.4.2和1.5.0之间的差异
+
+Differences Betureen 1.4.2 and 1.5.0
+
+相对Java 1.4.2, Java 1.5.0 添加了许多新的方法。大多数新的方法主要是为了支持 Matcher 的检索范围。此外，Unicode 支持也升级并提高了效率。所有的变化都在下面两节详细介绍 	(注9)。
+
+1.5.0中的新方法
+
+与检索范围相关的Matcher 方法都没有出现在Java 1.4.2中：
+
+region
+
+· regionStart
+
+● regionEnd
+
+useAnchoringBounds
+
+· hasAnchoringBounds
+
+· useTransparentBounds

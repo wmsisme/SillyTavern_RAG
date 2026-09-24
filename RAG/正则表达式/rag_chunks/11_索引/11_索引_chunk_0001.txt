@@ -1,0 +1,31 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 1/69
+---
+Index
+
+\(\) 137
+<\> 21,25,50,133-134,150 egrep 15
+Emacs 101
+mimicking in Perl 341-342
+\+ 141
+MII 190,380,444 \? 141
+"\+'history 87
+\0 117-118
+1138,300,303
+(see also backreferences) Perl 41
+\A 112,129-130
+(see also enhanced line-anchor mode) optimization 246
+a 115-116
+\B 134
+\b 65,115-116,134
+(see also: word boundaries; backspace) backspace and word boundary 44,46 Java 368
+Perl 286
+PHP 442
+b\B 240
+\c 120
+PHP 442
+49,120
+49,120
+Perl 288 PHP 442

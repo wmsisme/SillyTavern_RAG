@@ -1,0 +1,33 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 26/69
+---
+example(cont'd)
+URL 74-77,201-204,208,260,303-304,
+306,320,450-451
+egrep 25
+Java 209
+plucking 206-208
+username 73,76,98
+plucking from text 71-73
+in URL 74-77
+variable names 24
+XML 481-484
+ZIP code 209-212
+exception
+IllegalArgumentException 373,380 IllegalStateExcep tion 376-377
+IndexoutofBoundsException 375-376, 380
+IOException 81
+PatternSyntaxException 371,373 Bxplicit(Option)415
+ExplicitCapture(.NET)408,420,427
+exponential match 222-228,330,340
+avoiding 264-266
+discovery 226-228
+explanation 226-228
+non-determinism 264
+short-circuiting 250
+solving with atomic grouping 268
+solving with possessive quantifiers 268 expose literal text 255
+expression
+context 294-295

@@ -1,0 +1,92 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 18/37
+---
+Endif
+
+如果提供了offset ( 一个整数),则第一次尝试会从对应的偏移值开始。
+
+RegexObj.Match ( target)
+
+RegexObj. Match ( target, offset)
+
+RegexObj. Match (target, offset,maxlength)
+
+Return type: Match object
+
+Match 方法把正则表达式应用到目标字符串中，返回一个Match 对象。通过这个Match 对 象可以查询匹配结果的信息(是否匹配成功，捕获的文本等等),初始化此正则表达式的“下 一次”匹配。Match 对象的细节见第427页。
+
+如果提供了offset ( 一个整数),则第一次尝试会从对应的偏移值开始。
+
+如果提供了maxlength 参数，会进行特殊模式的匹配，从offset开始的字符开始计算，正则 引擎会把maxlength 长度的文本当作整个目标字符串，假设此范围之外的字符都不存在，所
+
+以此时^能够匹配原来的目标字符串中的offset 位置，$能够匹配之后maxlength 个字符的 位置。同样，环视结构不能“感觉到”此范围之外的字符。这与提供offset 有很大不同，如 果只提供了offset, 受影响的只是传动装置开始应用正则表达式的位置——正则引擎仍然能 够“看到”完整的目标字符串。
+
+下面表格中的例子比较了offset 和 maxlength的意义：
+
+调用方法	以下列表达式RegexObj的结果
+
+'\d\dj	^\d\dj	^\d\d$1
+
+RegexObj.Match("May	16,1998")	匹配	‘16'	失败	失败
+
+RegexObj.Match("May	16,1998",9)	匹配	‘99'	失败	失败
+
+RegexObj.Match("May	16,1998",9,2)	匹配	‘99'	匹配‘99'	匹配‘99'
+
+RegexObj. Matches ( target)
+
+RegexObj. Matches (targe t,offset)
+
+Return type: MatchCollection
+
+Matches 方法类似Match 方法，只是Matches 方法返回一组Match 对象，代表目标字符串 中的所有匹配结果，而不是第一次的匹配结果。返回的对象为MatchCollection。
+
+例如，初始化代码如下：
+
+Dim R as New Regex("\w+")
+
+Dim Target as String = "a few words"
+
+下面的程序：
+
+Dim BunchofMatches as MatchCollection=R.Matches(Target)
+
+Dim I as Integer
+
+For I =0 to BunchOfMatches.Count-1
+
+Dim MatchObj as Match =BunchofMatches.Item(I)
+
+Console.WriteLine("Match:"&MatchObj.Value)
+
+Next
+
+运行结果是：
+
+Match:a
+
+Match:few
+
+Match:words
+
+下面的程序输出同样的结果，它说明，MatchCollection 对象可以一次分配整个 Match- Collection。
+
+Dim MatchObj as Match
+
+For Each MatchObj in R.Matches(Target)
+
+Console.WriteLine("Match:"&MatchObj.Value)
+
+Next
+
+作为比较，下面的代码也可以达到同样的效果，使用Match (而不是Matches) 方法：
+
+Dim MatchObj as Match =R.Match(Target)
+
+While MatchObj.Success
+
+Console.WriteLine( "Match: "& MatchObj. Value)
+
+MatchObj = MatchObj. NextMatch()

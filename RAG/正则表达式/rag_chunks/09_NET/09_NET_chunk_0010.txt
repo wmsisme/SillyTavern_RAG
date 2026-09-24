@@ -1,0 +1,24 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 10/37
+---
+数字跟在反斜线之后，可能表示十进制数的转义，也可能是反向引用。到底应该如何处理， 取决于是否指定了Regexoptions .ECMAScript 选项。如果你不关心其中的细微差别，不妨 一直用\ k<num> 表示反向引用，或者在表示十进制数时以0开头(例如\08)。这两种办 法不受Regexoptions. ECMAScript 的影响。
+
+如果没有使用Regexoptions. ECMASCript, 从 '\1 到'\9的单个转义数字通常代表反向引 用，而以0开头的转义数字通常代表十进制转义(例如，012」 匹配 ASCII 的进纸符 linefeed), 除此之外的所有情况下，如果“有意义”(也就是说某个正则表达式中有足够 多的捕获型括号),数字都会被作为反向引用来处理。否则，如果数字的值处于\000和\377 之间，就作为十进制转义。例如，如果捕获型括号的数目多于12,则'\12」会作为反向引用， 否则就会作为十进制数字。
+
+下一节详细讲解 RegexOptions.ECMAScript 的语意。
+
+ECMAScript 模式
+
+ECMAScript 的基础是一种标准版本的JavaScript ( 注2),还包含了它自己的解析和应用正 则表达式的语意。如果使用 RegexOptions. ECMAScript 选项，NET 的正则表达式就会模 拟这些语意。如果你不明白ECMASCript 的含义，或者不需要兼容它，就完全可以忽略该节。
+
+如果启用了RegexOptions.ECMASCript, 将会应用下面的规则：
+
+· Regexoptions. ECMAScript 只能与下面的选项同时使用：
+
+RegexOptions.IgnoreCase
+
+RegexOptions.Multiline
+
+RegexOptions. Compiled

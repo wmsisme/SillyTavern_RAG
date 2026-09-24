@@ -1,0 +1,16 @@
+---
+章节: 第3章：正则表达式的特性和流派概览
+章节ID: 03_正则表达式的特性和流派概览
+切片序号: 23/83
+---
+Tcl
+
+Tcl 采用的是程序式处理方法，对不熟悉Tcl引用惯例 (quoting conventions) 的人来说可能 很迷惑。如果我们要在Tcl中修正错误的拼写，可以这样：
+
+regsub mizpel, $var misspell newvar
+
+它会检查变量var 中的字符串，把'mizpel 的第一处匹配替换为misspell, 把替换后的字 符串存人变量 newvar (这个变量并没有以$开头)。Tcl 接收的第一个参数是正则表达式， 第二个参数是目标字符串，第三个是 replacement 字符串，第四个是目标变量的名字。Tcl 的 regsub 同样可以接收可能出现的标志位，例如-all 用来进行全局替换，而不是只替换 第一处匹配文本。
+
+regsub -al1 mizpel, Svar misspell newvar
+
+同样，-nocase 选项告诉正则引擎进行不区分大小写的匹配(它等于egrep的 -i 参数，或 者 Perl的/i 修饰符)。

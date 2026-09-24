@@ -1,0 +1,51 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 28/69
+---
+GNU sed
+after-match data 138
+version covered 91
+word boundaries 134
+Goslng, James 89
+GPOS 362
+greatest weakness Perl 286
+gr[ea]y example 9
+greedy(see also lazy) alternation 174-175
+and backtracking 162-177
+deference to an overall match 153,274 essence 159,168-169
+favors match 167-168
+first come,first served 153
+global vs.local 182
+introduced 151
+vs.lazy 169,256-257
+localizing 225-226
+quantifier 141
+swapping 447
+too greedy 152
+green dragon 180
+grep Perl 324
+grep
+as an acronym 85
+flavor overview 92
+history 86
+regex flavor 86
+version covered 91
+
+grep (cont'd)
+-y option 86
+group method 377
+Group object (.NET)418 Capture 437
+creating 429
+Index 430
+Length 430
+Success 430
+ToString 430
+using 430
+Value 430
+Groupcollection 429,438
+groupCount method 377
+grouping and capturing 20-22
+grouping-only parentheses (see non-cap- turing parentheses)
+GroupNameFromNumber 427-428
+GroupNumberFromName 427-428

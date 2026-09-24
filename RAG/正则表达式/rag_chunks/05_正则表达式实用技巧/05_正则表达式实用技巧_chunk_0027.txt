@@ -1,0 +1,44 @@
+---
+章节: 第5章：正则表达式实用技巧
+章节ID: 05_正则表达式实用技巧
+切片序号: 27/40
+---
+我还没有谈论过正则表达式的 path ( 路径)部分，它接在主机名后面(例如http ://www. orielly. com/catalog/regex/ 中的划线部分)。path是最难正确匹配的文本，因为它需要 一些猜测才能做得很漂亮。我们在第2章说过，通常出现在 URL 之后的文本也能被作为 URL的一部分。例如：
+
+Read his comments at http://www.oreilly.com/ask_tim/index.html.He...
+
+我们观察之后就会发现，在‘index .html’ 之后的句号是一个标点，不应该作为URL的 一 部分，但是‘index.html’ 中的点号却是URL 的一部分。
+
+肉眼很容易分辨这两种情况，但程序做起来却很难，所以必须想些聪明的办法来尽可能好 地解决问题。第2章的例子使用逆序环视来确保URL不会以句末的句号结尾。我在Yahoo! Finance 写程序时还没有逆序环视，所以我用的办法要复杂的多，不过效果是一样的。代码 在下一页。
+
+示例5-1:从财经新闻中提取 URL
+
+\b
+
+# 匹 配 开 头 部 分 ( proto:// hostname, 或直接是 hostname) (
+
+# ftp: //、 http:// 或 https:// 开头部分
+
+(ftplhttps?)://[-\w]+(\.\W[-\w]*)+
+
+# 或者是用更准确的子表达式找到hostname
+
+(?i:[a-z0~9](?:[-a-z0-9]*[a-z0-9])?\.)+
+
+# . com 之 类 的 后 缀 . 要 求 小 写
+
+(?-i:com\b
+
+Iedu\b
+
+biz\b
+
+I gov\ b
+
+in(?:tlfo)\b # .int 或者 .info
+
+Imil\b
+
+net\ b
+
+I org\b

@@ -1,0 +1,63 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 51/69
+---
+\pL PHP 442
+\p{Latin) 122
+(?P< >) 451-452,457
+(?P<name>…)(see named capture) \p (Letter ) 122,288
+\p{Letter _Number} 123
+\p{Line_S eparator } 123
+p{Ll) 123,406
+p{Lm) 123,406
+\p(Lo} 123,406
+\ p{Lowercase_Letter) 123 \p{Lt} 123,406
+\p{Lu} 123,406 plus
+as \+141
+backtracking 162
+greedy 141,447
+introduced 18-20
+lazy 141
+possessive 142
+\p(M} 120,122
+\p{Mark} 122
+\p{Math _Symbol} 123
+\p(Mc} 123
+\p{Me) 123
+p(Mn} 123
+\p{Modifier_Letter) 123
+Ap{Modifier _symbol) 123
+\pN PHP 442
+\p{N) 122,395
+(?P =name )( see named capture) \p {Nd} 123,368,406
+p{N1} 123
+\p{No} 123
+\p{Non _Spacing _Mark} 123
+\p{Number} 122
+\p{Po} 123
+\p{Open_Punctuation)123 population example 59
+pos 130-133,313-314,316
+(see also \G)
+positive lookahead (see lookahead, positive)
+positive lookbehind(see lookbehind, positive)
+
+POSIX
+【 .….]128
+[: : 127
+
+Basic Regular Expressions 87-88 bracket expressions 127
+character class 127
+character class and locale 127 character equivalent 128
+
+5 0 8 索 引
+
+POSIX(cont'd)
+collating sequences 128
+dot 119
+empty alternatives 140
+
+Extended Regular Expressions 87-88
+superficial flavor chart 88
+locale 127
+longe-elos 177-179,335

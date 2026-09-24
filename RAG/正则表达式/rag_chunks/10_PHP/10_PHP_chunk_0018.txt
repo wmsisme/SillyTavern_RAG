@@ -1,0 +1,44 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 18/52
+---
+Mary B.Miller";
+
+preg_match_all('/^(\w+)(\w\.)(\w+)$/m', $subject, $all_matches,PREG_SET_ORDER);
+
+结果是：
+
+array
+
+(
+
+/*$al l_matches[0] 等价于preg_match 的$matches */
+
+0=>array(0=>"Jack A. Smith",/* 第1次整体匹配*/
+
+1=>"Jack", /*第1次整体匹配的第1个捕获型括号*/
+
+2 =>"A.", /*第1次整体匹配的第2个捕获型括号*/
+
+3=>"Smith" /* 第1次整体匹配的第3个捕获型括号*/),
+
+1 =>"Mary", /*第2次整体匹配的第1个捕获型括号*/
+
+2 =>"B.", /*第2次整体匹配的第2个捕获型括号*/
+
+3 =>"Miller" /* 第2次整体匹配的第3个捕获型括号*/), )
+
+两种排列方式的总结如下：
+
+类 型	标志位	说明及示例
+
+按分组编号	PREG_PATTERN_ORDER	将各次匹配中同样编号的分组编在一起
+
+$all_matches[$paren_num][$match_num]
+
+堆叠	PREG_SET_ORDER	将每次匹配的数据集中保存
+
+$all_matches[$match_num][$paren_num]
+
+preg_match_ all 和 PREG_OFFSET_CAPTURE标 志 位

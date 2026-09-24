@@ -1,0 +1,79 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 69/69
+---
+Visual Studio .NET 434
+VM 236
+Java 236
+warming up 236
+
+索引 515
+
+void context 294
+VT 109,370
+
+$^W 297
+\w 49,65,120 Emacs 129
+Java 368
+many different interpretations 93 Perl 288
+PHP 120,442
+\W 49,121
+Wall,Larry 88-90,140,363 warming up Java VM 236
+warnings 296
+($^w variable)
+Perl 297
+Perl 38
+temporarily turning off 297
+use warnings
+Perl 326,363
+warnings pragma 326,363
+while vs. foreach vs. if 320 whitespace
+allowing optional 18
+removing 199-200
+width attribute Java example 397
+wildcards filename 4
+word anchor mechanics of matching 150
+\<\>
+egrep 15
+introduced 15
+Java 134
+many programs 134
+mimicking 66,134,341-342
+.NET 134
+Perl 288
+PHP 134
+wwu.cpan.org 358
+www.PeakWebbosting.com xxiv www.regex.info 358
+www.unkxwiz.net xxiv,458
+
+x 108,120 /x 135,288
+(see also: comments and free-spacing
+mode;mode modifier)
+history 90
+introduced 72
+(?x)( see: comments and free-spacing
+mode;mode modifier)
+
+\x 117,406 Perl 286
+XML 483
+CDATA 483
+XML example 481-484
+
+y old grep 86
+￥ 124
+Yahoo! xxiv,74,132,190,206-207,258, 314,397
+
+\Z 112,129-130
+(see also enhanced line-anchor mode) Java 370
+optimization 246
+\p(Z} 121-122,368,407
+\z 112,129-130,316,447
+(see also enhanced line-anchor mode) optimization 246
+PHP 442
+Zawodny,Jeremy 258
+zero-width assertions (see:anchor;look- ahead;lookbehind)
+ZIP code example 209-212
+\p{Z1}123
+Zmievski,Andrei xxiv,440 Ap{Zp) 123
+p{Zs} 123

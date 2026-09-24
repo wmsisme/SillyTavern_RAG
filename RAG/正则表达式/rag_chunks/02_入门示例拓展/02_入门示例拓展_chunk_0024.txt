@@ -1,0 +1,40 @@
+---
+章节: 第2章：入门示例拓展
+章节ID: 02_入门示例拓展
+切片序号: 24/56
+---
+On Thu,Feb 29200711:15 The King wrote:
+
+l>Sorry I haven't been around lately.A few years back I checked
+
+l>into that ole heartbreak hotel in the sky, ifyaknowwhat Imean.
+
+I>The Duke says "hi".
+
+I> Elvi s
+
+现在我们来分析。为了生成新的 header, 我们需要知道目标地址(即本例中的 elvis@hh. tabloid .or g, 来自原始信息中的 Reply- To 字段),收件人的姓名 (The King),我们自 己的地址和姓名，以及主题。另外，为了生成邮件正文的导入部分 (introductory line), 我 们还需要知道原始邮件的日期。
+
+这些工作可以分为下面3步：
+
+1.从原始邮件的header 中提取信息；
+
+2. 生成回复邮件header;
+
+3. 打印原始邮件信息，行首用‘I>' 缩进。
+
+这样考虑有点超前了——在没有决定程序如何读入数据之前，就关心起如何处理数据了。 幸运的是，Perl 提供了神奇的“<>”操作符。在应用到变量svariable 时，使用“Svariable
+
+=<>”,这个有趣的结构能够每次读入一行数据。输入的数据来自命令行中Perl 脚本之后列
+
+出的文件名(例如上面例子中的king.in)。
+
+请不要混淆操作符<>与Shell 的重定向符号“> filename” 或者是Perl的大于/小于号。Perl
+
+中的<>相当于其他语言中的getline() 函数。
+
+读入所有输入数据之后，<>很方便地返回未定义的值(作为布尔值处理),所以整个文件可 以这样处理：
+
+while($line =<>)(
+
+…处理$line.

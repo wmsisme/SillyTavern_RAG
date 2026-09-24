@@ -1,0 +1,46 @@
+---
+章节: 第3章：正则表达式的特性和流派概览
+章节ID: 03_正则表达式的特性和流派概览
+切片序号: 76/83
+---
+表3-14:若干工具软件及其中访问捕获文本的方法
+
+程 序	完整的匹配	第一组括号匹配的文本
+
+GNU egrep	N/A	N/A
+
+GNU Emacs	(match_string 0)
+
+(replacement字符串中为\&)	(match-string 1)
+
+(replacement字符串中为\1)
+
+GNU awk	Substr(Stext,RSTART,RLENGTH) (replacement字符串中为\&)	\1(在gensub替换中)
+
+MySQL	N/A	N/A
+
+Perl 41	$&	$1
+
+PHP T450	Smatches[0]	$matches[1]
+
+Python ⑦97	MatchObj.group(0)	MatchObj.group(1)
+
+Ruby	$&	$1
+
+GNU sed	&(只能在replacement字符串中使用)	\1(只能出现在regex和replacement中)
+
+Java 95	MatcherObj.group()	MatcherObj.group(1)
+
+Tcl	通过regexp命令设置为用户选择的变量
+
+VB.NET96	MatchObj.Groups(0)	MatchObj.Groups(1)
+
+C#	MatchObj.Gropus[0]	MatchObj.Groups[1]
+
+vi	&	\1
+
+(请参考第91页的版本信息)
+
+如果这两组括号是非捕获型的，我们就可以按照直观的方式使用SHostnameRegex。另一种 办法是使用命名捕获，尽管Perl 没有提供这种功能，我们还是会介绍它。
+
+命名捕获：(?<Name>.)

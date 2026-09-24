@@ -1,0 +1,40 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 31/51
+---
+注 6 : Java 1.5 Update 7 中 有 个bug, 我已经报告给Sun 。使 用 Pattern. MULTILINE 之 后 ，如 果 之前正好有一个行终结符，即使已经取消了anchoring bounds,^」 (如果修改了检索边界， 它可以看作某种查看结构)也可以匹配检索范围的起始位置。
+
+也就是说尽管检索范围的起始位置可能在某个单词内部，\ b 仍然能够匹配-它看不到之 前的字母。
+
+下面的例子说明了transparent bounds设置为false (默认)的情况：
+
+String regex ="\\bcar\\b";/1 \b car\bj
+
+String text ="Madagascar is best seen by car or bike.";
+
+Matcher m= Pattern.compile( regex).matcher(text);
+
+m.region(7,text.length());
+
+m.find();
+
+Syste m.out.println(" Matches starting at character"+m.start());
+
+结果是：也就是说尽管检索范围的起始位置可能在某个单词内部，\b 仍然能够匹配-—它 看不到之前的字母。
+
+Matches starting at character 7
+
+单词分界符的确匹配了检索范围的起始位置，即 Madagas car, 尽管此处根本不是单词的 边界。如果不设定 transparent bounds, 单词分界符就“受骗 (spoofed)” 了 。
+
+如果在find 之前添加这条语句：
+
+m.useTransparentBounds(true);
+
+结果就是：
+
+Matches starting at character 27
+
+因为边界现在是透明的，引擎可以感知到起始边界之前有个字母‘s', 所 以 \bi 在此处无 法匹配。于是结果就成了“… by'caror·bike.”。
+
+同样，transparent-bounds 只有在检索范围不等于“整个目标字符串”时才有意义。即使reset 方法也不会重置它。

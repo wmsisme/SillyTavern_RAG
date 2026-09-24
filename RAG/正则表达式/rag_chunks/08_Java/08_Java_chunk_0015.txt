@@ -1,0 +1,48 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 15/51
+---
+Querying Match Results
+
+下面列出的Matcher 方法返回了成功匹配的信息。如果正则表达式还未应用过，或者匹配尝 试不成功，它们会抛出IllegalStateException 。 接收 num 参数(对应一组捕获型括号) 的方法，如果给定的num 非法，会抛出IndexOutofBoundsException。
+
+请注意start 和 end 方法，它们返回的偏移值不受检索范围的影响——偏移值从整个目标 字符串的开头开始计算，而不是检索范围的开头。
+
+后面还给出了一个例子，讲解其中大部分方法的使用。
+
+group ()
+
+返回前一次应用正则表达式的匹配文本。
+
+groupCount()
+
+返回正则表达式中与Matcher 关联的捕获型括号的数目。在 group、start 和 end 方 法中可以使用小于此数目的数字作为numth 参数，下文介绍(注4)。
+
+ring gropu (. num)
+
+返回编号为num"的捕获型括号匹配的内容，如果对应的捕获型括号没有参与匹配，则 返回null 。 如果num? 为0,表示返回整个匹配的内容， group(0) 就等于group()。
+
+start( int num)
+
+此方法返回编号为 num 的捕获型括号所匹配文本的起点在目标字符串中的绝对偏移 值——即从目标字符串起始位置开始计算的偏移值。如果捕获型括号没有参与匹配， 则返回-1。
+
+1 start ()
+
+此方法返回整个匹配起点的绝对偏移值，start( )就等于start(0)。
+
+end( in: num)
+
+此方法返回编号为 num 的捕获型括号所匹配文本的终点在目标字符串中的绝对偏移 值——即从目标字符串起始位置开始计算的偏移值。如果捕获型括号没有参与匹配， 则返回-1。
+
+int.end ()
+
+次方法返回整个匹配的终点的绝对偏移值，end() 就等于end(0)。
+
+Matchekesu it toMatchResult()
+
+此方法从Java 1.5.0开始提供，返回的MatchResult 对象封装了当前匹配的信息。它 和Matcher 类一样，也包含上面列出的group 、 start 、end 和 groupCount 方法。
+
+如果前一次匹配不成功，或者 Matcher 还没有进行匹配操作，调用 toMatcheResult 会 抛 出IllegalStateException。
+
+注 4 : groupCount 方法任何时候都可调用，而这里列出的其他方法必须在匹配尝试成功之后才 可调用。

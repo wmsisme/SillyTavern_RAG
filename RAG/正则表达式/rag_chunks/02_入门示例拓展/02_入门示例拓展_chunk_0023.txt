@@ -1,0 +1,50 @@
+---
+章节: 第2章：入门示例拓展
+章节ID: 02_入门示例拓展
+切片序号: 23/56
+---
+A Small Mail UItility
+
+来看另一个小工具的例子。一个文件中保存着 E-mail 信息，我们需要生成一个用于回复的
+
+文件。在准备过程中，我们需要引用原始的信息，这样就能很容易地把回复插入各个部分。 在生成回复邮件的 header 时，我们还需要删除原始信息邮件的header 中不需要的行。
+
+下一页的补充内容是一个邮件文件的范本。header 包含了我们关心的字段：日期、主题等 — 但也包括了我们不关注的字段，这些字段需要删除。如果我们的脚本程序叫做mkreply,
+
+而原始的信息保留在king.in中，我们会用下面的命令来生成回复模板：
+
+%perl -w mkreply king.in>king.out
+
+(-w 它用来打开Perl 的额外警告功能，38)
+
+E-mail Message范本
+
+From elvis Thu Feb 2911:152007
+
+Received:from elvis@localhost by tabloid.org(8.11.3)id KA8CMY Received:from tabloid.org by gateway.net(8.12.5/2)id N8XBK
+
+To:jfriedl@regex.info (Jeffrey Friedl)
+
+From:elvis@tabloid.org(The King)
+
+Date:Thu,Feb 29200711:15
+
+Message-Id:<2007022939939.KA8CMY@tabloid.org> Subject:Be seein'ya around
+
+Reply-To:elvis@hh.tabloid.org
+
+X-Mailer:Madam Zelda's Psychic Orb [version 3.7 PL92]
+
+Sorry I haven't been around lately.A few years back I checked into that ole heartbreak hotel in the sky,ifyaknowwhatImean.
+
+The Duke says “hi”.
+
+Elvis
+
+我们希望程序的输出结果king.out包括下面的内容：
+
+To:elvis@hh.tabloid.org(The King)
+
+From:jfriedl@regex.info(Jeffrey Friedl)
+
+Subject:Re:Be seein'ya around

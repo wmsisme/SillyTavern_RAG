@@ -1,0 +1,29 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 66/69
+---
+ToString
+Group object method 430 Match object method 427
+Regex object method 427 toString method 393-394
+Traditional NFA testing for 146-147 trailing context 182
+transmission (see also \G)
+optimizations 246-247
+transparent bounds 387
+Java 387
+Tubby 265
+typographical conventions xxi
+
+\u 117,290,406 \U 117
+\U-\E 290
+inhibiting 292
+uc 290
+U+COB5 107
+ucfirst 290
+UCS-2 encoding 107
+UCS4 encoding 107
+Ullman,Jeffrey 180
+\p{Unassigned} 123,125 Perl 288
+unconditional caching 350
+underscore in \w history 89
+Unescape 433

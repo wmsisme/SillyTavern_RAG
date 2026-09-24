@@ -1,0 +1,54 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 40/52
+---
+★ 例 如 ，如果表达式是' / ' , 盲 目 转 义 得 到 ' \ / ' ,最终结果是'八\//',这显然不对
+
+*应当把表达式分为三类：已转义的字符、未转义的斜线(需要处理)和其他宇符。
+
+* 还需要注意字符串结尾的转义 ★/
+
+if(!preg_matc h('{ (1:/I$)}',$ raw_regex ))/* 后面是'\'或EOS的 ' / ' */
+
+t
+
+/*不存在已转义的斜线，末尾也没有转义，直接转义其中的斜线即可*/
+
+$cooked =preg_replace('!/!','/',$raw_regex);
+
+else
+
+{
+
+/* 用来解析$raw _regex 的 pattern
+
+*捕获型括号内的两个部分需要转义 */
+
+Spattern ='{[^\ /]+I .I(/I $)}sx';
+
+/*S raw-regex 中$ pattern 的每次成功匹配都需要调用回调函数
+
+* 如 果$ matches [1] 不为空，返回转义后的结果
+
+*否则不做修改直接返回*/
+
+$f= create _function( '$ matches',' /* 这个长长的
+
+if (empty($matches[1])) ./* 单引号
+
+return $matches[0]; /*字符串就是
+
+else /* 函数的
+
+return "\\". $matches[1];/* 代 码
+
+');
+
+1 * 将 $pattern 应用到$raw_regex, 得到$cooked */
+
+$cooked =preg_replace_callback( $pattern ,$f,$ raw_regex); }
+
+/*现在可以在$cooked 两端添加分隔符了，然后附上修饰符，然后返回*/
+
+return"/$cooked/$modifiers"; }

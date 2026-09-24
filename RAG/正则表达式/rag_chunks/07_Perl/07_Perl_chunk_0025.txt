@@ -1,0 +1,22 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 25/94
+---
+my SWordRegex ='(?x:\b \w+\b)';# 普通字符串
+
+if($text =~m/^(SWordRegex)/){
+
+print"found word at start of text:$1\n";
+
+}
+
+此时，m/…/的正则文字插值之后，正则引擎接收到'^((?x:\b·\W+"\b))j, 这就是我们期望 的结果。
+
+其实这就是生成regex 对象的逻辑过程，只是regex 对象对于每个模式修饰符，都明确定义
+
+了“on” 或“off” 的状态。用qr/\b·\w+·\b/x 生成(?x-ism: \b·\W+"\b) 。 请注意模式修
+
+饰符的设定(? x-ism:…), 这里启用了/x, 禁止了/i 、/s 和/m。也就是说，无论是否指定 qr/…/ 的修饰符，regex 对象总是“锁定”在某个模式下。
+
+探 究 regex 对象

@@ -1,0 +1,92 @@
+---
+章节: 第6章：打造高效正则表达式
+章节ID: 06_打造高效正则表达式
+切片序号: 17/74
+---
+Java 使用了我称为BLTN(B etter-Late-Than-Never) 的编译器，在执行期间计数，对反复使 用的代码根据需要进行编译和优化。BLTN的性质是，它只对认为“热门”( hot, 即大量使 用)的代码进行干预。如果虚拟机已经运行了一段时间，例如在服务器环境中，它已经“预 热”完毕，而我们的简单例子确保了一台“凉”的服务器 ( BLTN 没有进行任何优化)。
+
+可以把测试部分放入一个循环，来观察“预热”现象：
+
+// 第一轮测试计时 ..
+
+for(int i=4;i>0;i--) {
+
+long count =timesToDo;
+
+long startTime = System .currentTimeMillis();
+
+while(--count>0)
+
+regex1.reset(test String).find();
+
+double seconds = (System .currentTimeMillis()-startTime) System.out.println("Alternation takes"+seconds
+
+}
+
+如果新增的循环运行足够长(例如，10s), B LTN就会优化热门代码，最后一次输出的时间 就代表了已预热系统的情况。再次使用server VM, 这些时间确实比之前有了8%和25%的 提高。
+
+Alternation takes 11.151 seconds
+
+Character class takes 0.483 seconds
+
+另一个问题在于，负责调度GC线程的工作是不确定的。所以，进行足够长时间的测试能够 降低这些不确定因素的影响。
+
+性能测试 237
+
+VB.NET 测试
+
+Bencmarkinng witlt VB.NET
+
+下面是VB.NET的测试程序：
+
+Option Explicit On
+
+Option Strict On
+
+Imports System.Text.RegularExpressions
+
+Module Benchmark
+
+Sub Main()
+
+Dim Regex1 as Regex =New Regex("^(alblcldlelflg)+$")
+
+Dim Regex2 as Regex =New Regex("^[ a-g]+$")
+
+Dim TimesToDo as Integer =1000
+
+Dim TestString as String =""
+
+Dim I as Integer
+
+For I =1 to 1000
+
+TestString = TestS tring &"abababdedfg"
+
+Next
+
+Dim StartTime as Double =Timer()
+
+For I=1 to TimesToDo
+
+Regex1.Match(TestString)
+
+Next
+
+Dim Seconds as Double =Math.Round(Timer ()-StartTime,3)
+
+Console.WriteLine("Alternation takes"&Seconds &"seconds")
+
+StartTime =Timer()
+
+For I=1 to TimesToDo
+
+Regex2.Match(TestString)
+
+Next
+
+Seconds =Math.Round(Timer()- StartTime,3)
+
+Console.WriteLine("Character class takes "&Seconds &"seconds")
+
+End Sub

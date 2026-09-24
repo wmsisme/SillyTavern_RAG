@@ -1,0 +1,42 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 33/51
+---
+Metltod Chaining
+
+下面的程序初始化一个Matcher, 并设定某些选项：
+
+Pattern p= Pattern .compil e(regex); 1/ 编 译regex
+
+Matcher m =p.matcher(text); / / 将rege x 与text 建立联系，创建Matcher
+
+m. region(5,text. length());	// 将检索范围设定为从第5个字符开始
+
+m.useAnchoringBounds(false);	//^之类不能匹配检索范围的起始位置
+
+m.useTransparentBounds(true);	// 考察结构能够超越检索范围
+
+在前面的例子中我们看到，如果创建Matcher 之后不再需要regex, 可以把前面两步合并起 来：
+
+Matcher m = Pattern.compile(regex).matcher
+
+n.region(5,t ext. length());
+
+m.useAnchoringBounds(false);
+
+m.useTransparentBounds(true)
+
+(text);
+
+1 / 将 检 索 范 围 设 定 为 从 第5 个 字 符 开 始 1/ ^之类不能匹配检索范围的起始位置 / / 考 察 结 构 能 够 超 越 检 索 范 围
+
+不过，因为Matcher 的两个方法会返回Matcher 本身，可以把它们整合成一行(尽管因为排 版的原因必须列为两行):
+
+Matcher m= Pattern.compile(regex).matcher(text). region(5,text.length())
+
+.useAnchoringBounds(false) .useTransparent Bounds(true);
+
+功能并没有增加，但用起来更加简便。这种“方法链”格式紧凑，一行程序可能很难对应 到单个步骤的文档，不过，好的文档重在说明“为什么”而不是“干什么”,所以这可能并 不是个问题。在第399页的程序中，使用方法链可以保证格式紧凑清晰。
+
+构建扫描程序

@@ -1,0 +1,14 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 18/51
+---
+Before Java 5.0 was Java 1.4.2. After Java 5.0 is Java 1.6
+
+如果pattern和matcher不需要复用，可以使用链式编程：
+
+Pattern.compile("\\bJava\\s*1\1.5\\b").matcher(text).replaceAll("Java 5.0") (如果单个线程中需要多次用到同一 pattern, 预编译pattern 对象可以提升效率372)
+
+对正则表达式稍加修改，就 可以用它来把“Java 1.6” 改为“Java 6.0” ( 当然也需要修改 replacement 字符串，讲解见下页)。
+
+Patterm.compile( "\\bJava\\s* 1\\.([56])\b").matcher(text).replaceAll("Java $1.0") 对于同样的输入文本，结果如下：

@@ -1,0 +1,36 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 47/51
+---
+◆ 第 3 9 9 页 问 题 的 答 案
+
+在第399页的程序中，java.util.regex错误地设置了matcher的“当前位置”,所以 下 一 次 查 找 会 从 错 误 的 位 置 开 始 。 我 们 可 以 绕 过 这 个 b u g , 自 己 记 录 “ 当 前 位 置 ” , 使
+
+用 单 个 参 数 的 f i n d 从 此 位 置 开 始 查 找 。
+
+程 序 中 修 改 的 部 分 以 高 亮 显 示 ：
+
+Pattern pWord =Pattern.compile("\\G\\w+");
+
+Pattern pNonHtml =Pattern.compile("\G[^\w<>&]+");
+
+Pattern pImgTa =Pattern.compile("\\G(?i)<img\s+([^>]+)>");
+
+Pattern pLink =Pattern.compile("\\G(?i)<A\\s+([^>]+)>");
+
+Pattern pLinkX =Pattern.compile("\G(?i)</A>");
+
+Pattern pEntity =Pattern.compile("\\G&(#\\d+I\w+);");
+
+Boolean needClose =false;
+
+Match er m =p word .matcher(html);//每个Pattern对 象 都 能 生 成M atch e r 对 象 Integer currentLoc =0;
+
+while(currentLoc<htm1.length())
+
+{
+
+if(m.usePattern(pword).find(currentLoc)){
+
+...m.group() 包 含 一 个 单 词 或 数 值 ， 可 以 进 行 对 应 的 检 查

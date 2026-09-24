@@ -1,0 +1,47 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 41/69
+---
+MySQL
+after-match data 138
+DBIx::DWIW 258
+version covered 91
+word boundaries 134
+
+\p(N) 122,395
+n 49,115-116
+introduced 44
+machine-dependency 115
+$^N 300-301,344-346
+(?n) 408
+named capture 138
+mimicking 344-345
+.NET 408-409
+numeric names 451
+PHP 450-452,457,476-477
+with unnamed capture 409
+naughty variables 356
+OK for debugging 331
+\p(Nd} 123,368,406
+negated class
+introduced 10-11
+and lazy quantifiers 167
+Tcl 112
+negative lookahead (see lookahead, negative)
+negative lookbehind(see lookbehind,
+negative)
+NEL 109,370,407 nervous system 85
+nested constructs
+.NET 436
+Perl 328-331,340-341
+PHP 475-478,481
+SNestedstuffRegex 339,346
+.NET xvii,405-438
+$+202
+after-match data 138
+benchmarking 237
+character-class subtraction 406 code example 219
+flavor overview 92
+JIT 410
+line anchors 130

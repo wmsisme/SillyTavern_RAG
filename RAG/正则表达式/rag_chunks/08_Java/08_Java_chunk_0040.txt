@@ -1,0 +1,56 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 40/51
+---
+Other Pattern Methods
+
+除了主要的compile factories, Pattern 类还提供了一些辅助方法：
+
+sp lit
+
+下一页会详细讲解两种形式的split 方法。
+
+Strin g pattern()
+
+这个方法返回用于创建本pattern 的正则表达式字符串。
+
+Stri: g tostring ()
+
+这个方法从Java 1.5之后可用，等价于pattern 方法。
+
+int flags ()
+
+这个方法返回pattern 创建时传递给compile factory的 flag 参数(作为整数)。
+
+n! quote (S tring text)
+
+从 Java 1.5 开始提供的 static 方法，返回 text 对应的正则文字字符串，能够作为 Pattern.compile 的参数。例如， Pattern.quote ("main()" )返回字符串 '\Qmain ()\E ’,作为正则表达式它解释为'\Qmain()\E, 完全能够匹配原始的参数‘main()’。
+
+Sta: 0iear: matches (String regex,CharSequence text)
+
+这个static 方法返回的Boolean 值表示正则表达式能否匹配文本(与matcher 方法的参 数一样，可以是一个String 或者任何实现CharSequence 的对象373)。其实，它等 价于：
+
+Pattern. compile( regex).matcher(text). matches();
+
+如果需要传递编译参数，或者所要的信息不只是简单的匹配是否成功，则应该使用之 前介绍的办法。
+
+如果这个方法需要多次调用(例如，在循环中，或者其他经常调用的代码中),预先把 正则表达式编译为一个 Pattern 对象，然后每次应用的效率会高很多。
+
+Pattern的split 方法，单个参数
+
+Pattern 's split Method,with One Argument
+
+sp lit(CharS equence text)
+
+pattern 的这个方法接收文本(一个CharSequence 对象),然后返回一个数组，包含由 这个 pattern 对应的正则表达式在其中的匹配分隔的文本。String 类的 split 方法也 提供了同样的功能。
+
+String[] result =Pattern.compile("\.").split("209.204.146.22");
+
+返回4个字符串构成的数组('209’、‘204’、‘146’和‘22'),由文本中的三个.分隔。 这个简单例子只用单个字符分隔，但其实我们可以使用任何正则表达式。例如，你可以用 非字母和数字的字符把一个字符串粗略地分为“单词”:
+
+String[]result=Pattern.compile("\\W+").split(Text);
+
+如果给出的字符串是“what'su Doc”, 则返回4个字符串(‘what' 、‘s’ 、‘up’ 、'Doc'),
+
+由这个表达式的3次匹配(如果包含非 ASCII 文本，你可能需要使用'\P{L}+1或 (^\p{L}p{N)_] 而不是'\W+J 367) 分隔。

@@ -1,0 +1,93 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 27/69
+---
+Extended Regular Expressions 87-88
+
+\f 115-116
+introduced 44
+Fahrenheit(se e temperature conversion example)
+failure
+atomic grouping 171-172
+forcing 241,333,335,340-341
+FF 109,370 file globs 4
+file-check example 2,36 filename
+patterns (globs)4
+prepending to line 79
+filename example 190-192,444
+Filo,David 397
+p{Final_Punctuation} 123
+
+find method 375
+region 384
+FindAmpersand 358
+Fite, Liz 33
+five modifiers example 316
+fl ags method 394
+flavor
+Perl 286-293
+superficial chart
+general 92
+Java 367
+.NET 407
+PCRE 441
+Perl 285,287
+PHP 441
+POSIX 88
+term defined 27
+flex version covered 91
+floating regex cache(see regex objects) floating 'strlng′ 362
+floating-point number example 194
+forcing failure 241,333,335,340-341 foreach vs.while vs.if 320
+form letter example 50-51
+\p{Format} 123
+freeflowing regex 277-281
+Friedl,Alfred 176
+Friedl, brothers 33
+Friedl,Fumie v,xxiv
+birthday 11-12
+Priedl,Jeffrey xxiii
+Friedl,Stephen xxiv,458 fully qualified name 295
+functions related to regexes in Perl 285
+
+\G 130-133,212,315-316,362,447 (see also pos)
+advanced example 132,399
+.NET 408
+optimization 246
+/g 61,132,307,311-312,315,319 (see also \G)
+introduced 51
+with regex object 354
+garbage collection Java benchmarking
+gas engine analogy 143-147
+general categories (see Unicode,
+properties)
+gensub 182
+George, Kit xxiv
+GetGroupNames 427-428
+
+索引 497
+
+GetGroupNumbers 427-428
+gettimeofday 234
+Gill,Stuart xxiv
+global match (see /g)
+global vs.private Perl variables 295
+globs filename 4
+
+GNU awk
+after-match data 138
+gensub 182
+version covered 91
+word boundaries 134
+
+GNU egrep
+after-match data 138
+backreference support 150
+doubled-word solution 22
+-ibug 21
+regex implementation 183
+word boundaries 134
+GNU Emacs(see Emacs) GNU grep
+shortest-leftmost match 182
+version covered 91

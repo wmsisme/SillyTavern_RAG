@@ -1,0 +1,64 @@
+---
+章节: 第2章：入门示例拓展
+章节ID: 02_入门示例拓展
+切片序号: 5/56
+---
+注2:在许多情况下， m并不是必须出现的。这个例子用$reply=~/^[0-9]+$/ 也可以，有过 Perl 编程经验的读者或许会觉得这样更顺眼。我个人认为，加上m 更清晰，所以我喜欢这 么做。
+
+把=~读作“匹配 ( matches)” 可能比较省事，所以
+
+if($reply =~m/^[0-9]+$/)
+
+读作：
+
+“如果变量$reply 所含的文本能够匹配正则表达式^[0-9]+$ J, 那么… ”
+
+如果^[0-9]+$J能够匹配$reply 的内容，$reply=~m/^[0-9]+$/ 的返回值就为true, 否 则为false 。if 语句使用true/false 值来决定输出什么信息。
+
+请注意，如果$reply 中包含任意的数字字符，$reply=~m/[0-9]+/ (相比之前的表达式， 去掉了开头的脱字符和结尾的美元符) 的返回值就是 true。两端的^ … $保证整个$reply 只包含数字。
+
+现在把上面两个例子结合起来。首先提示用户输入一个值，接收这个输入，用一个正则表 达式来验证，确保输入的是一个数值。如果是，我们就计算相应的华氏温度，否则，我们 输出一条报警信息：
+
+print“Enter a temperature in Celsius:\n”;
+
+$celsius =<STDIN>;# 从用户处接受一个输入
+
+chomp($celsius); # 去掉$celsius 后面的换行符
+
+if($celsius =~m/^[0-9]+$/)(
+
+$fahrenheit =($celsius *9 /5)+32;#计算华氏温度
+
+print“$celsius C is $fahrenheit F\n”;
+
+print“Expecting a number,so I don't understand \“$celsius\".n"; }
+
+请注意最后的print 语句有两个转义的双引号，它们的作用并不是标记引用字符串的边界。 对大多数语言的文字字符串 (literal string) 来说，有时候需要转义某些字符，做法跟正则表 达式中元字符的转义很相似。在 Perl 中，字符串与正则表达式的区别并非很重要，但是在 Java、Python 等语言中却极为重要。 “一点题外话——数量丰富的元字符”这一节(44)
+
+更详细地讨论了这个问题 (VB.NET 是个明显的例外，在那里转义双引号用‘“”’而不是 '\”')。
+
+如果我们把这段程序保存为c2f, 则运行结果如下：
+
+8 perl -w c2f
+
+Enter a temperature in Celsius:
+
+22
+
+22 C is 71.599999999999994316 F
+
+哎呀，看来(至少在某些系统上),Perl的简单的print 并不能很好地处理浮点数。
+
+我不想在本章中讨论Perl的细节，但是我告诉你用printf( “格式化输出(print formatted)”) 可以解决这个问题：
+
+printf“8.2f C is 8.2f F\n”,$celsius,$fahrenheit;
+
+这里的printf 类似C 语言中的printf, 或者 Pascal 、Tcl、elisp 和Python 中的 format。
+
+它不会更改变量的值，而只是改变显示的方式。现在的结果好看多了：
+
+Enter a temperature in Celsius:
+
+22
+
+22.00 C is 71.60 F

@@ -1,0 +1,22 @@
+chromadb==1.5.9
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-text-splitters>=0.3.0
+langchain-chroma>=0.2.0
+langchain-community>=0.3.0
+sqlalchemy>=2.0.0
+transformers==4.46.3
+torch>=2.0.0
+FlagEmbedding>=1.2.0
+rank-bm25>=0.2.2
+jieba>=0.42.1
+openai>=1.0.0
+numpy>=1.24
+# posthog 固定 3.x：新版改了 capture() 签名，chromadb 仍按老签名调用，会持续刷遥测报错
+posthog<4
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+Pillow>=10.0.0
+opencc-python-reimplemented>=0.1.7
+aiofiles>=23.0.0
+python-multipart>=0.0.9

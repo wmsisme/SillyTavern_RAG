@@ -1,0 +1,16 @@
+---
+章节: 第2章：入门示例拓展
+章节ID: 02_入门示例拓展
+切片序号: 20/56
+---
+Dear Tom,
+
+You have been chosen to win a brand new fabulous 1008 genuine faux diamond! Free!Could you use another fabulous 1008 genuine faux diamond in the Cruise household?Yes Tom Cruise,I bet you could!Just respond by … …
+
+举例：修整股票价格
+
+Example:Prettifying a Stock Price
+
+另一个例子是，我在使用Perl 编写的股票价格软件时遇到的问题。我得到的价格看起来是 这样“9.0500000037272”。这里的价格显然应该是9.05,但是因为计算机内部表示浮点 的原理，Perl 有时会以没什么用的格式输出这样的结果。我们可以像温度转换例子中的那样
+
+测验答案

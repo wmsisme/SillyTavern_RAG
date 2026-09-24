@@ -1,0 +1,32 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 25/51
+---
+The Matcher's Region
+
+从 Java1.5 开始，Matcher 支持可变化的检索范围，通过它，我们可以把匹配尝试限制在目 标字符串之中的某个范围。通常情况下，Matcher的检索范围包含整个目标字符串，但可以 通过region 方法实时修改。
+
+下面的例子检索 HTML 代码字符串，报告不包含 ALT 属性的 image tag。对同一段文本 (HTML), 它使用了两个Matcher: 一个寻找image tag, 另一个寻找ALT属性。
+
+尽管两个Matcher 应用到同一个字符串，但它们的关联只局限于，用找到的image tag 来限 定寻找ALT属性的范围。在调用ALT-matcher的 find 方法之前，我们用刚刚完成的image-tag 的匹配来设定ALT-matcher的检索范围。
+
+单拿出image tag的 body 之后，就可以通过查找ALT来判断当前的tag 内是否包含ALT属 性：
+
+/ / 查 找image tag 的matcher 。 变量'html ' 包含需要处理的HTM1 代码
+
+Matcher mImg = Pattern.compile( "(?id)<IMG\\s+(.*?)/?>") .matcher(html);
+
+1/ 查找ALT属性的matcher (应用于刚刚找到的IMG tag中)
+
+Matcher mAlt =Pattern .compile("(?ix)\\b ALT \s*=").matcher(html);
+
+/ / 对html 中的每个image tag
+
+while(mImg.find()〉(
+
+// 把查找范围局限在刚刚找到的tag 中
+
+mAIt.region(mImg.start(1),mImg.end(1));
+
+// 如果没有找到，则报错，输出找到的整个 image tag

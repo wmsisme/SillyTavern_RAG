@@ -1,0 +1,22 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 12/94
+---
+Expression Context
+
+context 对 Perl 来说是很重要的概念，尤其对 match 运算符来说更是如此。一个表达式可能 出现在三种context 中 ：序列 (list) 、 纯量值(scalar) 或者空 (void ),它们表示表达式期望 接收的参数类型。所以，list context 说明表达式期望获得一个序列。scalar contex 说明表达 式期望获得单个值。以上两者极为常见，而且对使用正则表达式非常有价值。 void context 说明不期望获得任何值。
+
+看下面两个赋值：
+
+$s =expression one;
+
+@a = expression two;
+
+因为$s 是 scalar 变量(它用来保存单个的值，而不是序列),期望简单的纯量值，所以第一 个表达式的应用场合为scalar context。同样，因为@a 是一个数组，期望获得一个 list, 第二 个表达式的应用场合为list context。即使这两个表达式完全等价，也可能返回完全不同的结 果，产生不同的影响。具体情况依表达式而定。
+
+举例来说，localtime 函数如果用在list context中 ，会返回一组值，表示当前年、月、日、 时。但如果用在scalar context 中，则返回文本类型的当前时间，比如‘Mon Jan 2022:05:15 2003’。
+
+另一个例子是<MYDATA>之类的 I/O运算符，在scalar context 中，它返回文件的下一行，但 是在list context中，返回所有(剩下的)行。
+
+就像localtime 和I/O 运算符一样，许多 Perl 的结构会根据应用场合的不同返回不同的值， 正则运算符同样如此。拿 match 运算符m/…/ 来说，有时候它会简单地返回 true/false 值， 有时候返回一组匹配结果。所有的细节都会在本章讲解。

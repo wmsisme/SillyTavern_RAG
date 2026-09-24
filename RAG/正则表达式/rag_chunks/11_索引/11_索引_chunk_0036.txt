@@ -1,0 +1,33 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 36/69
+---
+\p(M} 120,122
+m// introduced 38
+(?m) (see: enhanced line-anchor mode;
+mode modifier) /m 135
+(see also:enhanced line-anchor mode;
+mode modifier)
+machine-dependent character codes 115
+MacoS 115
+mail processing example 53-59
+makudonarudo example 165,169,228-232, 264
+\p{Mark] 122
+match 306-318
+(see also:DFA;NFA) actions 95
+context 294-295,309 list 294,310-311
+scalar 294,310,312-316
+DFA Vs.NFA 224
+efficiency 179
+example with backtracking 160
+example without backtracking 160 lazy example 161
+leftmost-longest 335
+longest 334-335
+m/ /
+introduced 38
+mechanics(see also:greedy;lazy) . ★ 152
+anchors 150
+capturing parentheses 149
+character classes and dot 149
+consequences 156

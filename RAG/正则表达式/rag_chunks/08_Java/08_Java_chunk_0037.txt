@@ -1,0 +1,18 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 37/51
+---
+Other Mntcher Methods
+
+这些Matcher 方法尚未介绍过：
+
+Matcher reset()
+
+这个方法会重新初始化 Matcher 的大多数信息，弃用前一次成功匹配的所有信息，将 匹配位置指向文本的开头，把检索范围(384)恢复为默认的“全部文本”。只有 anchoring bounds 和 transparent bounds(388) 不会变化。
+
+Matcher 有三个方法会在内部调用reset, 因此也会重新设定检索范围：replaceAl1、
+
+replaceFirst, 以及只使用一个参数的find。
+
+这个方法返回Matcher 本身，所以它可以用在方法链中(389)。

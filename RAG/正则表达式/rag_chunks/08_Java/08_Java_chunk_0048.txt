@@ -1,0 +1,44 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 48/51
+---
+}else if(m,usePattern(pImgTag).find(currentLoc)){
+
+. . . 包含image tag,检 查 是 否 合 适 ...
+
+}else if(!needClose &&m.usePattern(pLink).find(currentLoc))( .. . 有 超 链 接 ， 验 证 . ..
+
+needClose =true;
+
+}else if(needclose &&m.usePattern(pLinkx).find(currentLoc))( System.out.println("/LINK["+m.group()+"]");
+
+needclose =false;
+
+}else if(m.usePattern(pEntity).find(currentLoc ))(
+
+/1 容 许 出 现&gt;和&#123;之 类 的entity
+
+}else if(m.usePattern(pNonHtml).find(currentLoc )){
+
+/ 1 容 许 出 现 其 他 非 单 词 的 非 H T M L 代 码
+
+}else{
+
+/1完全无法匹配，肯定出了错，在此处选取一段文字用于错误输出
+
+m.usePattern(Pattern.compile("\\G(?s). {1,12}")).find(currentLoc);
+
+System.out.print1n( "Bad char at'”+m.group()+"'");
+
+System.exit(1);
+
+}
+
+currentLoc =m.end();//“当 前 位 置 ” 指 向 上 次 匹 配 的 结 尾
+
+}
+
+if(needClose)(
+
+System.out.print1n("Missing Final </A>");

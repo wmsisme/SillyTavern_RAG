@@ -1,0 +1,24 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 60/69
+---
+Regular Expresslon Searcb Algoritbm 85
+regular sets 85
+Reinhold, Mark xxiv
+removing whitespace 199-200
+Replace(Regex object method) 423-424
+replaceA ll method 378
+replaceFirst method 379
+replacement argument 460
+array order 462,464 Java 380
+PHP 459
+reproductive organs 5
+required character pre-check 245-248,252, 257-259,332,361
+requireEnd method 389-392
+re-search-forward 100-101
+reset method 385,392-393
+Result(Match object method)429
+RightToLeft(Regex property)427-428
+RightToLef t(.NET)408,411-412,420, 426-427,429-430
+“The Role of Finite Automata in the Devel- opment of Modern Computing The- ory”85

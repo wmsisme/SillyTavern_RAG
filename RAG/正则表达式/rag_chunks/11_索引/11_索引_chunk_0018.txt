@@ -1,0 +1,34 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 18/69
+---
+433,435
+conditional 140-141
+with embedded regex 327,335 mimicking with lookaround 140
+.NET 409-410
+Config module 290,299
+conflicting metacharacters 44-46
+\ p{Connector_Punctuation ) 123
+Constable,Robert 85
+context (see also:list context; scalar con- text; match,context)
+contorting
+Perl 294
+forcing 310
+metacharacters 44-46
+regex use 189
+continuation lines 178,186-187
+unrolling 270-271
+contorting an expression 294-295
+\p{Control} 123
+
+cooking for HTML 68,414
+c opy for s (see pre-match copy) correctness vs. efficiency 223-224
+counting quantifier (see interval)
+wwu.cpan.org 358
+
+CR 109,370
+create_ function
+CR/LF 370
+Cruise,Tom 51
+crummy analogy

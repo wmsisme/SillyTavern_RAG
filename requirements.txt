@@ -1,9 +1,14 @@
+chromadb>=1.5.9
 langchain>=0.3.0
 langchain-core>=0.3.0
 langchain-text-splitters>=0.3.0
 langchain-chroma>=0.2.0
 langchain-community>=0.3.0
-chromadb>=0.5.0
-sentence-transformers>=3.0.0
-huggingface-hub>=0.24.0
 sqlalchemy>=2.0.0
+transformers>=4.40.0
+torch>=2.0.0
+FlagEmbedding>=1.2.0
+rank-bm25>=0.2.2
+jieba>=0.42.1
+openai>=1.0.0
+numpy>=1.24.0

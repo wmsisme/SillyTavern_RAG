@@ -1,0 +1,54 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 11/52
+---
+捕获匹配数据
+
+preg_ match 的第3个参数如果出现，则会用来保存匹配结果的信息。用户可以照自己的意 愿使用任何变量，不过最常用的名字是smatches 。 在本书中，如果我在特定的例子之外提 到smatches, 指的就是“preg_match 接收的第3个参数”。
+
+匹配成功之后，preg_match 返回 true, 并按如下规则设置$matches:
+
+Smatches[0 ]是正则表达式匹配的所有文本
+
+$matches[ 1] 是第1组捕获型括号捕获的文本
+
+Smatches[2 ]是第2组捕获型括号捕获的文本
+
+如果使用了命名分组，Smatches 中也会保存对应的元素(下一节有这样的例子)。
+
+第5章中(191)曾出现过这个简单的例子：
+
+/* 输入完整路径，分离出文件名*/
+
+if( preg_ match('{/([^/]+)$}x',$WholePath, $matches))
+
+SFileName =$matches[1];
+
+最好是在preg_matc h返回 true的情况下用$matches (随便你怎么命名)。如果匹配不成功， 会返回 false, 或者错误(例如模式错误或函数标志位设置错误)。有的错误发生之后， Smatches 是空数组，但也有时候它的值不会变化，所以我们不能认为，Smatches 不为空 就表示匹配功。
+
+下面这个例子使用了3组捕获型括号：
+
+/ * 从URL 中提取协议、主机名和端口号*/
+
+if(preg_match('{^(https?)://([^/:]+)(?::(\d+))?}x',Sur1, $matches))
+
+{
+
+Sproto =$matches[1];
+
+$host =$matches[2];
+
+$port =$matches[3]?$matches[3]:($proto =="http"?80 :443);
+
+print"Protocol:$proto\n";
+
+print "Host :$host\n";
+
+print"Port :$port\n";
+
+数组结尾“未参与匹配”的元素会被忽略
+
+如果一组捕获型括号没有参与最终匹配，它会在对应的$matches 中生成一个空字符串(注 2)。需要说明的是，Smatches 末尾的空字符串都会被忽略。在前面那段程序中，如果(\ d+) 参与了匹配，smatches [3] 会保存一个数值，否则，$matches [3] 根本就不会存在。
+
+注2:如果希望用NULL取代空字符串，请参考第454页的补充内容。

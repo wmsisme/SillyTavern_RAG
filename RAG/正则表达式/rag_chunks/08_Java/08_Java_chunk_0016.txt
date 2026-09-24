@@ -1,0 +1,58 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 16/51
+---
+示例
+
+下面的例子示范了若干方法的使用。给定一个 URL 字符串，这段代码会找出URL的协议 名 ('http ' 或是‘https')、 主机名，以及可能出现的端口号：
+
+String url ="http: //regex. info/blog";
+
+String regex ="(?x)^(https?)://([^/:]+)(?:(\\d+))?";
+
+Matcher m =Pattern. compile( regex). matcher(url);
+
+if(m.find())
+
+{
+
+System.out. print(
+
+"Overall ["+m.group() +"]"+
+
+"(from" +m.start() +" to"+m.end() +")\n"+
+
+"Protocol ["+m.group(1)+"]"+
+
+"(from" +m.start(1)+"to"+m.end(1)+")\n"+
+
+"Hostname ["+m.group(2)+"]"+
+
+"(from" +m.start(2)+"to"+m.end(2)+")\n"
+
+);
+
+//group(3) 可能未参与匹配，此处应小心对待
+
+if( m.group(3) ==null)
+
+System.out.println("No port;default of '80'is assumed"); else {
+
+System.out.print("Port is ["+m.group(3)+"]"+
+
+"(from"+m.start(3)+"to"+m.end(3)+")\n");
+
+}
+
+执行的结果是：
+
+Overall [http://regex. info]( from 0 to 17)
+
+Protocol [http](from 0 to 4)
+
+Hostname [regex.info](from 7 to 17)
+
+No port; default of '80' is assumed
+
+简单查找-替换

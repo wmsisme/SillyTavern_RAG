@@ -1,0 +1,20 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 43/94
+---
+Tle Substitution Operator
+
+Perl 的 substitution 运算符s /…1…/不但能够匹配，还能够替换匹配的文字。通常的形式是： $text =~ s/ regex/replacement/ modifiers
+
+简单来说，regex 匹配的文本会替换为 replacement 的值。如果使用了/g, 这个正则表达式 会重复应用到文本中进行匹配，每次匹配的内容都会被替换。
+
+与 match 操作一样，如果目标字符串在变量$_中 ，目标运算元和=~都不是必须的。 match 运算符可以省略m, 而 substitution 不能省略s。
+
+我们已经看到，match 运算符是非常复杂的——它的工作原理，它的返回值，都取决于它所 在的应用场合，目标字符串的pos, 以及使用的修饰符。相反，substitution 运算符很简单： 它返回的信息是不变的 ( 表示替换的次数),影响它的修饰符也很好理解。
+
+你可以使用第292页介绍的所有核心修饰符，但是substituion运算符还支持另外两个修饰符，
+
+/g, 以及马上将要介绍的/e。
+
+运算元 replacement

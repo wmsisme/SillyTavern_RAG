@@ -1,0 +1,16 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 42/51
+---
+Adding Width and Heighit Attributes fo Inage Tags
+
+这里给出个高级的例子，原地 ( in-place) 查找替换，修改HTML, 保证所有的image tag都 包含WIDTH 和 HEIGHT 属性( HTML必须是StringBuilder 、 StringBuffer, 或者其他
+
+CharSequence)。
+
+只要有一副图像没有规定宽度或者高度，就可能降低整个页面的装载速度，因为浏览器在 显示这幅图像之前必须读入整个文件。如果包含了宽度和高度的尺寸，文本和其他元素就 可以立刻正确摆放，这样用户会感觉页面读取速度更快(注8)。
+
+如果找到image tag,程序会寻找SRC 、WIDTH和HEIGHT属性，如果存在，提取他们的 值。如果WIDTH和 HEIGHT有一个不存在，就先取回图像，计算尺寸，然后补充上属性。
+
+如果WIDTH和HEIGHT都没有，就按照图像的真实尺寸来设置这些属性。如果存在一个， 就只需要算出另一个属性，它的值是按比例计算出来的(例如，如果WIDTH是真实尺寸的 一半，则添加的HEIGHT的值也是真实高度的一半；现代的浏览器就是这样处理的)。

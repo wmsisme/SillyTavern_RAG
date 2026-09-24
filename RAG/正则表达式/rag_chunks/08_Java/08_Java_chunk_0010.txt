@@ -1,0 +1,24 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 10/51
+---
+The Pattern.compile()Factory
+
+正则表达式的Pattern 对象是通过Pattern. compile 生成的。第一个参数是代表正则表达 式的字符串(101)。368页表格8-3中的选项可以作为第二个参数。下面的代码从字符串 myRegex 生成一个 pattern,进行不区分大小写的匹配：
+
+Pattern pat = Pattern.compile(myR egex,
+
+Pattern.CASE_INSENSITIVE |Pattern.UNICODE_CASE);
+
+预定义的 pattern 常量用来指定编译选项(例如 Pattern .CASE_INSENSITIVE), 这可能有 点笨拙(注2),所以我会使用正则表达式内部的模式修饰符(110)。包括378页的(? x), 399页的(? s) 和多个(? i)。
+
+不过，预定义常量固然复杂，但这种“笨办法 (unwieldy)” 能够降低新手阅读代码的难度。 如果没有页面宽度限制，我们可以这样写第384页的 Pattern.compile 的第二个参数：
+
+Pattern. UNIX_LINES I Pattern.CASE_INSENSITIVE
+
+而不是在正则表达式开头使用不那么清楚的(?id)J。
+
+从名字可以看出，这一步把正则表达式解析并编译为内部形式。第6章对此有详细讲解 	(241), 简单地说，在字符串内应用表达式的整个过程中，编译 pattern 通常是最耗时间 的。所以要把编译独立出来，作为第一步——这样就可以先期将正则表达式编译好，重复 使用。
+
+当然，如果正则表达式编译之后只需要使用一次，编译时机就不是个问题，但如果需要多 次应用(例如应用到读入文件的每一行),预编译Pattern 对象就很有价值。

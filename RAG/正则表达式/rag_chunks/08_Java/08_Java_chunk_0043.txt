@@ -1,0 +1,34 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 43/51
+---
+注8:“所有的图像都必须有size 属性”,这是Yahoo!的规定，即使在早期也是如此。显然，今天 仍然有许多流量巨大的站点页面的<img>tag不包含尺寸信息。
+
+和第383页的代码 一 样，这个程序手动维护匹配指针。它还使用了检索范围(384)和方 法 链 ( 389)。代码如下：
+
+/ / 匹 配 独 立 的<img>tags
+
+Matcher mImg = Pattern.compile(" (?id)<IMG\\s+( .*?)/?>").matcher(html);
+
+//匹配独立的tag 中 的SRC 、WIDTH 和 HEIGHT 属性(所用的表达式很简单)
+
+Matcher mSrc= Pattern .compile ("(?ix)\\bSR C =(\S+)").matcher(html);
+
+Matcher mwidth= Pattern.comp ile("(?ix)\\bWIDTH=(\S+)") .matcher(html);
+
+Matcher mHeight= Pattern.compile("(?ix)\\ bHEIGHT=(\S+)"). matcher(html);
+
+int imgMatchPointer =0;// 第一次搜索从字符串起始位置开始
+
+while( mImg.find( imgMatchPointer))
+
+{
+
+imgMatchPointer =mImg.end(); // 下一次查找从这里开始
+
+// 在刚刚找到的tag 中查找各字段
+
+Boolean hassrc = msrc.region(mImg. start(1),mImg.end(1)).find();
+
+Boolean hasHeight =mHeight. region(mImg.start(1) ,mImg.end(1)).find();

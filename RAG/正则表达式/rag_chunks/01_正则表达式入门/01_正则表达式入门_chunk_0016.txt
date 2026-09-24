@@ -1,0 +1,40 @@
+---
+章节: 第1章：正则表达式入门
+章节ID: 01_正则表达式入门
+切片序号: 16/40
+---
+注5:请参考第VI页的体例说明，这里的“ ·”表示空格，这样更容易识别。
+
+字符组基本可以算是一门独立的微型语言(例如，对于元字符，它们有自己的规定),而多 选结构是“正则表达式语言主体 (main regular expression language)”的一部分。你将会发 现，这两者都非常有用。
+
+同样，在一个包含多选结构的表达式中使用脱字符和美元符的时候也要小心。比较 ^From|Subject|Date: 和 ^(From|Subject|Date):·就会发现，虽然它们看起来与之前 的 E-mail的例子很相似，匹配结果(即它们的用处)却大不相同。第一个表达式由3个多 选分支构成，所以它能匹配^From 或者subjectj 或者 Date:, 实用性不大。我们希望在 每一个多选分支之前都有脱字符，之后都有： ·。所以应该使用括号来"限制"( constrain) 这些多选分支：
+
+^(From|Subject|Date):"
+
+现在3个多选分支都受括号的限制，所以，这个正则表达式的意思是：匹配一行的起始位 置 ，然后匹配^ From、subjectj 或 Datej 中的任意一个，然后匹配： · ,所以，它能够匹 配的文本是：
+
+1)行起始，然后是F·ro°m, 然后是‘:’,
+
+或者 2)行起始，然后是Su·b·je·ct, 然后是‘:',
+
+或者3)行起始，然后是Dat·e, 然后是‘:’。
+
+简单点说，就是匹配以‘From: ’,' Subject:’ 或者'Date: '开头的文本行，在提取E-mail 文件中的信息时这很有用。
+
+下面是一个例子：
+
+8 egrep (From|Subject|Date): ' mailbox
+
+From:elvis@tabloid.org(The King)
+
+Subject:be seein'ya around
+
+Date: Mon,23 Oct 200611:04:13
+
+From:The Prez <president@whitehouse.gov>
+
+Date:Wed,25 Oct 20068:36:24
+
+Subject:now,about your vote..
+
+忽略大小写

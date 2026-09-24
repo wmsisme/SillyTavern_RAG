@@ -1,0 +1,34 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 16/52
+---
+收集匹配数据
+
+preg_ match 和 preg_match_all 的另一个主要区别是第3个参数中的数据。preg_match 进行至多一次匹配，所以它把匹配的数据存储在matches 变量中。与此不同的是，preg_
+
+match_all 能匹配许多次，所以它的第3个参数保存了多个单次匹配的 matches 。 为了说 明这种区别，我使用sall _matches 作为preg_match_all 的变量名，而不是spreg_match 中常用的$matches。
+
+preg_ match_a11 可以以两种方式在$all_ matches 中存放数据，根据下面两个互斥的第4 个参数flag:PREG_PATTERN_ORDER 或是 PREG_SET_ORDER 来决定。
+
+默认的排列方式是 PREG_PATTERN_ORDER 下面有个例子(我称其为“按分组编号的 (collated)”— 稍后将介绍)。如果没有设置标志位，这就是默认的配列方式：
+
+$subject ="
+
+Jack A.Smith
+
+Mary B.Miller";
+
+/ * 不 设 置flags 就采用PREG_PATTERN_ORDER */
+
+preg_match_all('/^(\w+)(\w\.)(\w+)$/m', $subject,$all_matches);
+
+$all_ matches的结果为：
+
+array
+
+/*Sall _matches[ 0] 对应所有的全局匹配*/
+
+0 =>array(0=>"Jack A.Smith",/* 第 1 次 匹 配 的 全 部 文 本 */ 1=>"Mary B.Miller"/* 第 2 次 匹 配 的 全 部 文 本 *1),
+
+/*$all _matches[1]	对应第1组捕获型括号匹配的信息*/

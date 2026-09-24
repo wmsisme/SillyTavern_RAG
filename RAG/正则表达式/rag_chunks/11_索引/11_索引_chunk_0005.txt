@@ -1,0 +1,54 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 5/69
+---
+\p( Ps) 123
+
+\p{S} 122
+
+\p{Separator } 122
+\p (Sk} 123
+\p{Sm} 123
+\p{So} 123
+\p{Space_Separator} 123
+\p{Spacing_ Combining_Mark} 123
+\p{Symbol) 122
+\p{Tamil} 124
+\p{Thai) 122
+\p{Tibetan) 124
+\p{Titlecase _Letter} 123
+\p{Unassigned} 123,125 Perl 288
+\p{Uppercase_ Letter} 123
+\p(2) 121-122,368,407
+\pz PHP 442
+\p{Z1} 123
+\p(Zp) 123
+\p{Zs) 123
+1Q Java 368,395,403
+Q\E 290
+inhibiting 292
+\r 49,115-116
+machine-dependency 115
+\s 49,56,121
+\s 49,121
+Emacs 128
+introduction 47
+Perl 288
+PHP 442
+t 49,115-116
+introduced 44
+\U 117
+\u 117,290,406 \U.…\E 290
+inhibiting 292
+\v 115-116,364 \ 364
+\w 49,65,120 Emacs 129
+Java 368
+many different interpretations 93 Perl 288
+PHP 442
+\W 49,121
+x 117,406 Perl 286
+x 108,120
+\Z 112,129-130
+(see also enhanced line-anchor mode) Java 370
+optimization 246

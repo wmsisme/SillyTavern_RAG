@@ -1,0 +1,44 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 13/37
+---
+End Module
+
+通过命令行提示符来执行，把'\d+\w+1 应用到同样的文本，结果是：
+
+matched[1st]from char#12 for 3 chars.
+
+导 入 正 则 表 达 式 名 字 空 间
+
+你注意到程序头部的 I mports System.Text. RegularExpressions 了 吗 ? 任 何 用 到 .NET
+
+正 则 对 象 的VB 程序都必须写上这 一 条语句，才能通过编译。
+
+C#中对应的是：
+
+using System.Text. RegularExpressions;//C# 中 应 这 么 写
+
+这个例子说明了基本的正则对象的用法，下面两行主要行为：
+
+Dim R as Regex =New Regex("\d+\w+"〉 '编译这个pattern
+
+Dim M as Match =R.match(SampleText ) '应用到字符串中
+
+也可以合并为一行：
+
+Dim M as Match = Regex. Match(SampleText ,"\d+\w+" )‘ 对字符串应用pattern
+
+合并的写法更容易使用，程序员需要输入的代码更少，需要记录的对象也更少。不过，它 的效率会稍微低一些(432)。在下面几页中，我们首先会看到原始的对象，然后学习“便 捷”函数，例如静态函数Regex.Match, 以及合适的使用时机。
+
+为简便起见，在程序片段的例子中，我会省略下面这几行：
+
+Option Explicit On
+
+Option Strict On
+
+Imports System.Text. RegularExpressions
+
+本书的第96、99、204、219和237页出现过VB的例子，回顾它们也许有所帮助。
+
+核心对象概览

@@ -1,0 +1,38 @@
+---
+章节: 第3章：正则表达式的特性和流派概览
+章节ID: 03_正则表达式的特性和流派概览
+切片序号: 15/83
+---
+程序式处理和面向对象式处理
+
+Procedural and Object-Oriented Handling
+
+程序式处理和面向对象式处理非常相似。这两种方式下，正则功能不是由内建的操作符来 提供，而是由普通函数(函数式)或构造函数及方法(面向对象式)来提供的。这种情况 下，并没有专属于正则表达式的操作符，只有平常的字符串，普通的函数、构造函数和方 法把这些字符串作为正则表达式来处理。
+
+下面几节给出了几个Java、VB.NET、PHP和Python的例子。
+
+Java 中的正则处理
+
+现在来看“Subject”例子在Java 中的实现方式，使用Sun 提供的java. util .regex 包(第 8章详细介绍Java)。
+
+import java.util. regex. *;// 这样使用regex 包中的类更加容易
+
+0 Pattern r=Pattern.compile("^Sujbcet:(.*) ", Pattern.CASE_ INSENSITIVE);
+
+Matcher m =r.matcher(line);
+
+田 if(m. find()){
+
+subject =m.group (1);
+
+}
+
+我仍然用斜体标注变量名，粗体标注正则表达式相关的元素，下画线标注正则表达式本身。 准确地说，是用下画线标注表示作为正则表达式处理的普通的字符串。
+
+这个类说明了面向对象式处理方法，它 使 用Sun 提供的java .util. regex 包的两个类—— Pattern 和 Matcher 。其中执行的操作有：
+
+① 检查正则表达式，将它编译为能进行不区分大小匹配的内部形式 ( internal form), 得到一个“Pattern” 对象。
+
+② 将它与欲匹配的文本联系起来，得到一个“Matcher” 对象。
+
+④ 应用这个正则表达式，检查之前与之建立联系的文本，是否存在匹配，返回结果。

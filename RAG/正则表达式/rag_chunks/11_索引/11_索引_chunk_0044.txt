@@ -1,0 +1,29 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 44/69
+---
+Object Oriented Perl 339
+object-oriented handling 95-97
+compile caching 244
+octal escape 116,118
+vs.backreference 412-413
+Perl 286
+offset preg_ match 453
+on-demand recompilation 351
+oneself example 332,334 \p{Open_Punctuation } 123
+operators Perl list 285
+optimization 240-252
+(see also:atomic grouping;possessive
+quantifiers; efficiency)
+automatic possessification 251
+BLTN 236
+with bump-along 255
+end-of-string anchor 246
+excessive backtrack 249-250
+hand tweaking 252-261
+implicit line anchor 191
+initial character discrimination 245-248, 252,257-259,332,361
+JIT 236,410
+lazy evaluation 181
+lazy quantifier 248,257 leading.★246

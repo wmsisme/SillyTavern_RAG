@@ -1,0 +1,48 @@
+---
+章节: 第3章：正则表达式的特性和流派概览
+章节ID: 03_正则表达式的特性和流派概览
+切片序号: 69/83
+---
+while(not shtml =~m/\G\z/gc)#在整个字符串没有处理完之前
+
+{
+
+if($html =~m/八G(\w+)/gc){
+
+..如果$1中包含数字或单词—可以检查语言的规范性...
+
+}elsif($html =~m/G[^<>&\w]+/gc){
+
+#其他非HTML代码——无关紧要
+
+}elsif($html =~m/\G<img\s+([^>]+)>/gci){
+
+..包含image tag——可以检查它是否符合规范...
+
+}elsif(not sneed_close_anchor and shtml =~m/\G<A\s+([^>]+)>/gci){ ...包含超链接，这里可以进行验证...
+
+$need_close_anchor =1;#我们现在需要的是</A>
+
+}elsif(Sneed_close_anchor and $html =-m{\G</A>}gci){
+
+$need_close_anchor =0;#需求已经满足，不再容许出现
+
+}elsif($html =~m/\G&(#\d+<\w+);/gc){
+
+#容许出现&gt;和&#123;之类的entity
+
+}else〔#此处完全无法匹配，必然有错误。记下当前位置，从HTML中提取若千字符，报告错误 my $location =pos($html);#记下这段HTML的起始位置
+
+my($badstuff)=$html =~m/G. (1,12}) /s;
+
+die "Unexpected HTML at position $location:$badstuff\n"; }
+
+{
+
+#确保没有孤立的<A>
+
+if(Sneed_close_anchor){
+
+die"Missing final </A>" }
+
+单词分界符：\ b、\B、 、\> …

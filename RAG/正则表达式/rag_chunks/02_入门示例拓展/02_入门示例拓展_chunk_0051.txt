@@ -1,0 +1,44 @@
+---
+章节: 第2章：入门示例拓展
+章节ID: 02_入门示例拓展
+切片序号: 51/56
+---
+That Doubled-Word Thing
+
+我希望第1 章提到的单词重复问题能够引发读者对于正则表达式的兴趣。在本章的开头我 给出了一堆难懂的代码，将其作为解法之一：
+
+$/=“.\n”;
+
+while(<>){
+
+next if !s/\b([a-z]+)((?:\s+<[^>]+>\s+)+)(\1\b)/\e[7m$1\e[m$2\e[7m$3\e[m/ig; s/^(?: [^\e]*\n) +// mg; # 删除所有未标记的行
+
+s /^/ $ARGV:/mg; # 在行首增加文件名
+
+print;
+
+}
+
+对 Perl 有了些了解之后，我希望读者至少能够看懂常规的正则表达式应用——其中的<>, 三个s/ …/…/,以 及print 。 不过，其他的部分仍然很难。如果你关于Perl的知识全部来自 本章(而且关于正则表达式的知识都来自之前的章节),这个例子可能会超出你的理解能力。 不过，如果细致考察起来，我认为这个正则表达式并不复杂。在重读程序之前，我们不妨 回过头看看第1页的程序规格要求，并尝试运行一次：
+
+% per l -w FindDbl ch01.txt
+
+ch01.tx t:check for doubled words(such as 8), a common problem with
+
+ch01.txt:* Find doubled words despite capitalization differences,such as with 管 e
+
+ch01.txt: 10 ', as well as allow differing amounts of whitespace(space,tabs, ch01.txt:/<(1 ,000,0001millio nl 通 ) / .But alternation can't be
+
+ch01. txt: of this chapter.If you knew 魔 specific doubled word to find(such
+
+.***
+
+78 第 2 章 ： 入 门 示 例 拓 展
+
+先来看这个Perl的解法，然后我们会看到一个 Java 的解法，接触另一种使用正则表达式的 思路。现在列在下面的程序使用了s{regex}( replacement)modifier的替换形式，同时使用了
+
+1x 修饰符来提高清晰程度(空间更充裕的时候，我们使用更易懂的 'next unless' 替 换 'next if!')。除去这些，它与本章开头的程序其实就是一模一样的。
+
+示例2-3:用Perl 处理重复单词
+
+$/ =“.\ n";①# 设定特殊的“块模式”("chunk-mode” ); 一 块文本的终结为点号和换

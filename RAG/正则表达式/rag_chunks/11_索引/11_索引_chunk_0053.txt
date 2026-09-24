@@ -1,0 +1,37 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 53/69
+---
+preg suite 439
+"missing"functions 471
+preg_grep 469-470
+PREG_GREP_INVERT 470
+preg_match 449-453
+offset 453
+preg_match _all 453-457
+PREG_OFFSET_CAPTURE 452,454,456 preg pattern_error 474
+PREG_PATTERN_ORDER 455
+preg _quote 136,470-471
+preg_regex_error 475
+preg_rege x_to_pattern 472-474
+preg _replace 458-464
+preg_replace_ callback 463-465
+PREG_SET_ORDER 456
+preg_split 465-469
+PREG_SPLIT_DELIM_CAPTURE 468-469
+split limit 469
+PREG_SPLIT_NO_EMPTY 468
+PREG_SPLIT_OFFSET_CAPTURE 468
+pre-match copy 355
+prepending filename to line 79
+price rounding example 51-52,167-168 with alternation 175
+with atomic grouping 170
+with possessive quantifier 169
+Principles of Compiler Design 180 printf 40
+private vs.global Perl variables 295 \p{Private_ Use} 123
+procedural handling 95-97
+compile caching 244
+processing instructions 483
+procmail 94
+version covered 91

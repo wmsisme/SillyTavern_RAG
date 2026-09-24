@@ -1,0 +1,16 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 35/94
+---
+为了提取每一行中的昵称(alias) 和完整地址，我们可以使用m/^alias\s+(\8+)\s+(.+)/m 	(不使用/g)。在list context中，返回的序列包括两个元素，例如('Jeff','jfriedl@regex. info') 。 现在用/g 匹配所有这样的组合，得到的序列是：
+
+('Jeff ', 'jfriedl@regex.info','Perlbug',
+
+'per15-porters@perl.org','Prez','president@whitehouse.gov')
+
+如果这个序列恰好符合key/value的形式，我们可以直接把它存入一个关联数组(associative array)。
+
+my 8alias =$text =~m/^alias\s+(\S+)\s+(.+)/mg; 返回之后，可以用$alias{Jeff} 访问'Jeff ' 的完整地址。
+
+迭代匹配：Scalar Context, 使用/g

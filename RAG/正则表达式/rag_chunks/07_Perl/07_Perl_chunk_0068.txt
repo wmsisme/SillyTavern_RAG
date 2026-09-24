@@ -1,0 +1,58 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 68/94
+---
+Overloading Regex Literals
+
+通过重载，用户可以通过自己喜欢的方式预先处理正则文字中的文字部分。下面几节给出
+
+了例子。
+
+添加单词起始/结束元字符
+
+Perl 没有提供作为单词起始/结束元字符的'\<和'\>,可能是因为绝大多数情况下b 已经 够用了。不过，如果我们希望使用这两个元字符，我们可以通过重载，将表达式中的'\<'
+
+和‘\>'分别替换为(?<!\ w)(?=\w) 和 (?<=\ W)(?!\w)J。
+
+342 第 7 章 ： P e r l
+
+先创建一个函数，MungeRegexLitera1, 进行需要的预处理：
+
+sub MungeRegexLiteral($)
+
+{
+
+my(SR egexLiteral) =@_; # 参数是字符串
+
+SRegexLiteral =~s/\</(?<!\\w)(?=\\w) / g; # 模拟单词起始边界\<
+
+$RegexLitera l =~8/八\>/(?<=\\w)(?!\\w)/g;# 模拟单词结束边界\>
+
+return SRegexLiteral; # 返回修改后的字符串
+
+}
+
+如果给此函数传递字符串‘…k…', 它会将其转化为‘…(?<!\w)(?=\w) … ’。 记住，因为 replacement 部分类似双引号字符串，所以需要用‘\w’ 表示 'w'。
+
+为了让它能够自动处理正则文字的每个文字部分，我们将其存入文件 MyRegexStuf.pm , 供 Perl 重载：
+
+package MyRegexStuff; # 起个特殊的名字
+
+use strict; # 这是个好习惯
+
+use warnings; # 这也是个好习惯
+
+use overload; # 启 用 Perl 的重载机制
+
+# 载 入 regex handler....
+
+sub import(overload::constant qr =>\&MungeRegexLiteral }
+
+sub MungeRegexLiteral($)
+
+{
+
+my ($RegexLiteral)= @_; # 参数是字符串
+
+SRegexLiteral

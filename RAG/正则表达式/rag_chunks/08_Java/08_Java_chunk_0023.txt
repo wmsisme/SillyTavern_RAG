@@ -1,0 +1,28 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 23/51
+---
+In-Place Search and Replace
+
+现在还只出现过对 String 对象使用java. util.regex 的例子，但是Matcher 其实适用于 任何实现了Charsequence 接口的类，所以我们能够对目标文本进行实时的、原地( in place) 的修改。
+
+StringBuffer 和 StringBuilder 是两种常用的实现了CharSequence 接口的类，前者保 证线程安全性，但效率略低。这两者都可以作为String 来使用，但它们的值可以变化。本 书中的例子使用了StringBuilder, 但如果在多线程环境中，请使用StringBuffer。
+
+译注1: method chaining, 也叫“链式编程”。
+
+这个简单的例子在StringBuilder 中 搜 索 大 写 单 词 ，将 它们替换为小写形式(注5):
+
+StringBuilder text = new StringBuilder("It's so very RUDE to shout!");
+
+Matcher m =Pattern.compile ("\\b[\\p{Lu}\\p{Lt)]+\\b"). matcher(text);
+
+while(m.find())
+
+text.replace(m.start(),m.end(),m.group().toLowerCase()); System. out.println(text);
+
+结果是：
+
+It's Bo very rude to shout!
+
+其中匹配了两次，调用了两次text .replace 。 头两个参数指定需要替换的文本范围(跳过 表达式匹配的文本),然后是用作replacement的文本(也就是匹配文本的小写形式)。

@@ -1,0 +1,48 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 39/51
+---
+Matcher m=Pattern.compile("(\\w+)").matcher("ABC 123");
+
+System.out. println(m .toString());
+
+m. find();
+
+System.out. println(m .toString());
+
+结果是：
+
+java.util.regex.Matcher[pattern=(\w+)region=0,7 lastmatch=]
+
+java.util .regex.Matcher[pattern=(\w+)region=0,7 lastmatch=ABC]
+
+Java 1.4.2的 Matcher 类只有继承自java.lang .Object 的 tostring 方法，它返回没
+
+什么信息含量的字符串：'java.util. regex. Matcher@480457’。
+
+查询Matcher 的目标字符串
+
+Matcher 类没有提供查询当前目标字符串的方法，但有些办法绕过了这种限制：
+
+/ / 此pattern 在下面的函数中使用，此处编译并保存，是为了提高效率
+
+static final Pattern pNeverFail=Pattern.compile("^");
+
+//返回与matcher 对象关联的目标字符串
+
+public static String text(Matcher m)
+
+{
+
+// 记住这些位置，以备之后恢复
+
+Integer regionstart =m.regionStart();
+
+Integer regionEnd =m.regionEnd();
+
+Pattern pattern =m.pattern();
+
+//只有这样才能返回字符串
+
+String text =m.usePattern(pNeverFail).replaceFirst("");

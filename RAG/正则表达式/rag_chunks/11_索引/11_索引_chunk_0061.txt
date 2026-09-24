@@ -1,0 +1,26 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 61/69
+---
+Ruby
+$and ^112
+after-match data 138
+benchmarking 238
+line anchors 130
+mode modifiers 135
+version covered 91
+word boundaries 134
+rule
+earliest match wins 148-149
+standard quantifiers are greedy 151-153 rx 183
+
+p{S) 122
+s/ … 1 50,318-321
+\s 49,121
+Emacs 128
+introduction 47
+Perl 288
+PHP 442
+(?s)(see: dot-matches-all mode;mode modifier)
+s 49,56,121 /8 135

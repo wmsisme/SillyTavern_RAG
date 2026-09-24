@@ -1,0 +1,46 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 21/51
+---
+appendTai l(stringbuffer result)
+
+找到所有匹配之后(或者是，找到期望的匹配之后——此时用户可以停止匹配过程), 这个方法将目标字符串中剩下的文本附加到提供的StringBuffer 中。
+
+在上例中，接下来就是：
+
+m. appendTail(sb)
+
+将‘<--’附加到sb 。这样就得到‘--> XXX+XXX<--', 查找-替换完成。
+
+查找-替换示范
+
+下面实现了一个自己的replaceAll 的方法(并非必须，只是作为示范)。
+
+public static String replaceAl1(Matcher m,String replacement)
+
+{
+
+m. reset(); // 保 证Matcher 不受之前的影响
+
+StringBuffer result = new StringBuffer();/ / 生成用于替换的副本
+
+while(m.find())
+
+m.appendReplacement(result,replacement);
+
+m.appendTail(result);
+
+return result.toString();// 转换为String, 然后返回
+
+}
+
+它与Java 内建的 replaceAll 方法一样，它不受检索范围(384)的影响，而是在查找- 替换之前重置检索范围。
+
+为了弥补这个缺憾，下面的replaceAl1 只在检索范围中进行，修改和新增的代码会标注出 来：
+
+Integer start =m.regionstart();
+
+Integer end =m.regionBnd();
+
+m.reset ().region (start , end);1/ 直置matcher, 之后恢复region

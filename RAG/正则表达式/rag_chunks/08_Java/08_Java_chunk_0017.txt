@@ -1,0 +1,48 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 17/51
+---
+Simple Search and Replace
+
+上面介绍的方法足够进行查找-替换操作了，只是比较麻烦，但是 Matcher 提供了简便的方 法。
+
+St.ring replaceAll(String replacement)
+
+返回目标字符串的副本，其中Matcher 能够匹配的文本都会被替换为 replacement, 具 体处理过程在380页。
+
+此方法不受检索范围的影响(它会在内部调用reset 方法),不过第382页介绍了在检 索范围中进行这样操作的方法。
+
+String 类也提供了replaceAl l 的方法，所以：
+
+string. replaceAl1 (regex,replacement)
+
+就等于：
+
+Pattern.compile (regex). matcher(string). replaceAl1(replacement)
+
+S.ing replaceFirst (String replacement)
+
+此方法类似replaceAl1, 但它只对第一次匹配(如果存在)进行替换。
+
+String 类也提供了replaceFirst 方法。
+
+stia !ie String quoteReplacement( String text)
+
+此 static 方法从Java 1.5开始提供，返回 text 的文字用作 replacement的参数。它为 text 副本中的特殊字符添加转义，避免了下一页讲解的正则表达式特殊字符处理(下一节 也给出了Matcher. quoteReplacement 的例子)。
+
+简单查找-替换的例子
+
+下面的程序将所有的“Java 1.5” 改为“Java 5.0”,用市场化的名称取代开发名称：
+
+3t:g tExt="Before Java 1.5 was Java 1.4.2.After Java 1.6s?iva i.6";
+
+Strirg Tegex=" ava s*1 .5b";
+
+Mach”n=Patterr.compile(regex).matcher(Lext);
+
+String result =m.replaceAll(" Java 5.0");
+
+systm.out.print.in(resuit);
+
+结果是：

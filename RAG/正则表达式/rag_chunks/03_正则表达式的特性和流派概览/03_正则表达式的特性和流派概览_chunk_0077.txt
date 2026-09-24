@@ -1,0 +1,22 @@
+---
+章节: 第3章：正则表达式的特性和流派概览
+章节ID: 03_正则表达式的特性和流派概览
+切片序号: 77/83
+---
+Python 和 PHP 的 preg 引擎，以及.NET引擎，都能够为捕获内容命名。Python 和PHP 使用 的语法是'(?P<name>…)j, 而 .NET 使 用 ( ?<name>…)J。我更喜欢.NET 的语法。下面是一 个.NET的例子：
+
+\b(?<Area >\d\d\d\)- (?<Exch >\d\d\d)- (?<Num> \d\d\d\d)\bj
+
+在 Python/PHP中是这样：
+
+\b(?P<Area> \d\d\d\)- (?P<Exch> \d\d\d)- (?P<Num >\d\d\d\d)\b
+
+这个表达式会用美国电话号码的各个部分“填充”Area 、Exch 和Num 命名的内容。然后我 们可以通过名称来访问各个括号捕获的内容，例如在VB.NET 和大多数.NET语言中，可以 使用RegexObj.Groups("Area"), 在 C#中使用RegexObj.Groups["Area"], 在 Python中
+
+使用RegexObj. group("Area" ), 在 PHP 中使用$matches[ "Area"] 。 这样程序看起来更清 晰。
+
+如果要在正则表达式内部引用捕获的文本，.NET中使用'\k<Area>j,Python 和 PHP 中使用 (?P=Area)。
+
+在Pyhon 和.NET ( 但不包括PHP) 中，可以在同一个表达式中多次使用同样的命名。例如 美国电话号码的区号部分的形式是‘(###)’或者‘###-',为了匹配，我们可以使用(用.NET 语法):‘…(?:\((?<Area>\d\d\d)\)1(?<Area>\d\d\d)-) … 。 无论哪一组匹配成功，都 会把3位的区号保存到Area中 。
+
+固化分组：(?>...)

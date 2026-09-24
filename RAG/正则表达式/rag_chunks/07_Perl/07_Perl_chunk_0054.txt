@@ -1,0 +1,34 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 54/94
+---
+用内嵌代码显示匹配进行信息
+
+这段程序：
+
+"abcdefgh"=~m{
+
+(?{print"starting match at [$'I$']\ n"})
+
+(?:dlelf)
+
+}x;
+
+的结果是：
+
+starting match at [labcdefgh]
+
+starting match at [albcdefgh]
+
+starting match at [abicdefgh]
+
+starting match at [abcldefgh]
+
+正则表达式的开头就是内嵌代码结构，所以只要正则表达式开始新一轮匹配，就会执行：
+
+print"starting match at [$'I$']\n"
+
+它用变量$'和$(300)(注9)表示目标字符串，用‘I’ 标记当前的匹配位置(在这里就 是匹配开始的位置)。从结果中我们可以知道，传动装置(148)进行了4次应用，才匹
+
+配成功。

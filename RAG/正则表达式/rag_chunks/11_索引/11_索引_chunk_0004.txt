@@ -1,0 +1,44 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 4/69
+---
+\p{javaJavaIdentifierStar t}369 \p{Katakana } 122,124
+\pL PHP 442
+\p{L} 121-122,133,368,395
+\p{L&} 122-123,125,442
+Java 369
+Perl 288
+\p{Latin} 122
+\p{Letter } 122,288
+\p{Letter_ Number} 123
+\p{Line_Separator} 123
+\p{L1} 123,406
+p{Lm} 123,406
+\p{Lo} 123,406
+\p{Lowercase_Letter] 123
+\p{Lt} 123,406
+\p{Lu} 123,406
+\p{M) 120,122
+\p{Mark} 122
+\p(Math_Symbol} 123
+\p {Mc) 123
+\p{Me} 123
+\p(Mn} 123
+\p(Modifier _Letter) 123
+\p{Modifier _symbol} 123
+\p(N} 122,395
+\pN PHP 442
+\p{Na) 123,368,406
+\p(Nl} 123
+\p{No) 123
+\ p(Non _Spacing_Mark} 123 p(Number) 122
+\p(Open_ Punctuation} 123
+\p{Other} 122
+\p{Other_Letter} 123
+\ p(Other_ Number} 123
+\p{Other_ Punctuation} 123
+\p{Other _Symbol} 123
+\p{P} 122
+\p{ Paragraph_separator) 123 \p{Pc} 123,406
+\p {Pd} 123 \p{Pe} 123 \p{Pf} 123 	Java 369 \p{Pi} 123 	Java 369 \p {Po} 123

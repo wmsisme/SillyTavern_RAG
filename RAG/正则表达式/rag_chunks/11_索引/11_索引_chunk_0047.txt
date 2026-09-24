@@ -1,0 +1,46 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 47/69
+---
+Pattern
+CANON_BQ 108,368
+CASE_INSENSITIVE 95,110,368,372
+CASE_INSENSITIVE bug 392
+COMMBNTS 99,219,368,401
+compile 372
+DOTALL 368,370
+flags 394
+
+Pattern (cont'd) matcher 373
+matches 395
+MULTILINE 81,368,370
+MULTILINE bug 387
+pattern 394
+quote 395
+split 395-396
+tostring 394
+UNICODE_CASE 368,372
+UNIX_LINES 368,370
+pattern argument 472
+array order 462,464
+pattern arguments PHP 444,448
+pattern method 393-394
+pattern modifier A 447
+D 442,447
+e 459,465,478
+m 442
+S 259,447,460,467,478-480 u 442,447-448,452-453
+U 447
+unknown errors 448
+x 443,471
+X 447
+pattern modifiers PHP 446-448
+PatternsyntaxBxception 371,373 \p{Basic _Latin) 124
+\p{Box_ Drawing} 124
+\p{C) 122
+Java 369
+\p{Pc) 123,406 \p(Cc} 123
+p{Cf} 123
+p{Cherokee } 122
+\p{Close_ Punctuation) 123

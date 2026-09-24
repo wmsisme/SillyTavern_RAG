@@ -1,0 +1,38 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 6/69
+---
+\z 112,129-130,316,447
+(see also enhanced line-anchor mode) optimization 246
+PHP 442
+11 322
+/c 131-132,315 /e 319-321
+/g 61,132,307,311-312,315,319
+(see also \G)
+introduced 51
+with regex object 354
+/1135
+(see also: case-insensitive mode;mode
+modifier)
+introduced 47
+with study 359
+/m (s5also: enhanced line-anchor mode;
+mode modifier) 10352-353
+with regex object 354
+/osmosis 293
+/a (s5also: dot-matches-all mode;mode
+modifier)
+/x (sel,8: comments and free-spacing
+mode;mode modifier)
+history 90
+introduced 72
+-Dr 363
+-i as-y 86
+-Mre=debug(see use re'debug')
+-y old grep 86
+<> 54
+and s_ 79
+<br/> 481
+!~ 309
+鲁 (see comments)

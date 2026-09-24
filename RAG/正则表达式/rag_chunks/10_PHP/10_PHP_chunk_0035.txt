@@ -1,0 +1,30 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 35/52
+---
+arra y('DLSR camera',' Nikon D200','Canon EOS 30D')
+
+分隔符中的匹配内容被去掉了。不过，如果使用了PRE_SPLIT_DELIM_CAPTURE 标志位 (并且用-1作为limit 参数的占位符):
+
+Sparts =preg_split( ' 八 s+(andlor )\s+/x',$input ,-1,
+
+PREG_SPLIT DELIM_CAPTURE);
+
+sparts 包含了捕获型括号匹配的分隔符：
+
+array('DLSR camera','and','Nikon D200','or','Canon EOS 30D')
+
+此时，每次切分会在结果数组中增加一个元素，因为正则表达式中只有一组捕获型括号。 然后我们就能够遍历sparts 中的元素，对找到的‘and’ 和 ‘or ' 进行特殊处理。
+
+请注意，如果使用了非捕获型括号(如果 pattern 参数为‘八s+(?:andlor)\s+/ '),
+
+PREG_SPLIT_DELIM_CAPTURE 标志位不会产生任何效果，因为它只对捕获型括号有效。
+
+来看另一个例子，第466页分析股市行情的例子：
+
+$tickers =preg_split('/[\s,]+/',$input);
+
+如果我们添加捕获型括号，以 及PREG_SPLIT_DELIM_CAPTURE
+
+$tickers =preg_split('/([\s,]+)/',$input,-1,PREG_SPLIT_DELIM_CAPTURE);

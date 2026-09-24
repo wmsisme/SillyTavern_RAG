@@ -1,0 +1,42 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 32/37
+---
+End while
+
+在这个例子中，我仅仅从 jfriedl namespace 导 入 ，但也可以很简单地从 jfiedl.CSV
+
+namespace 导入，然后这样创建Regex对象：
+
+Di m Field Regex as GetField= New GetField ' 生 成 新 的 regex 对 象
+
+这是两种风格。
+
+通过装配件构建自己的正则表达式库
+
+这个例子构建了一个小规模的正则表达式库。完整的程序构建了一个装配件 (DLL), 其中包含三个已经生成的Regex 构造函数：jfriedl.Mai1. Subject,jfriedl.Mail.
+
+From 和 jfried1. CSV.GetField。
+
+前两者很简单， 一 眼就能明白， 最后那个复杂的构造函数展示了构建库的约定 	(promise) 。 请注意，这里不需要设定 Regexoptions. Compiled, 因为在构造装配件 时已经隐含地设定了。
+
+关于如何使用构建好的装配件，请参考第434页。
+
+Option Explicit On Option Strict On
+
+Imports System.Text. RegularExpressions
+
+Imports System.Reflection
+
+Module BuildMyLibrary
+
+Sub Main()
+
+’下面调用regexCompliationInfo 时提供了pattern, regex 选项、类内部的名称、类名，
+
+′以及 一 个Boolean 值表明类是否 public 。 举例来说，要使用第一个类，
+
+’程序必须使用装配件中"j friedl.Mail.Subject" 作 为 Rege x 的构造函数。
+
+Dim RCInfo() as RegexCompilationInf o ={

@@ -1,0 +1,102 @@
+---
+章节: 第5章：正则表达式实用技巧
+章节ID: 05_正则表达式实用技巧
+切片序号: 23/40
+---
+Validnting a Hostname
+
+在上面的例子中，我们用[^/:] +1来匹配主机名。不过，在第2章中(76)我们使用的 是更复杂的[- a-z]+(\.[-a-z]+)*\.( comledu| … |inf o) 。 做同样的事情，复杂程度为什
+
+么会有这么大的差别?
+
+而且，虽然二者都用来“匹配主机名”,方法却大不相同。从已知文本(例如，从现成的 URL 中)中提取一些信息是一回事，从随机文本中准确提取同样信息是另一回事。
+
+而且，在上例中我们假设，‘ http:// ’ 之后就是主机名，所以用't^/:]+J 来匹配就是理所 当然的。但是在第2章的例子中，我们使用正则表达式从随机文本中寻找主机名，所以它 必须更加复杂。
+
+现在从另外一个角度来看主机名的匹配，我们可以用正则表达式来验证主机名。也就是说， 我们需要知道，一串字符是否是形式规范、语意正确的主机名。按规定，主机名由点号分
+
+VB.NET 中的link 检查程序
+
+下面的程序会列出Html 变量中的链接：
+
+Imports System.Text.RegularExpressions
+
+设置循环中将会遇到的正则表达式
+
+Dim A_RRegex as Regex = New Regex(
+
+"<a\b(?<guts>[^>]+)>(?<Link>. *?)</ a>", 二 RegexOptions.IgnoreCase)
+
+Dim GutsRegex as Regex = New Regex(-
+
+"\b HREF "\s*=\s*
+
+"(?:	(?# 'href ' 属性 )“&_
+
+(?# = ' 可 能 存 在 空 白 字 符 ) " & _ (?# 其值为 . . . )”&_
+
+(?# 双 引 号 字 符 串 )”&_
+
+(?# 或 者 是 . . . )"&_
+
+(?# 单引号宇符串 )"&_
+
+(?# 或 者 是 . . . )"&_
+
+(?# '其他文本 )"&_
+
+(?# )”,
+
+■
+
+"
+
+"
+
+”	""(?<url>{^"")*)"" I
+
+'(?<url>[^']*)'
+
+I
+
+"(?<url>[^'"">\s]+) ")
+
+RegexOptions.I gnoreCase Or RegexOptions.IgnorePatternWhitespace)
+
+' 现在检查 'Html ' 变量 ...
+
+Dim CheckA as Match =A_Regex.Match(Html)
+
+For each match within ...
+
+While CheckA.Success
+
+' 已 匹 配 <a>tag, 现在检查 URL
+
+Dim Ur1Check as Match =_
+
+GutsRegex .Match(CheckA.Groups(" guts" ).Value)
+
+If UrlCheck.Success
+
+' 已经匹配完毕，得到URL/link
+
+Console.WriteLine("Url"&Ur1Check.Groups("url").Value &_
+
+"WITH LINK "& CheckA.Groups(" Link" ).Value)
+
+End If
+
+CheckA =CheckA.NextMatch
+
+End While
+
+需要注意的几点：
+
+● 在 VB.NET中使用正则表达式， 需要首先执行对应的Imports 语句，告诉编译器 应当导入的库文件。
+
+● 程序中使用了(?#…) 风格的注释，因为VB.NET中加入换行符很不方便，所以普 通的‘#’注释会延伸到下一个换行符或者字符串的结尾(第一种情况即意味着正 则表达式剩下的所有内容都作为注释)。为了使用正常的#…注释，请在每一行的
+
+结尾添加&chr(10) (420)。
+
+● 表达式中的每个双引号都需要以'""’表示(103)。

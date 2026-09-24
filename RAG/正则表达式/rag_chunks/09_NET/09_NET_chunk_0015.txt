@@ -1,0 +1,74 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 15/37
+---
+图9- 1: .NET正则表达式相关对象模型
+
+Match 对象
+
+Regex 对象的Match(…) 方法通过创建并返回Match 对象来提供匹配信息。Match 对象有多 个属性，包括Success ( 一个表示匹配是否成功的Boolean 值 ) 和Value ( 如果匹配成功， 则保存实际匹配文本的副本)。稍后我们会看到Match 的所有属性的列表。
+
+Match 对象返回的细节中还包括捕获型括号所匹配的文本。前面Perl 的例子使用$1保存第 一组捕获型括号匹配的文本。.NET 提供了两种办法：如果要取得纯文本，可以按照索引值 访问Match 对象的Groups 属性，例如Groups (1).Value, 它等价于Perl 的$1(请注意， C#中使用的是Groups[1].Value) 。 另一个办法是使用Result 方法，请参考第429页。
+
+418 第 9 童 ： . N E T
+
+Group 对象
+
+前一段中的Groups(1) 其实是对Group对象的引用，后面的.Value 引用它的value 属性(也 就是此分组对应的文本)。每一组捕获型括号都对应一个Group 对象，另外还有一个“虚拟 分组 (virtual group)”,其编号为0,它保存全局匹配的信息。
+
+因此，MatchObj. Value 和 MatchObj.Groups(0) .Value 是等价的——都是全局匹配的文本 的副本。第一种写法更加简洁方便，但我们必须知道存在编号为0的分组，因为MatchObj. Groups. Count (也就是Match关联的分组的数目)包含了它。如果s+ (\d+) 能够匹配成 功 ，MatchObj.Groups.Count 的值就是2(标号为0的全局匹配和$1)。
+
+Capture 对象
+
+Capture 对象的使用并不频繁，请参考第437页的介绍。
+
+匹配时会计算出所有结果
+
+把正则表达式应用到字符串中，得到一个 Match 对象，此时所有的结果(匹配的位置，每 个捕获分组匹配的内容等)都会计算出来，封装到Match对象中。访问Match对象的属性 和方法，包括它的Group 对 象 (及其属性和方法)只是取回已经计算好的结果。
+
+核心对象详解
+
+Core Object Details
+
+概览完毕，来看细节。首先，我们来看如何创建 Regex 对象，然后来看如何将其应用到字
+
+符串，生成Match 对象，以及如何处理这个Match 对象和它的Group 对象。
+
+在实践中，很多时候不必明确创建 Regex 对象，不过明确创建看起来更顺眼，所以在讲解 核心对象时，每次都会创建它们。稍后我会告诉你.NET提供的简便方法。
+
+在下面的列表中，我会忽略从Object 类继承而来的，很少用到的方法。
+
+创 建Regex 对 象
+
+Creating Rcgex Objects
+
+Regex的构造函数并不复杂。它可以接收一个参数(作为正则表达式的字符串),或者是两 个参数(一个正则表达式和一组选项)。下面是一个参数的例子：
+
+Dim StripTrailWS = new Regex("\s+$"〉 ' 去掉结尾的空白字符
+
+它只是创建Regex, 做好应用前的准备；而没有进行任何匹配。
+
+下面是使用两个参数的例子：
+
+Dim GetSubject =new Regex("^subject:(.*)",RegexOptions.I gnoreCase)
+
+这里多出了一个Regexoptions 选项，不过可以用OR 运算符连接多个选项，例如：
+
+Dim GetSubject =new Regex("^subject:(.*)",_
+
+RegexOptions. IgnoreCas e OR RegexOptions Multiline)
+
+捕获异常
+
+如果正则表达式包含了元字符的非法组合，就会抛出 ArgumentException 。通常，如果用 户知道所使用的正则表达式能够正常工作，就不需要捕获这个异常，不过如果使用程序“之 外”(例如由用户输入，或者从配置文件读入)的正则表达式，就必须捕获这个异常。
+
+Dim R As Regex
+
+Try
+
+R=New Regex(SearchRegex) Catch e As ArgumentException
+
+Console.WriteLine("* ERROR* bad regex :"&e. ToString)
+
+Exit Sub

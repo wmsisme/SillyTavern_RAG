@@ -1,0 +1,48 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 46/51
+---
+. . . 包 含 image tag, 检查是否合适...
+
+}else if(!needClose &&m.usePattern(pLink).find())(
+
+. . . 有 超 链 接 ， 验 证 . . .
+
+needCl ose= true;
+
+}else if(needClose &&m.usePattern(pLinkX),find()){
+
+System.out. println("/LINK [" +m.group()+"]");
+
+needClose =false;
+
+}else if(m.usePattern(pEntity).find()){
+
+// 容许出现&gt; 和 & # 1 2 3 ; 之 类 的entity
+
+}else if(m.usePattern(pNonHtml ). find()){
+
+// 容许出现其他非单词的非HTML 代码
+
+}else {
+
+// 完全无法匹配，肯定出了错，在此处选取一段文字用于错误输出
+
+m.usePattern(Pattern.compile( "\\G(?s).{1,12}")).find();
+
+System. out. println("Bad char before '"+m.group()+"'");
+
+System.exit(1);
+
+}
+
+}
+
+if(needClose){
+
+System.out.println("Missing Final </A>");
+
+System.exit(1);
+
+因为java. util.r egex 的 bug , 非 HTML的匹配尝试即使不成功，仍然会“占用”目标字 符串中的一个字符，所以我把这段程序放在最后。这个 bug 仍然存在，只是表现为错误输 出中缺少第一个字符。我已经把这个bug 提交给 Sun。

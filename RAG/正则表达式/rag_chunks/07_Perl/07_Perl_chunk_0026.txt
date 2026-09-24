@@ -1,0 +1,52 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 26/94
+---
+Viewing Regex Objects
+
+前面讨论了regex 对象综合正则表达式和模式修饰符——例如(? x-ism:…)---- 的逻辑过 程。如果在Perl期望接收字符串的地方使用regex 对象，Perl会把它转换为对应的文本表示
+
+方式，例如：
+
+-m: \- \') qr/b \w+\b/x,"\n"!
+
+这就是第304页的SHttpUr1 的转换结果：
+
+(?ix-sm:
+
+http://(?ix-sm:
+
+# 一个或多个点号分隔部分
+
+(?:[a-z0-9]\.I [a-z0-9][-a-z0-9](0,61}[a-z0-9]\.)*
+
+# 后 缀
+
+(?:comledulgovlintlmillnetlorgibizlinfo…laerol[a-z][a-z])
+
+)\b#hostname
+
+(?:
+
+/[-a-z0-9-:\@&?=+,.!/~*1%\$]*
+
+(?<![.,?!])
+
+# 可能出现的pa th
+
+# 不 能 以 [ . , ? !] 结 尾
+
+)?
+
+)
+
+把regex 对象转换为字符串的功能在调试时很有用。
+
+用regex 对象提高效率
+
+Using Regex Objects for Efficiency
+
+使用regex 对象的主要原因之一是便于控制。为了提高效率，Perl 会把正则表达式编译为内 部形式。第6章简要介绍了正则表达式编译的一般知识，但是更复杂的Perl 相关问题，包 括 regex 对象之类，都在“正则表达式编译、10修饰符、qr/…/ 和效率”(348)中详细 讨论。
+
+Match 运算符

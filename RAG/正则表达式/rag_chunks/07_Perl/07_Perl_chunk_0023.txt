@@ -1,0 +1,58 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 23/94
+---
+Building and Using Regex Objects
+
+下面的表达式来自第2章(76):
+
+my $HostnameRegex =qr/[-a-z0-9]+(?:\.[-a-z0-9]+)*\.(?:comledulinfo)/i;
+
+my SHttpUrl =qr{
+
+http:// SHostnameRegex \b
+
+(?:
+
+/[-a-z0-9-:\@&?=+,.!/~*'8\$]*
+
+(?<![.,?!])
+
+)?
+
+# Hostname
+
+# 可能出现的path
+
+# 不容许以[.,?!] 结尾
+
+}ix;
+
+第一行代码把匹配主机名所用的简单正则表达式封装为regex对象，保存到变量$Hostname- Regex中。下一行使用该变量构建匹配HTTP URL的 regex 对象，保存到SHttpUr1中。构 建完成之后就可以以多种方式使用，例如：
+
+if(Stext =~$HttpUr1){
+
+print "There is a URL\n"; }
+
+用来检测，或者：
+
+while($text=~m/(SHttpUrl)/g){
+
+print"Found URL:$1\n";
+
+用来搜索和显示所有的HTPPURL。
+
+如果按照第5章的讲解(205)修改$HostnameRegex:
+
+my SHostnameRegex = qr{
+
+# 一个或多个点号分隔部分
+
+(?:[a-z0-9]\.I[a-z0-9][-a-z0-9](0,61}[a-z0-9]\.)*
+
+# 后缀
+
+(?:comledulgovlint Imil|net lorglbizlinfol…laerol[a-z][a-z]) }xi;
+
+它的使用方式与之前的例子相同(开头没有^,结尾没有$,也没有捕获型括号),所以， 我们的替换不受限制。这样能得到更准确的SHttpUrl。

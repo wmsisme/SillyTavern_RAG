@@ -1,0 +1,55 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 39/69
+---
+Matcher (cont'd)
+find 375
+group 377
+groupCount 377
+hasAnchoringBounds 388
+hasTransparentBounds 387
+hitEnd 389-392
+lookingAt 376
+matches 376
+pattern 393
+quoteReplacement 379
+region 384-389
+region 386
+reg ionEnd 386
+regionStart 386
+replaceA ll 378
+replaceFirst 379
+replacement argument 380
+requireEnd 389-392
+reset 392-393
+start 377
+text 394
+toMatchResult 377
+tostring 393
+useAnchoringBounds 388
+usePattern 393,399
+useTransparentBounds 387
+Matcher object 373
+reusing 392-393
+Smatches 450
+us.$all_m atches 454
+matches
+unexpected 194-195
+viewing all 332
+matches method 376,395
+Matches(Regex object method)422 MatchEvaluator 423-424
+matching
+delimited text 196-198
+HTML tag 200
+longest-leftmost 177-179
+matching comments Java 272-276
+Matchobject object(.NET)creating 422
+\ p(Math_Symbol} 123
+Maton,William xxiv,36
+mb_ereg suite 439
+MBOL 362
+McCloskey,Mike xxiv
+McCulloch,Warren 85
+\p(Me} 123
+mechanics viewing 331-332

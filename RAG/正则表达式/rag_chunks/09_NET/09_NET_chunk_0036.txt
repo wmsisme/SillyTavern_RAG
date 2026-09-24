@@ -1,0 +1,20 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 36/37
+---
+M.Groups(1). Captures. Count	is	5.
+
+你也许会注意到，最后匹配的‘ij’ 等同于最终全局匹配中的M.Groups(1),Value 。 看起
+
+来 ，Group 的 Value 就是本分组最终匹配文本的简记法。M.Groups(1).V alue 是：
+
+M.Groups (1).C aptures( M.Groups(1).Captures.Count -1).Value
+
+关于Capture, 还要讲几点：
+
+· M.Groups(1). Captur e 是一个 CaptureCollection, 与普通的集合类 ( collection) 一样，它包含了 Items 和 Count 属性。不过，通常大家都不会使用这两个属性，而是 通过索引值直接访问，例如 M.Groups(1).Capture s(3) ( 在C#中是 M.Groups[1]. Captures[3])。
+
+· Capture 对象没有Success 方 法 ，如果需要，请测试 Group 的 Success。
+
+· 到现在，我们已经看到，Capture 对象在 Group 对象内部可用。Match 对象也有 Captures 属性，尽管涌出并不大。M.Captures 可以直接访问编号为0的分组的 Captures 属性(也就是说M.Captures 等价于M.Groups(0).C aptures) 。 因为编号 为0的分组表示整个匹配，所以不会有“遍历”匹配的迭代，所以编号为0的捕获集 合类只有一个 Capture 。 因为它们包含与编号为0的匹配同样的信息，M.Capters 和 M. Groups(0).Captures 并不是很有用。

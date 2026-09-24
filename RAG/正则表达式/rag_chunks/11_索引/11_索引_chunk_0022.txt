@@ -1,0 +1,38 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 22/69
+---
+\E 290
+(see also literal-text mode)
+Java 368,395,403 \e 79,115-116
+/e 319-321
+earliest match wins 148-149
+EBCDIC 29
+ECMAScript(.NET)406,408,412-413,421, 427
+ed 85
+efficiency(see also optimization) and backtracking 179-180
+correctness 223-224
+Perl 347-363
+Perl-specific issues 347-363
+PHP 478-480
+regex objects 353-354
+unlimited lookbehind 134
+egrep
+after-match data 138
+backreference support 150
+case-insensitive match 15
+doubled- word solution 22
+example use 14
+flavor overview 92
+flavor summary 32
+history 86-87
+introduced 6-8
+metacharacter discussion 8-22
+regex implementation 183
+version covered 91
+
+egrep(cont'd)
+word boundaries 134
+electric engine analogy 143- 147
+else (see conditional)

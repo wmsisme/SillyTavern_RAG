@@ -1,0 +1,110 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 11/37
+---
+注 2 : ECMA 表 示“ European Computer Manufactures Association (欧洲计算机制造商协会)”,成 立于1960年，任务是为不断发展计算机的各个方面制定标准。
+
+· 正则表达式中的反斜线-数字的序列不会有反向引用和十进制转义的二义性，它只能表 示反向引用，即使这样需要截断结尾的数字。例如，(…)\10」中的'\10会被处理为， 第1组捕获性括号匹配的文本，然后是文字‘0'。
+
+使 用 .NET 正则表达式
+
+Using.NET Regular Expressions
+
+.NET正则表达式功能强大，语法清晰，通过完整而易于使用的类接口来操作。虽然微软的 正则表达式包做得很漂亮，文档却相反——它非常糟糕。文档不够全面，编写不够清晰， 缺乏组织，有时甚至不能保证正确性。我花了很长的时间才整理清楚，所以希望这一章的 内容能够让读者更清楚地理解.NET的正则表达式。
+
+正则表达式快速入门
+
+Regex Quickstart
+
+即使不需要知道正则类模型( regex class model) 的细节，也可以直接上手使用.NET的正则 表达式包。理解细节能够让我们获得更多的信息，提高工作效率，但是下面这些简单的例 子没有明确创建任何正则类，细节将在例子之后提到。
+
+使用正则表达式库的程序必须在文件的开头写上下面这条语句，下面的例子假设此句已经 存在：
+
+Imports System.Text.RegularExpressions
+
+下面的例子都能正常处理 string 变量TestStr 。本章的所有例子中，选用的变量名都以斜 体标注。
+
+快速入门：在字符串中寻找匹配
+
+这段程序检查一个正则表达式是否能匹配字符串：
+
+If Regex.IsMatch(TestStr,"^\s*$")
+
+Console.WriteLine("line is empty")
+
+E1se
+
+Console.WriteLine(" line is not empty") End If
+
+这个例子使用了匹配模式：
+
+If Regex.IsMatch(TestStr,"^subject:",RegexOptions.IgnoreCase) Console.WriteLine("line is a subject line")
+
+Else
+
+Console.WriteLine("line is not a subject line") End If
+
+快 速 入 门 ： 匹 配 ， 获 得 匹 配 文 本
+
+这个例子显示正则表达式实际匹配的文本。如果没有匹配， TheNum 就是空字符串。
+
+Dim TheNum as String =Regex.Match(TestStr,"\d+").Value
+
+If TheNum<>""
+
+Console.WriteLine("Number is:"&TheNum)
+
+End If
+
+这个例子使用了 一 个匹配模式：
+
+Dim ImgTag as String = Regex. Match(TestStr, "<img\b[^>]*>",_
+
+RegexOptions.IgnoreCase).Value
+
+If ImgTag<>"
+
+Console.WriteLine (" Image tag:"& ImgTag) End If
+
+快 速 入 门 ： 匹 配 ， 获 得 捕 获 文 本
+
+这段程序以字符串的形式返回第1个捕获分组的匹配文本：
+
+Dim Subject as String =
+
+Regex.Match(Teststr, "^Subject:(.*)"). Groups(1). Value
+
+If Subject<>""
+
+Console.WriteLine(" Subject is:"& Subject)
+
+End If
+
+请注意，在C# 中 应 使 用Groups [1] 取 代Groups(1)。
+
+下面的程序目的相同，只是使用了match 选 项 ：
+
+Dim Subject as String =_
+
+Regex.Match(Teststr,"^subject:(.*)",_
+
+RegexOptions.IgnoreCase).Groups(1).Value
+
+If Subject<> ""
+
+Console.WriteLine("Subject is:"&Subject)
+
+End If
+
+仍然是相同的程序，只是使用命名捕获：
+
+Dim Subject as String = 一
+
+Regex.Match(TestStr,"^subject:(?<Subj>.*)",_
+
+RegexOptions.IgnoreCase).Groups("Subj").Value
+
+If Subject <>""
+
+Console.WriteLine("Subject is:"&Subject)

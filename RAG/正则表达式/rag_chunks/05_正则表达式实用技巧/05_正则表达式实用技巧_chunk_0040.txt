@@ -1,0 +1,83 @@
+---
+章节: 第5章：正则表达式实用技巧
+章节ID: 05_正则表达式实用技巧
+切片序号: 40/40
+---
+进一步提高效率
+
+尽管在下一章之前都不会谈论效率，但对于支持固化分组(139)的系统，我还是愿意在 这里给出提高效率的修改： 把匹配双引号字段的子表达式从 (?:[^"] I"")*」改为 (?>[^"]+1"")*J 。 下一页用VB.NET的例子做了说明。
+
+如果像Sun的 Java regex package 那样支持占有优先量词(142),也可以使用占有优先量 词。Java CSV 程序的补充内容说明了这一点。
+
+这些修改背后的道理会在下一章讲解，最终我们会在271页给出效率最高的办法。
+
+其他CSV 格式
+
+Microsoft的 CSV 格式很流行，因为它是Microsoft的 CSV 格式，但其他程序可能有不同格 式，我见过的情况还有：
+
+· 使用任意字符，例如';'或者制表符作为分隔。(不过这样名字还能叫“逗号分隔值” 吗? )
+
+· 容许分隔符之后出现空格，但不把它们作为值的一部分。
+
+· 用反斜线转义引号(例如用‘"’而不是‘“’类表示值内部的引号)。通常这意味着 反斜线可以在任何字符前出现(并忽略)。
+
+这些变化都很容易处理。第一种情况只需要把逗号替换为对应的分隔符，第二种只需要在 第一个分隔符之后添加'\s*j, 例如以(?:^ I, \s*) 开头。
+
+第三种情况，我们可以用之前的办法(198),把[^"]+1"";替换为[^\\"]+1\.1。 当然， 我们必须把后面的s/""/"/g 改为更通用的s/(.)/ $1/g, 或者对应语言中的代码。
+
+V B . N E T 的 C S V 处 理
+
+Imports System.Text.RegularExpressions
+
+Dim FieldRegex as Regex =New Regex(_
+
+"(?:^1,) "& 一
+
+"(?: "&
+
+(? # 要 么 是 双 引 号 字 段 . . . ) "&
+
+" " " ( ? # 字 段 起 始 双 引 号 ) "&
+
+( (?>[^""]+ """)*) "&_
+
+" "" (?# 字段结柬双引号) "&
+
+"(?#...or ...) "&
+
+"| "&_
+
+" (? # . . . 非 引 号 非 逗 号 文 本 . . . ) "&
+
+([^"",]*) "& -
+
+")",RegexOptions.IgnorePatternwhitespace)
+
+Dim QuotesRegex as Regex =New Regex("""""" 双引号字符串
+
+Dim FieldMatch as Match =FieldRegex.Match(Line) While FieldMatch.Success
+
+Dim Field as String
+
+If FieldMatch.Groups(1).Success
+
+Field =QuotesRegex.Replace(FieldMatch.Groups(1).Value,"""")
+
+Else
+
+Field =FieldMatch.Groups(2).Value
+
+End If
+
+Console.WriteLine("["&Field &"]")
+
+'现 在 可 以 处 理 'Field'
+
+FieldMatch =FieldMatch.NextMatch
+
+End While
+
+第 章
+
+打造高效正则表达式
+\

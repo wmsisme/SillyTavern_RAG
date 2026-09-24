@@ -1,0 +1,52 @@
+---
+章节: 第3章：正则表达式的特性和流派概览
+章节ID: 03_正则表达式的特性和流派概览
+切片序号: 55/83
+---
+表3-9:基本的Unicode子属性
+
+属 性	等价表示法及说明
+
+\p{L1}
+
+\p{Lu}
+
+\p{Lt}
+
+\p{L&}
+
+\p{Lm}
+
+\p{Lo}	\p{Lowercase_Letter}——小写字母。
+
+\p{Uppercase_Letter}——大写字母。
+
+\p{Titlecase_Letter}——出现在单词开头的字母(例如，字符D?是小写字母 d?和大写字母D?的首字母形式)。
+
+\p{L1}、\p{Lu}、\p{Lt}并集的简记法。
+
+\p{Modifier_Letter}——少数形似字母的，有特殊用途的字符。
+
+\p{other_Letter}——没有大小写形式，也不属于修饰符的字母，包括希伯来语、 阿拉伯语、孟加拉语、泰国语、日语中的字母。
+
+\p{Mn}
+
+\p{Mc}
+
+\p{Me}	\p{Non_Spacing_Mark}——用于修饰其他字符的“字符(Characters)”,例如重 音符号、变音符号、某些“元音记号”和语调标记。
+
+\p{Spacing_Combining_Mark}——会占据一定宽度的修饰字符(各种语言中的
+
+大多数“元音记号”,这些语言包括孟加拉语、印度古哈拉地语、泰米尔语、泰卢 固语、埃纳德语、马来语、僧伽罗语、缅甸语和高棉语)。
+
+\p{Encolsing_Mark}——可以围住其他字符的标记，例如圆圈、方框、钻石型等。
+
+\p{Zs}
+
+\p{Z1}
+
+\pfZp}	　\p{Space_Separator}——各种空白字符，例如空格符、不间断空格(non-break space),以及各种固定宽度的空白字符。
+
+\p{Line_Separator}——LINE SEPARATOR字符(U+2028)。
+
+\p{Paragraph_Separator}——PARAGRAPH SEPARATOR字符(U+2029)。

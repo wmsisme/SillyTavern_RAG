@@ -1,0 +1,55 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 31/69
+---
+Index
+Group object method 430
+Match object method 429
+IndexoutofBoundsException 375-376
+\p{InDingbats} 124
+indispensable TiVo 3
+\p(InHangul_ Jamo) 124
+\p{InHebrew} 124
+\p(Inherited} 122
+initial class discrimination 245-248,252, 257-259,332,361
+\p{ Initial _Punctuation) 123
+\p{InKatakana} 124
+inline modes(see modifiers) \p{InTamil} 124
+integrated handling 94
+compile caching 243
+interpolation 288-289
+caching 351
+introduced 77
+mimicking 321
+PHP 103
+INTERSECTION class set operations 126 interval 141
+introduced 20
+X(0,0} 141
+\p{InTibetan} 124
+introduced encoding 29 introduction Perl 37-38 IOException 81
+
+索 引 499
+
+IP example 5,187-189,267-268,311,314,
+348-349 Iraq 11
+Is VS.In 121,124-125
+Java 369
+.NET 407
+Perl 288
+\p{IsCherokee ) 122
+\p(IsCommon} 122
+\p{IsCyrillic) 122
+\p{IsGujarati) 122
+\p {IsHan} 122
+\p(IsHebrew) 122
+\p(ISHiragana} 122
+isJavaIdentifierstart 369
+\p{IsKatakana} 122
+\p{IsLatin) 122
+IsMatch(Regex object method)421
+ISO-8859-1 encoding 29,87,106,108,123 issues overview encoding 105
+\p{IsThai } 122
+\p{IsTibetan} 124
+
+J 111

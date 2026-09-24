@@ -1,0 +1,26 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 20/37
+---
+New New
+
+Regex("\s+")
+
+Regex("^\s+")
+
+Target =AnyWS.R eplace(Target,"",-1,LeadingwS.Match(Target). Length)
+
+它会把‘…… some…random……spacing’ 转化为‘……some·randomspacing’, 在查找和替 换时，它使用LeadingwS 匹配文本的长度作为偏移值(就是要跳过的字符数目)。这里用到 了Match 对象的简便特性，即LeadingWS. Match(Target) 的 Length 属性(即便失败也没 问题，此时Length 的值为0,也就是说我们需要对整个目标字符串应用Anyws)。
+
+特殊的Replacement处理
+
+Regex .Replace方法和Match .Result方法都可以接收能够进行特殊处理的 replacement字符串。下面的字符序列会被匹配的文本所替换：
+
+字符序列	替换内容
+
+$&
+
+$1,$2 … ${name} $'
+
+$' $$ $_ $+	整个表达式匹配的文本(等于$0) 对应编号的捕获分组匹配的文本 对应命名捕获分组匹配的文本

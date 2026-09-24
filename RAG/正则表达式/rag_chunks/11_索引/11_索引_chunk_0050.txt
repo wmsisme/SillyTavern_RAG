@@ -1,0 +1,55 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 50/69
+---
+PHP(cont'd)
+flavor overview 441
+history 440
+line anchors 130
+lookbehind 134,443
+“missing”functions 471
+\p{} 125
+pattern arguments 444,448 recursive matching 475-478
+regex delimiters 445,448
+search and replace 458-465 single-quoted string 444
+strings 103-104
+str_replace 458
+study 447
+Unicode 442,447
+version covered 440
+\w 120
+word boundaries 134
+\p{Pi} 123
+·Java 369
+\p{InArrows} 124
+\p{InBasic _Latin} 124
+\p{InBox_Drawing} 124
+\p{InCurrency} 124
+\p(InCyrillic} 124
+\p(InDingbats) 124
+\p(InHangul _Jamo} 124
+p{InHebrew} 124
+\p{Inherited} 122
+\p{Initial_Punctuation] 123
+\p{InKatakana} 124
+\p(InTamil} 124
+\p{InTibetan) 124
+Pinyan,Jeff 246
+\p{IsCherokee} 122
+\p{IsCommon} 122
+\p{IsCyrillic) 122
+\p{IsGujarati) 122
+\p{IsHan} 122
+p(IsHebrew} 122
+\p{IsHiragana) 122
+p{IBKatakana} 122
+\p{IBLatin) 122
+p{IsThai } 122
+\ p {IsTibetan} 124
+Pitts, Walter 85
+\p{javaJavaIdentifi erStart} 369
+\p{Katakana) 122,124
+\p {L} 121-122,133,368,395 \p{L&} 122-123,125,442
+Java 369
+Perl 288

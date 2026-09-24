@@ -1,0 +1,36 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 45/51
+---
+Validating HTML with Multiple Patterns Per Matcher
+
+我们也可以用Java 来写校验简单HTML的程序( 132)。这段代码通过usePattern 方法 实时更换Matcher的 pattern。这样能够处理多个以' GJ 开头的pattern, 进行对应的操作。请 参考第132页的内容了解此方法的更多细节。
+
+Pattern	pAtEnd	=Pattern.compile("\\G\\z");
+
+Pattern	pWord	=Pattern. compil e("\G\\w+");
+
+Pattern	pNonHtml	=Pattern.compile("\G[^\\w<>&]+");
+
+Pattern	pImgTag	=Pattern.compile( "\\G(?i) <img\s	+([^>]+)>");
+
+Pattern	pLink	=Pattern.compile("\\G(?i)<A\s+([^>]+)>");
+
+Pattern	pLinkX	=Pattern.compile ("\\G(?i )</A>");
+
+Pattern	pEntity	=Pattern.compile("\\G&(#\\d+;\w+);");
+
+Boolean needClos e=false;
+
+Matcher m = pAtEnd.matche r(htm1);// 每个 Pattern 对象都能生成Matcher 对 象
+
+while(!m. usePattern(pAtEnd). find())
+
+{
+
+if(m. usePattern( pWord).find()){
+
+...m.group() 包含一个单词或数值，可以进行对应的检查
+
+}e lse if(m.usePattern(pImgTag) .find ()){

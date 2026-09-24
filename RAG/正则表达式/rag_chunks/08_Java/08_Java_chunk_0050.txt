@@ -1,0 +1,28 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 50/51
+---
+● hasTransparent Bounds Java 1.4.2也不包含下面的方法：
+
+toMatchResult
+
+hitEnd
+
+requireEnd
+
+usePattern
+
+· toString
+
+Java 1.4.2不包含下面这个static 方法：
+
+Pattern.quote
+
+1.4.2和1.5.0关于Unicode 支持的差异
+
+1.4.2和1.5.0在Unicode 相关的问题上有这些变化：
+
+· Java 1.4.2的 Unicode 使用的是Unicode Version 3.0.0,1.5.0 使用的是Unicode Version 4.0.0。这个改变影响到很多方面，例如字符的定义(例如，在Version 3.0.0中 ，\ uFFFF 之后是没有代码点的),以及属性和 Unicode区块的定义。
+
+· 增强了通过 '\p{…} 和 ' P{…3 引用区块的方式(参加 Java 关于 character. UnicodeBlock 的文档，得到区块列表及其正式名称)。

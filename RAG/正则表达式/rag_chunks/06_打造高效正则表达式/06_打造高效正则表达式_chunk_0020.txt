@@ -1,0 +1,54 @@
+---
+章节: 第6章：打造高效正则表达式
+章节ID: 06_打造高效正则表达式
+切片序号: 20/74
+---
+Benchmarking with Python
+
+下面是Python的测试代码：
+
+import re
+
+import time
+
+import fpformat
+
+Regex1 =re.compile("^(alblcldlelflg)+$")
+
+Regex2 =re.compile("^[a-g]+$")
+
+TimesToDo =1250;
+
+TestString =""
+
+for i in range(800):
+
+TestString +="abababdedfg"
+
+StartTime =time.time()
+
+for i in range(TimesToDo):
+
+Regex1.search(TestString)
+
+Seconds =time.time()-StartTime
+
+print"Alternation takes"+fpformat.fix(Seconds, 3)+"seconds"
+
+StartTime =time.time()
+
+for i in range(TimesToDo):
+
+Regex2.search(TestString) Seconds = time.time()-StartTime
+
+print "Character class takes"+ fpformat.fix(Seconds,3)+"se conds"
+
+因为Python的正则引擎设定的限制，我们必须减少字符串的长度，因为原来长度的字符串 会导致内部错误(“maximum recursion limit exceeded”)。这种规定有点像减压阀，它有助于 终止无休止匹配。
+
+作为弥补，我相应增加了测试的次数。在我的机器上，测试结果为：
+
+Alternation takes 10.357 seconds
+
+Character class takes 0.769 seconds
+
+Tcl测试

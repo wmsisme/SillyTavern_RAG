@@ -1,0 +1,52 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 21/37
+---
+目标字符串中匹配文本之前的文本
+
+目标字符串中匹配文本之后的文本 单个‘$'字符
+
+整个原始目标字符串的副本 见说明
+
+目前，$+几乎是没有用的。它源自Perl中的$+变量，即实际参与匹配的捕获型括号中 编号最大的那个(第202页有一个例子)。而.NET的replacement字符串中的$+只是引
+
+用正则表达式中最靠后的那个捕获型括号匹配的文本。因为捕获型括号会重新编号— 一在使用命名型捕获时，会自动进行这种操作(409),所以它基本没有用。
+
+除了上面的情况之外，任何情况下在replacement字符串中使用‘s’都完全没问题。
+
+使用replacement 委托
+
+replacement 参数不只能用简单字符串，还可以是委托(delegate, 简单说就是函数指针)。 代理函数在每次匹配之后调用，生成作为replacement的文本。因为这个函数能够进行我们 需要的任何处理，这种查找替换的机制功能非常强大。
+
+委托的类型是MatchEvaluator, 每次匹配都会调用。它所引用的函数必须接受Match 对
+
+象，进行你所需要的任何处理，返回作为replacement的文本。
+
+做个比较，下面两段程序输出同样的结果：
+
+Target=R.Replace(Target,"<<$&>>"))
+
+Function MatchFunc(ByVal M as Match)as String
+
+return M.Result("<<$&>>")
+
+End Function
+
+Dim Evaluator as MatchEvaluator=New MatchEvaluator(Addressof MatchFunc)
+
+..
+
+Target =R.Replace(Target,Evaluator)
+
+两段程序都用<<…>>标注匹配的文本。使用委托的好处在于，在计算replacement时我们可 以进行任意复杂的操作。下面的例子把摄氏温度转换为华氏温度：
+
+Function MatchFunc(ByVal M as Match) as String
+
+'从$1获得温度数值，转换为华氏温度
+
+Dim Celsius as Double =Double.Parse(M.Groups(1).Value)
+
+Dim Fahrenheit as Double =Celsius *9/5+32
+
+Return Fahrenheit&"F" '添加"F", 然后返回

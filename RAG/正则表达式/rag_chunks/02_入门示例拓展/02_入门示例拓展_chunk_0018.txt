@@ -1,0 +1,44 @@
+---
+章节: 第2章：入门示例拓展
+章节ID: 02_入门示例拓展
+切片序号: 18/56
+---
+$var =~s/\bJeff\b/Jeff/i;
+
+的功能是什么呢?◆请翻到下页查看答案。
+
+例子：公函生成程序
+
+Example:Form Letter
+
+下面这个有趣的例子展示了文本替换的用途。设想有一个公函系统，它包含很多公函模板， 其中有一些标记，对每一封具体的公函来说，标记部分的值都有所不同。
+
+使用正则表达式修改文本 51
+
+这里有一个例子：
+
+Dear =FIRST=,
+
+You have been chosen to win a brand new =TRINKET=!Free!
+
+Could you use another =TRINKET=in the =FAMILY= household?
+
+Yes =SUCKER=,I bet you could!Just respond by … …
+
+对特定的接收人，变量的值分别为：
+
+$given =“Tom”;
+
+$family=“Cruise”;
+
+$wunderprize =“100% genuine	faux	diamond”;
+
+准备好之后，就可以用下面的语句“填写模板”:
+
+$letter =~s/=FIRST=/$given/g;
+
+$letter =~s/=FAMILY=/$family/g;
+
+$letter =~s/=SUCKER=/$given $family/g;
+
+$letter =~s/=TRINKET=/fabulous $wunderprize/g;

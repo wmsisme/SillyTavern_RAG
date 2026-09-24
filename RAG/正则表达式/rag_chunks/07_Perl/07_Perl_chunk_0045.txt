@@ -1,0 +1,64 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 45/94
+---
+测验答案
+
+318页测验的答案
+
+318页代码的结果：
+
+WHILE stooge is Larry.
+
+WHILE stooge is Curly.
+
+WHILE stooge is Moe.
+
+IF stooge is Larry.
+
+FOREACH stooge is Moe.
+
+FOREACH stooge is Moe.
+
+FOREACH stooge is Moe.
+
+请注意，如果foreach循环中的print引用了$_而不是$&,结果就会与while的一 样。在这个foreach中，m/…/g返回的('Larry','Curly','Moe')并没有使用。
+
+相反倒是使用了伴随效应中的$&,这表示程序有错误，因为list context的伴随效应， m/…/g并不常用。
+
+不容许出现的特殊字符，可以编码为百分号“%”加两位十六进制数的形式。为了编码所有 这种字符，可以这样：
+
+$url =~s/([^a-zA-20-9])/sprintf('%%%02x',ord($1 ))/ge;
+
+下面的程序可以用来解码：
+
+$url =~s/8([0-9a-f][0-9a-f])/pack("C",hex($ 1))/ige;
+
+简单地说，sprintf( '%%02x',o rd(character)) 把字符转换为对应的 URL 编码，而
+
+pack("C", value )的作用相反，请参考你常用的Perl 文档获取更多信息。
+
+多次使用/e
+
+通常情况下，对单个运算符多次使用同一修饰符没有特殊意义(只有让读者更困惑),但是 重复/e 修饰符却会改变replacement 的替换过程。正常情况下，replacement会进行一次求值， 但是如果‘e’ 的数目多于1个，则Perl 又会对求值的结果进行求值，如此一直进行下去， 求值的次数与‘e’ 的数目一样多。或许它的主要价值是用作比较Perl 代码复杂性的测试。
+
+不过此功能并非完全无用。如果需要手动进行变量插值(例如从配置文件读入字符串)。也 就是说，有一个字符串‘…$var…', 我们希望把‘svar ' 替换为svar 的值。
+
+直
+
+简单的办法是：
+
+$data =~s/($[a-zA-2_\w*)/$1/eeg;
+
+如果不使用/e, 则会替换匹配的‘svar ' 自身，这没什么用。使用一个/e, 会对$1重新求 值，得到 'svar', 这样也没什么意义，同样是用匹配的文本替换自身。但是如果使用两个 /e, 则‘svar ' 会重新求值，得到内容，这样就模拟了变量插值。
+
+应用场合与返回值
+
+Context and Return Value
+
+根据context 和/g 的不同组合，match 运算符会返回不同的值。不过，substitution 运算符 没有这么复杂——它返回的要么是替换发生的次数，要么是空字符串，表示没有发生任何 替换。
+
+为使用方便，返回值为Boolean时(例如在if 条件语句中),只要发生了替换，返回值就为 true, false 表示没发生替换。
+
+Split 运算符

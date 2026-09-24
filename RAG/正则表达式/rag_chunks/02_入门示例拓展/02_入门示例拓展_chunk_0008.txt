@@ -1,0 +1,74 @@
+---
+章节: 第2章：入门示例拓展
+章节ID: 02_入门示例拓展
+切片序号: 8/56
+---
+图2-2:温度转换程序的逻辑流程
+
+示例2-1:温度转换程序
+
+print“Enter a temperature(e.g.,32F,100C):\n”;
+
+$input =<STDIN>;# 接收用户输入的一行文本
+
+chomp($input); #去掉文本末尾的换行符
+
+if($input =~m/^([-+]?[0-9]+)([CF])$/)
+
+# 如果程序运行到此，则已经匹配。$1保存数字，$2保存”C” 或者"F" SInputNum =$1; #把数据保存到已命名变量中..
+
+Stype =$2; #...保证程序清晰易懂
+
+if($ type eq“C"){ # 'eq 测试两个字符串是否相等 # 输入为摄氏温度，则计算华氏温度
+
+$celsius =$InputNum;
+
+$fahrenheit=($celsius *9 /5)+32;
+
+}else{
+
+#如果不是“C”, 则必然是"F", 计算摄氏温度
+
+$fahrenheit =$InputNum;
+
+$celsius =($fahrenheit -32)*5 /9;
+
+#现在得到了两个温度值，显示结果：
+
+printf“8.2f Cis 8.2f F\n”,$celsius,$fahrenheit; }else{
+
+# 如果最开始的正则表达式无法匹配，报警
+
+print“Expecting a number followed by \"C\”or \"F\",\n”; print“so I don't understand \”$input\”.\n”;
+
+使用正则表达式匹配文本 43
+
+如果上一页的程序名叫convert, 我们可以这样使用：
+
+% per1 -w convert
+
+Enter a temperature(e.g.,32F,100C):
+
+39F
+
+3.89 C is 39.00 F
+
+8 perl -w convert
+
+Enter a temperature(e.g.,32F,100C):
+
+39C
+
+39.00 C is 102.20 F
+
+8 perl -w convert
+
+Enter a temperature(e.g.,32F,100C):
+
+oops
+
+Expecting a number followed by“C”or“F”,
+
+so I don't understand“oops".
+
+错综复杂的正则表达式

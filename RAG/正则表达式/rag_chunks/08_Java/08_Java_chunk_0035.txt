@@ -1,0 +1,38 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 35/51
+---
+表8-5:在lookingAt搜索之后使用hitEnd 和 requireEnd的例子
+
+正则表达式	目标文本	匹配文本	hitEnd()	requierEnd()
+
+1	\d+\bl[><]=?	‘1234'	'1234′	true	true
+
+2	\d+\bl[><]=?	‘1234*> ·567′	'1234 ·> ·567'	false	false
+
+3	\d+\bl[><]=?	'>'	S'	true	false
+
+4	\d+\bl[><]=?	'> ·567'	·567'	false	false
+
+5	\d+\bl[><]=?	'>='	'>='	false	false
+
+6	\d+\bl[><]=?	'>=*567′	'>= ·567'	false	false
+
+7	\d+\bl[><]=?	'oops'	匹配失败	false
+
+8	(setlsetup)\b	'se′	匹配失败	true
+
+9	(set Isetup)\b	'set'	'set’	true	true
+
+10	(setlsetup)\b	'setu'	匹配失败	true
+
+11	(setisetup)\b	'setup'	'setup'	true	true
+
+12	(set Isetup)\b	'set ·x=3′	'set ·x=3′	false	false
+
+13	(set isetup)\b	'setupx'	'setup ·x'	false	false
+
+14	(setisetup)\b	'self'	匹配失败	false
+
+15	(setlsetup)\b	'oops'	匹配失败	false

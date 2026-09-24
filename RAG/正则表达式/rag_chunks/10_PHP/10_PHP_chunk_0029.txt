@@ -1,0 +1,32 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 29/52
+---
+◆462页问题的答案
+
+462页问题中的程序运行结果如下(为了适应排版，进行了折行):
+
+resu1t:word<this>word<has>word<num><7>word<words>
+
+word<and>word<num><31>word<letters>
+
+如果这两处粗体内容出乎你的意料，原因在于，使用多个正则表达式的preg_match (使用pattern数组)并不会“并行”处理这些pattern,而是依次进行。
+
+在这个例子中，第1组pattern/replacement会在subject中添加两个num<…>,这两个
+
+'num’会被数组中的下一个pattern匹配。然后每个'num’变成‘word<num>',最 终得到这个意料之外的结果。
+
+这个例子告诉我们，如果preg_replace使用了多个pattern,一定要注意安排它们的 顺序。
+
+下面这个例子用preg_replace_callback 和辅助函数重写了第460页的程序。 callback 参 数是一个字符串，包含辅助函数的名字：
+
+Sreplacement =array('&'=>'&amp;',
+
+'<'=>'&lt;',
+
+'>'=>'&gt;',
+
+I"'=>'&quot;');
+
+/*

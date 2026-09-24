@@ -1,0 +1,67 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 23/69
+---
+Emacs
+after-match data 138
+control characters 117
+flavor overview 92
+re-search-forward 101
+search 100
+strings as regexes 101
+syntax class 128
+version covered 91
+word boundaries 134
+email of author xxiii
+email address example 70-73,98 Java 98
+.NET 99
+embedded code local 336
+my 338-339
+regex construct 327,331-335
+sanitizing 337
+embedded string check optimization 247, 257
+Empty 433
+empty-element tag 481
+encapsulation (see regex objects) \p{Enclosing _Mark} 123
+encoding (see also Unicode) ASCII 29,106-107,115,123 introduced 29
+issues overview 105
+Latin-129,87,106,108,123
+UCS-2107
+UCS-4107
+UTF-16107
+UTF-8107,442,447
+END block 358
+end method 377
+end of Hne(see anchor,dollar)
+end of previous match(see \G)
+end of word(see word boundaries) end-of-string anchor optimization 246 engine
+143-147
+182,239,243
+implementation ease 183
+introduced 27
+testing type 146-147
+with neverending match 227
+type comparison 156-157,180-183
+
+English module 357
+English vs.regex 275
+enhanced line-anchor mode 112- 113
+introduced 69
+ERE 87-88
+ereg suite 439
+errata xxiii
+EBcape 432
+escape
+introduced 22
+term defined 27
+essence
+atomic grouping 170-171
+greediness, laziness,and backtrack- ing 168-169
+NFA(see backtracking) eval 319
+example
+atomic grouping 198,201,213,271,
+330,340-341,346
+commafying a number 64-65
+introduced 59
+without lookbehind 67

@@ -1,0 +1,42 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 25/52
+---
+Pattern	Replacement	行为
+
+字符串	字符串	应用pattern,将每次匹配的文本替换为replacement
+
+数组	字符串	轮流应用pattern,将每次匹配的文本替换为replacement
+
+字符串	数组	轮流应用pattern,将每次匹配的文本替换为对应的replacement
+
+数组	数组	不容许
+
+如果subject 参数是数组，则依次处理数组中的每个元素，返回值也是字符串数组。
+
+请注意limit 参数是以单个pattern和单个subject为单位的。它不是对所有的pattern 和subject 生效。返回的$count 则是所有pattern和 subject 字符串所进行操作次数的总合。
+
+这里有一个preg_replace 的例子，其中pattern 和replacement 都是数组。其结果类似于PHP 内建的htmlspecialchars() 函数，它保证处理过的文本符合 HTML 规范：
+
+$cooked =preg_replace(
+
+/*要匹配的文本... */array('/&/','/</','/>/','/"/'),
+
+/*要替换的文本... */array('&amp;','&lt;','&gt;','&quot;'),
+
+/*...要操作的目标字符串*/$text
+
+);
+
+如果输入的文本是：
+
+AT&T -->" baby Bells"
+
+Scooked的值就是：
+
+AT&amp;T --&gt;&quot;baby Bells&quot;
+
+当然也可以预先准备好这些数组，下面的程序运行结果相同：
+
+$replacements = array('&amp; ','&lt;','&gt;',' &quot;');

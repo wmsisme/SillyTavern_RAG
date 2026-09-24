@@ -1,0 +1,74 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 26/37
+---
+Num Num Num	#0
+
+#1 #2 #3
+
+一 - 一
+
+--
+
+Num #0	is	Name"0"	Num #0 is Name"0"
+
+Num #1	is	Name"1"	Num #1 is Name"proto"
+
+Num #2	is	Name"2"	Num #2 is Name"host"
+
+Num #3	is	Name"3"	Num #3 is Name"page"
+
+MatchObj.Length
+
+返回实际匹配文本的长度。
+
+MatchObj. Index
+
+返回一个整数，显示匹配文本在目标中的起始位置。编号从0开始，所以这个数字表示从 目标字符串的开头 (最左边)到匹配文本的开头(最左边)的长度。即使在创建 Match 对 象时设置了RegexOptions. RightToLeft, 回值也不会变化。
+
+MatchObj.Groups
+
+此属性是一个GroupCollection 对象，其中封装了多个Group 对象。它是一个普通的集合 类 ( collection), 包 含 了Count 和 Item 属性，但是最常用的办法还是按照索引值访问，取 出对应的Group 对象。例如，M.Groups(3) 对应第3组捕获型括号，M.Groups ("HostName") 对应命名捕获“HostName”(正则表达式中的'(? <HostName>…)j)。
+
+在 C#中，使用M.Groups[3] 和 M.Groups[" HostName"]。
+
+编号为0的分组表示整个正则表达式匹配的所有文本。MatchObj.Groups(0) .Value 等价于 MatchObj. Value。
+
+MatchObj. NextMatch ()
+
+NextMatch() 方法将正则表达式应用于目标字符串，寻找下一个匹配，返回新的Match 对 象。
+
+MatchObj. Result ( string)
+
+string是一个特殊的序列，按照第424页补充内容的介绍来处理，返回结果文本。这里有个 简单例子：
+
+Dim M as Match = Regex. Match(SomeString ,"\w+")
+
+Console.WriteLine (M.Result(" The first word is '$&'")〉
+
+下面的程序可以依次匹配内容左侧和右侧文本的副本
+
+M.Result("$")
+
+M.Result("$'"〉
+
+' 这是匹配内容左侧的文本
+
+' 这是匹配内容右侧的文本
+
+调试时可能需要显示某些和行有关的信息：
+
+M.Result("[$<$&>$'")]
+
+如果把' d+J应用到 'May 16,1998’ 得到的Match对象，返回的是 'May <16>,1998', 这清楚地体现了匹配文本。
+
+430 第 9 章 ： . N E T
+
+MatchObj. Synchronized()
+
+它返回一个新的，与当前Match 完全一样的Match 对象，只是它适合于多线程使用。 MatchObj.Captures
+
+Captures 属性并不常用，参见第437页的介绍。
+
+使用Group 对象

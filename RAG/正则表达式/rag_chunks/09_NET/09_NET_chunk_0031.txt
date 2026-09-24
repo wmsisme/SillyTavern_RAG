@@ -1,0 +1,62 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 31/37
+---
+End If
+
+如果字符串数组 EmailHeaderLines 没有任何行(或者没有 Subject 行),程序中的循环就 不会设置SubMatch, 如果 SubMatch 没有初始化，循环之后检查SubMatch 会得到一个空 引用异常。这种情况下用Match.Empty 来初始化就很方便。
+
+Regex.CompileTOAssembly(…)
+
+它容许用户创造一个装配件 ( assembly), 封装正则表达式——参见下一节。
+
+.NET 高级话题
+
+Advanced.NET
+
+下面的内容涉及某些尚未介绍过的特性：通过正则装配件( regex assemblies)构建正则表达 式库，使用.NET 专属的特性匹配嵌套结构，以及对Capture 对象的讲解。
+
+正则表达式装配件
+
+Regex Assemblies
+
+.NET能够把 Regex对象封装到装配件 ( assembly) 中，在构建正则表达式库时这很有用。 下一页的补充内容提供了示例。
+
+运行补充内容中的例子，能够在当前工程的bin 代码目录下创建JfriedlsRegexLibrary.DLL。 然后我们可以通过Visual Studio.NET的 Project> Add Reference 将其加入，在其他工程中使 用这个装配件。
+
+要使用装配件中的类，首先必须导入：
+
+Imports jfriedl
+
+然后就可以像其他任何类一样引用它们，例如：
+
+Dim FieldRege x as CSV.GetField =New CSV.GetField	' 生 成 新 的 rege x 对 象
+
+**
+
+Dim FieldMatch as Match =FieldRegex.Match(Line)
+
+' 应 用 到 字 符 串 . . .
+
+While FieldMatch.Success
+
+Dim Field as String
+
+If FieldMatch. Groups (1).Success
+
+Field =FieldMatch.Groups("QuotedField").Value
+
+Field = Regex.Replace(Field,"""""","""") ‘ 把连在一起的引号替换为单个引号
+
+Else
+
+Field=FieldMatch. Groups("UnquotedField").Value
+
+End If
+
+Console.WriteLine(“[”&Field &"]”)
+
+' 现在可以处理'Field' ...
+
+Fie ldMatch =FieldMatch.NextMatch

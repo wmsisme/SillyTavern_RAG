@@ -1,0 +1,48 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 7/69
+---
+$ (cont'd)
+.NET 424
+OK for debugging 331
+pre-match copy 355
+$* 362
+$/ 35,78 Perl 35
+$′ 300
+checking for 358
+mimicking 357
+naughty 356
+.NET 424
+OK for debugging 331
+pre-match copy 355
+s$ .NET 424
+$ 112-113,130,447
+(see also enhanced line-anchor mode) escaping 77
+optimization 246
+Perl interpolation 289
+PHP 442
+$_79,308,311,314,318,322,353-354, 359
+.NET 424
+$+[0] (see +) so 300
+Java 380
+PHP 459
+s-[01 (see g-) ${0) 459
+$1137-138,300,303 introduced 41
+Java 380
+.NET 424
+in other languages 138
+pre-match copy 355
+$all_matches 455
+$ARGV 79
+SHostnameRegex 76,137,303,351 SHttpUr1 303,305,345,351
+SLevelN 330,343
+Smatches 450
+$^N 300-301,344-346
+${name} 409
+${name~ )424
+SNestedstuffRegex 339,346 $^R 302,327
+$^w 297
+8 Perl interpolation 289
+(?:)(see non-capturing parentheses) ()(see parentheses)
+(?!) 241,333,335,340-341

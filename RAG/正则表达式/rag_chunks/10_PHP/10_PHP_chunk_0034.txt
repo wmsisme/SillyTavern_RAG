@@ -1,0 +1,32 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 34/52
+---
+PRBG_SPLIT_OFFSET_CAPTURE 就像在 preg_match 和 preg_match_all 中使用 PREG_
+
+OFFSET_CAPTURE 一样，这个标志位会修改结果数组，把每个元素变为包含两个元素的数组 (元素本身和它在字符串中的偏移值)。
+
+PRBG_SPLIT_NO_EMPTY 这个标志位告诉preg_split 忽略空字符串，不把它们放在返回数 组中，也不记入 limit 的统计。对目标字符串的起始位置、结尾位置，或是空行的匹配，都 会带来空字符串。
+
+下面来改进前面的“Web 2.0” 的 tag的例子(466),如果$input 为‘party,,fun', 那
+
+么:
+
+Stags =preg_split('/s*,\s*/x',$input);
+
+得到的stags 包含3个元素： 'party’、 空字符串，然后是‘fun' 。空字符串是逗号的两次 匹配之间的“空白”。
+
+如果设置了PREG_SPLIT_NO_EMPTY 标志位：
+
+Stags = preg _split('/\s*,\s*/x',$input,-1,PREG_S PLIT_NO_EMPTY); 结果数组只包含‘party ' 和 'fun'。
+
+PREG_SPLIT_DBLIM_CAPTURE 这个标志位在结果中包含匹配的文本，以及进行此次切分的 正则表达式的捕获括号匹配的文本。来看个简单的例子，如果字符串中各个字段是以‘and' 和 ‘ or ' 来联系的，例如：
+
+DLSR camera and Nikon D200 or Canon EOS 30D
+
+如果不使用PREG_ SPLIT_DELIM_CAPTURE,
+
+Sparts =preg_split('/\s+(andlor)\s+/x',$input);
+
+得到的sparts 是 ：

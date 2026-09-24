@@ -1,0 +1,28 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 32/51
+---
+Anchoring bounds
+
+与anchoring bounds有关的方法有：
+
+Matcher useAnchoringBounds(Boolean b)
+
+设置 matcher的 anchoring-bounds 的值，默认为true。
+
+此方法会返回 matcher 对象本身，故可用于方法链中。
+
+boolean hasAnchoringBounds()
+
+如果启用了anchoring bounds, 则返回true, 否则返回false。
+
+默认状态下，anchoring bounds为 true,也就是说行锚点(^\ A$\z \Z) 能匹配检索范围 的边界，即检索范围不等于整个目标字符串。将它们设置为false 表示行锚点只能匹配检索
+
+范围内，整个目标字符串中符合规定的位置。
+
+禁用anchoring bounds的理由可能与使用transparent bounds 一样，当用户的“光标不在整段 文本的起始位置时”保证语意的完备。
+
+与transparent-bounds 一 样，anchoring bounds也只有在检索范围不等于“整个目标字符串” 时才有意义。即使reset 方法也不会重置它。
+
+方法链

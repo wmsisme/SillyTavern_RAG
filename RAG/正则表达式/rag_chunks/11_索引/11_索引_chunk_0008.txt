@@ -1,0 +1,30 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 8/69
+---
+(?善) 99,136,420 (? 1)
+Java 402
+PCRE 476
+PHP 476
+?1)PHP 482
+(?i)( see: case-insensitive mode; mode modifier)
+(?i:…)(see mode-modified span) (?-i) 446
+(?i); 446
+(?f tben |else) (see conditional)
+(?m)( see: enhanced line-anchor mode;
+mode modifier)
+(?m:) (see mode-modified span) (?n) 408
+(?<name> )(see named capture)
+(?' name' )(see named capture) (?P< >) 451-452,457
+(?P=name)(see named capture)
+(?P<name>)(see named capture) (?R) 475
+PCRE 475
+PHP 475
+(?s)(see: dot-matches-all mode;mode modifier)
+(?s:)(see mode-modified span)
+(?x:…)(see mode-modified span)
+(?x)( see: comments and free-spacing
+mode;mode modifier)
+
+★+(see possessive quantifiers)

@@ -1,0 +1,47 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 63/69
+---
+split
+with capturing parentheses .NET 409,426
+Perl 326
+PHP 468
+chunk limit
+Java 396
+Perl 323
+PHP 466
+into characters 322
+Java 395-396
+limit 466-467
+Java 396
+Perl 323
+PHP 466
+Perl 321-326
+PHP 465-469
+trailing empty items 324,468
+whitespace 325
+split method 395-396
+Split(Regex object method) 425-426 B 111,128,290
+stacked data 456
+standard formula for matching delimited text 196
+star
+backtracking 162
+greedy 141,447
+introduced 18-20
+lazy 141
+possessive 142
+start method 377
+start of match (see \G)
+start of word (see word boundaries) start-of-line/string(see anchor,caret) start-ofstring anchor optimization 246,
+255-256,315
+states (see also backtracking,saved states) flushing (see: atomic grouping; look-
+around;possessive quantifiers) stclass Ist ' 362
+stock pricing example 51-52,167-168 with alternation 175
+with atomic grouping 170
+with possessive quantifier 169
+Strict( Option)415
+strict pragma 295,336,345 Strminaches 376
+replaceA ll 378
+replaceFirst 379
+split 395

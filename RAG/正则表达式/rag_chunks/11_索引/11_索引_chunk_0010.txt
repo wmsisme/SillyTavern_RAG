@@ -1,0 +1,51 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 10/69
+---
+.NET(cont'd)
+\p{… } 125
+regex approach 96-97
+regex flavor 407
+search and replace 414,423-424 URL example 204
+version covered 405
+dau) 134
+=~308-309,318
+introduced 38
+?(see question mark)
+? ? 308
+?+(see possessive quantifiers)
+…. · 103
+Q- 300,302,339 8+ 300,302,314
+Perl interpolation 289
+[==] 128 [::] 127
+[:<:] 91
+【 ..】 128
+112-113,130
+(see also enhanced line-anchor mode) Java 370
+optimization 246
+^Subject:example 94,151-152,154,
+242-243,245,289
+Java 95
+.NET 96
+Perl 55
+Perl debugger 361
+PHP 97
+Python 97
+{mn,max} 20,141
+I(see alternation)
+$+ .NET 202
+
+\0 117-118
+$o 300
+Java 380
+PHP 459
+(?1)
+Java 402
+PCRE 476
+PHP 476
+\1 138,300,303
+(see also backreferences) Perl 41
+$1 137-138,300,303
+introduced 41
+Java 380

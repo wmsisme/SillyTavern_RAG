@@ -1,0 +1,68 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 48/52
+---
+CSV Parsing with PHP
+
+这里有一个用PHP 解析CSV ( 逗号分隔值)的程序，原来的例子在第6章(271)。 这个
+
+正则表达式使用了占有优先量词( 142),而不是固化分组括号，因为它们看起来更清晰。 首先，这是我们将要使用的正则表达式：
+
+$csv_regex ='{
+
+\G(?:^I,)
+
+(?:
+
+# 或者是双引号字段 ...
+
+" # 起 始 双 引 号
+
+( [^"]*+(?:""[^"]*+)*+)
+
+"# 结束双引号 | # . . . 或者是 . . .
+
+#. ..非双引号/逗号文本...
+
+([^",]*+)
+
+}x';
+
+然后，我们用它来解析$CSv文件中的一行：
+
+/* 应用正则表达式，填充$all_ matche s */
+
+preg_match_all($csv_regex,$line,$all_matches);
+
+/*SResul t 用来保存从$all_ matches 收集的数据*/
+
+SResult =array();
+
+/*遍历每个成功的匹配 ...*/
+
+for($i =0;$i<count($all_matches[0]);$i++)
+
+{
+
+/* 如果第2组捕获型括号匹配了，则直接使用*/
+
+if(strlen($all_matches[2][$i])>0)
+
+array_push($Result,$all_matches[2][$i]);
+
+else
+
+{
+
+/*否则为引用字段，在使用前处理其中内嵌的相连双引号*/
+
+array_push($Result,preg_replace('/""/','"',$all_matches[1][$i]));
+
+}
+
+{
+
+/* 现在可以使用SResult 数组*/
+
+检查tagged data 的嵌套正确性

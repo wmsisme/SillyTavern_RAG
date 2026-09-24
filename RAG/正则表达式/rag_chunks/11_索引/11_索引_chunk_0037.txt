@@ -1,0 +1,33 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 37/69
+---
+match,mechanics(cont'd)
+greedy introduced 151
+literal text 149
+modes 110-113
+Java 368
+negating 309
+neverending 222-228,330,340
+avoiding 264-266
+discovery 226-228
+explanation 226-228
+non-determinism 264
+short-circuiting 250
+solving with atomic grouping 268 solving with possessive quanti-
+fiers 268
+NFA vs.DFA 156-157,180-183
+of nothing 454
+position (see pos)
+
+POSIX
+Perl 335
+shortest-leftmost 182
+side effects 317
+intertwined 43
+Perl 40
+speed 181
+in a string 27
+tag-team 132
+viewing mechanics 331-332

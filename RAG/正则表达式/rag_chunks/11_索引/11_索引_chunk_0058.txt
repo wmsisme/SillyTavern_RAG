@@ -1,0 +1,31 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 58/69
+---
+Regex(. NET),object(cont'd)
+using 96,421 Options 427
+Replace 414-415,423-424,431
+Ri ghtToLeft 427
+Split 425-426,431
+ToString 427
+Unescape 433
+regex objects 303-306
+(see also qr/-1)
+efficiency 353-354
+/g 354
+match modes 304-305
+/0354
+in regex literal 354
+viewing 305-306
+regex operators Perl 285
+regex overloading 292
+(see also use overload)
+regex overloading example 341-345
+bttp://regex.info/ xxiv,7,345,358,451
+RegexCompilationInfo 435
+regex-directed matching 153
+(see also NFA)
+and backreferences 303
+and greediness 162
+Regex.Escape 136

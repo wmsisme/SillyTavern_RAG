@@ -1,0 +1,26 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 9/69
+---
+★(see star)
++(see plus)
+++ 483
+(see also possessive quantifiers)
+· . ★·(see double-quoted string example)
+
+introduced 55
+mechanics of matching 152
+optimization 246
+warning about 56
+.NET xvii,405-438
+$+202
+after-match data 138
+benchmarking 237
+character-class subtraction 406 code example 219
+flavor overview 92
+JIT 410
+line anchors 130
+literal-text mode 136
+MISL 410
+object model 417

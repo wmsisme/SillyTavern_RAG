@@ -1,0 +1,34 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 34/94
+---
+my @nums =$text =~m/\d+/g;
+
+如果stext 包含IP地址‘64.156.215.240’,@num会接收4个元素，‘64’、‘156’、‘215’、 ‘240’。与其他结构相结合，就能很方便地把 IP 地址转换为8位16进制数字，例如 409cd7f0', 如果需要创建紧凑的Iog 文件，这很方便：
+
+my shex_ip =join · , map(sprintf(" 若02x",$_)}$ip=~m/\d+/g;
+
+下面的代码可以把它转换回来：
+
+my sip = join'.', map {hex( $_)}Shex_ip=~m/../g
+
+另一个例子是匹配一行中的所有浮点数：
+
+my @nums = Stext =~m/\d+(?:\.d+)?.\d+/g;
+
+一定要使用非捕获型括号，因为捕获型括号会改变返回的结果。下面的例子说明了捕获型 括号的价值：
+
+my @Tags =$Html =~m/<(\w+)/g;
+
+@Tags 会保存SHtm1 中依次出现的各个tag, 这里假设每一个‘<’都有对应的‘>’。
+
+312 第 7 章 ： P e r l
+
+下面的例子使用了多个捕获型括号：把Unix中邮箱联系人的alias 文件的内容存放在一个字 符串中，数据格式是：
+
+alias	Jeff	jfriedl@regex.info
+
+alias	Perlbug	per15-porters@perl.	org
+
+alias	Prez	president@whitehous	e.gov

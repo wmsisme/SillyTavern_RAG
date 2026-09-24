@@ -1,0 +1,82 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 57/94
+---
+寻找最长匹配
+
+如果我们不希望找到所有匹配，而是希望找到并保存最长的匹配，应该如何做呢?我们可 以用一个变量来保存“到目前为止”最长的匹配，比较每一个“当前匹配”和它。下面是
+
+' onself ' 的例子：
+
+$longest_match =undef; # 用于记录最长的匹配
+
+"oneselfsufficient"=~m{
+
+one(self)?(selfsufficient)?
+
+(?{
+
+#比较当前匹配($&)与之前记录的最长匹配
+
+if(not defined($longest_match)
+
+or
+
+length($&)>length($longest_match))
+
+{
+
+$longest_match =$&;
+
+}
+
+})
+
+(?!)# 保证匹配失败，通过回溯继续寻找其他匹配
+
+}x;
+
+#如果有结果，就输出
+
+if(defined($longest_match)){
+
+}elt"longest match=[$longest_match]\n";
+
+print "no match\n";
+
+}
+
+毫不奇怪，结果是‘longest match=[oneselfsufficient]’。这一段内嵌代码很长，不 过将来我们可能会使用，所以我们把它和(?!)封装起来，作为单独的regex 对象：
+
+my $RecordPossibleMatch = qr{
+
+(?{
+
+# 比较当前匹配($& )与之前记录的最长匹配
+
+if(not defined($longest_match)
+
+or
+
+length($&)>length($longest_match))
+
+$longest_match =$&;
+
+})
+
+# 保证匹配失败，通过回溯继续寻找其他匹配
+
+下面这个简单例子会找到最长的匹配‘9938':
+
+$longest_match =undef; # 记录最长的匹配
+
+"800-998-9938"=~m{\d+SRecordPossibleMatch }x;
+
+# 输出到目前为止的累积结果
+
+if(defined($longest_match)){
+
+print" longest match=[$longest_match]\n"; }else {
+
+print "no match\n";

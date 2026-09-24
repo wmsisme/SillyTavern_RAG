@@ -1,0 +1,62 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 33/37
+---
+New RegexCompilationInfo(
+
+"^Subject:\s*(.*)",RegexOptions.IgnoreCase,
+
+"Subject","jfriedl.Mail",true), New RegexCompilationInfo(
+
+"^From:\s*(.*)",RegexOptions.IgnoreCase,
+
+"From","jfriedl.Mail",true), New RegexCompilationInfo(
+
+"\G(?:^I,)
+
+"(?:
+
+"(?# 或者是双引号字段 . . .)
+
+"""(?# 起始双引号)
+
+"(?<QuotedField>(?>[^""]+ "#")*)
+
+" " " ( ? # 结 束 双 引 号 )
+
+" ( ? # . . . 或 者 . . . )
+
+" I
+
+" ( ? # . . . 非 引 号/ 非 逗 号 文 本 . . . )
+
+"(?<UnquotedField>[^"",]*)
+
+")",
+
+RegexOptions.IgnorePatternwhitespace,
+
+"GetField","jfriedl.CSV",true)
+
+}
+
+'现在进行主要的处理，生成结果...
+
+Dim AN as AssemblyName = new AssemblyName()
+
+AN. Name ="JfriedlsRegexLibrary"'DLL 文件的名字
+
+AN.Version = New Version("1.0.0.0")
+
+Regex. CompileToAssembly(RCInfo, AN)‘ 构建完成 End Sub
+
+End Module
+
+也可以不进行任何导入，而是直接使用：
+
+Dim FieldRegex as jfried1.CSV.GetField = New jfried1.CSV.GetField
+
+这有点麻烦，但是清楚地说明了对象的出处。同样，这只是风格的问题。
+
+匹配嵌套结构

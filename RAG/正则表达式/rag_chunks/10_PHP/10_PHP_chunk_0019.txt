@@ -1,0 +1,36 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 19/52
+---
+就像 preg_match 一样，也可以在 preg_match_all 中使用 PREG_OFFSET_CAPTURE,让 $all_ matches 的每个末端元素(leaf element) 成为一个两个元素的数组(匹配的文本，以 及按字节计算的偏移值)。也就是说，$all_matches 成为一个数组的数组的数组，这可真 饶舌。如果你希望同时使用PREG_OFFSET_CAPTURE和 PREG_SET_ORDER, 请使用逻辑运算 符“or” 来连接：
+
+preg_match_all($pattern,$subject,$all_matches,
+
+PREG_OFFSET_CAPTURE |PREG_SET_ORDER);
+
+preg_match_all 与命名分组
+
+如果使用了命名分组，$all_matches 将会多出命名元素(同 preg_match 一 样 4 5 1 ) 。 这 段程序：
+
+$subject ="
+
+Jack A.Smith
+
+Mary B.Miller";
+
+/*不设置flags 就采用PREG_PATTERN_ORDER */
+
+preg_match_a ll('/^(?P<Given>\w+)(?P<Middle>\w\. )(?P<Family>\w+)$/m', $subject,$all_matches);
+
+$all_ matches 的结果是：
+
+array
+
+( 0 =>array(0=>"Jack A. Smith",1=>"Mary B.Miller"),
+
+"Given" =>array(0=>"Jack", 1 =>"Mary" ),
+
+1 =>array(0=>"Jack", 1=>"Mary" ),
+
+"Middle"=>array(0=>"A.", 1=>"B." ),

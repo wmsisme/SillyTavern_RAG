@@ -1,0 +1,42 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 45/69
+---
+optimization (cont'd)
+literal-string concatenation 247 need cognizance 252
+needless class elimination 248
+needless parentheses 248
+pre-check of required charac-
+ter 245-248,252,257-259,332, 361
+simple repetition
+discussed 247-248
+small quantifier equivalence 251-252 state suppression 250-251
+string/line anchors 149,181
+super -linear short-circuiting 250 option
+-036
+-c 361
+-Dr 363
+-e 36,53,361
+-i 53
+-M 361
+-Mre=debug 363
+-n 36
+-p 53
+-w 38,296,326,361
+Option (.NET)415
+optional(see also quantifier)
+whitespace 18
+options(Regex object method)427 OR class set operations 125-126
+Oram, Andy 5
+ordered alternation 175-177
+pitfalls 176
+osmosis 293
+/osmosis 293
+p {Other} 122
+\ p{Other_ Letter) 123
+\ p{Other _Number} 123
+\p{Other _Punctuation) 123
+p{Other _symbol) 123
+our 295,336
+overload pragma 342

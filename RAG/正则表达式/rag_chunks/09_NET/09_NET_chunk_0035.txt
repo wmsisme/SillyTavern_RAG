@@ -1,0 +1,26 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 35/37
+---
+Capture Objects
+
+.NET的对象模型中还包括Capture 对象，之前一直没有介绍过。依视角的不同，它可能为 匹配结果增加了新的观察角度，也可能是增加把结果弄得更糟。
+
+Capture 对象几乎等价于Group 对象，因为它表示一组捕获型括号匹配的文本。与 Group 对象一样，它提供了Value (匹配的文本)、Length (匹配文本的长度),以及 Index ( 匹 配文本在目标字符串中的偏移值，编号从0开始)。
+
+Group 对象和Capture 对象的主要差别是，每个Group 对象都包含了一组Captures, 分别 对应到匹配过程中各分组的未确定匹配( intermediary match),以及该分组最终匹配的文本。 看下面这个例子：
+
+Dim M as Match =Regex.Match("abcdefghijk","^(..)+")
+
+正则表达式匹配了5组(.. ), 包括了字符串中的绝大多数字符‘abcdefghij k': 因为加 号在括号外面，加号控制的每次迭代都会重新捕获，这个捕获型括号最后保存的是‘ij' ( 也 就是说，M.Groups( 1).Value 等于‘ij') 。 相反，M.Groups(1)同样包含一组Capture, 它们对应到(..) 的匹配过程：
+
+M.Groups(1).Captures(0).Value		is ‘ab'
+
+M.Groups(1).Captures(1).Value		is ‘cd'
+
+M.Groups(1).Captures(2).Value		is ‘ef'
+
+M.Groups(1).Captures(3).Value		is ‘gh'
+
+M.Groups(1) .Captures(4).Value		is ‘ij'

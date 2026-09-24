@@ -1,0 +1,53 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 42/69
+---
+.NET(cont'd)
+literal-text mode 136
+MISL 410
+object model 417
+\p{…}125
+regex approach 96-97
+regex flavor 407
+search and replace 414,423-424 URL example 204
+version covered 405
+word boundaries 134
+(see also VB.NET)
+neurophysiologists early regex study 85 neverending match 222-228,330,340
+avoiding 264-266
+discovery 226-228
+explanation 226-228
+non-determinism 264
+short-circuiting 250
+solving with atomic grouping 268
+solving with possessive quantifiers 268 New Regex 96,99,416,421
+newline and HTIP 115
+NEXT LINE 109,370,407
+NextMatch(Match object method) 429 NFA
+acronym spelled out 156
+and alternation 174-175
+compared with DFA 156-157,180-183
+control benefits 155
+efficiency 179
+essence(see backtracking)
+first introduced 145
+and greediness 162
+implementation ease 183
+introduction 153
+nondeterminism 265
+checkpoint 264-265
+POSIX efficiency 179
+testing for 146-147
+theory 180 \p(N1} 123
+N{LATIN SHALL LETTER SHARP S) 290
+N(name} 290
+(see also pragma)
+inhibiting 292 Ap(No) 123
+
+No Dashes Hall Of Shame 458
+no re 'debug′361
+no_match_vars 357
+nomenclature 27
+
+non-capturing parentheses 45,137-138 (see also parentheses)

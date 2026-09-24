@@ -1,0 +1,62 @@
+---
+章节: 第3章：正则表达式的特性和流派概览
+章节ID: 03_正则表达式的特性和流派概览
+切片序号: 19/83
+---
+查找和替换
+
+A Search-and-Replace Example
+
+“Subject” 的例子太简单，还不足以说明3种方法之间的差异。在本节我们将看到更复杂 的例子，它进一步揭示了不同处理方式在设计上的差异。
+
+在前一章，我们看到了在Perl 中利用查找和替换将E-mail地址转换为超链接的例子(73):
+
+$text =~s{
+
+\b
+
+# 把捕获的地址保存到$1 ...
+
+(
+
+\wi.\w]* #username
+
+@
+
+[-\w]+(.[-\w]+)*\.( comledulinf o)#hostname
+
+)
+
+\b
+
+}{<a href="mailto:$1">$1</a>}gix;
+
+Perl 的查找和替换操作符是“原地生效”的，也就是说，替换会在目标变量上进行。其他大 多数语言的替换都是在目标文本的副本上进行的。如果不需要修改原变量，这样操作就很 方便，不过如果需要修改原变量，就得把替换结果回传给原变量。下面给出了一些例子。
+
+Java 中的查找和替换
+
+下面是使用Sun 提供的java.util.regex 进行查找-替换的例子：
+
+import java.util. regex. *;// 一次性导入所有需要用到的类
+
+Pattern r= Pattern.compile(
+
+"\\b
+
+"# 把捕获的地址保存到$1 ...
+
+"(
+
+-.w]* #username
+
+" [-\\w]+(\.[-\\w]+)*\. (comledul info) #hostname
+
+")
+
+"\\b
+
+Pattern.CASE_INSBNSITIVE|Pattern.COMMENTS);
+
+Matcher m =r.matcher(text);
+
+text =m.replaceAl1("<a href=\"mailto:$1\">$1</a>");

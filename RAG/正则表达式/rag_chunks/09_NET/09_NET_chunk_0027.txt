@@ -1,0 +1,78 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 27/37
+---
+Using Giroup Objects
+
+Group 对象包含一组捕获型括号(如果编号是0,就表示整个匹配)的信息。其属性和方法 如下：
+
+GroupObj. Success
+
+它返回一个 Boolean 值，表明此分组是否参与了匹配。并不是所有的分组都必须“参与”成 功的全局匹配。如果(this)1(that) 能够成功匹配，肯定有一个分组能参与匹配，另一个 不能。第139页的脚注中有另一个例子。
+
+GroupObj. Value
+
+GroupObj. ToString ()
+
+它们都返回本分组捕获文本的副本。如果匹配不成功，则返回空字符串。
+
+GroupObj.Length
+
+返回本分组捕获文本的长度。如果匹配不成功，则返回0。
+
+GroupObj. Index
+
+返回一个整数，表示本分组捕获的文本在目标字符串中的位置。编号从0开始，所以它就
+
+是从目标字符串的开头(最左边)到捕获文本的开头(最左边)的长度(即使在创建Match
+
+对象时设置了RegexOptions.RightToLeft, 结果仍然不变)。
+
+GroupObj. Captures
+
+请参考第437页Group 对象的Capture 属性。
+
+静态“便捷”函数
+
+Static“Conzenience” Functions
+
+在第413页的“正则表达式快速入门”中已经看到，我们并不需要每次都显式地创建Regex 对象。我们可以通过下面的静态函数直接使用正则表达式：
+
+Regex.IsMatch(target,pattern)
+
+Regex.IsMatch(target,pattern,options)
+
+Regex.Match(target, pattern)
+
+Regex.Match( target,pattern, options)
+
+Regex.Matches(target,pattern)
+
+Regex.Matches(target ,pattern, options)
+
+Regex.Replace( target, pattern, replacement)
+
+Regex.Replace(target ,pattern,replacement,options)
+
+Regex.Split(target,pattern)
+
+Regex.Split(target,pattern,options)
+
+其实它们不过是包装了已经介绍的主要的 Regex 构造函数和方法而已。它们会临时创建一 个Regex 对象，用它来调用请求的方法，然后弃用这个对象(其实并没有弃用，稍后介绍)
+
+这里有个例子：
+
+If Regex. IsMatch(Line,"^\s*$")
+
+****
+
+它等价于：
+
+Dim TemporaryRegex =New Regex("^\s*$")
+
+If TemporaryRegex.IsMatch(Line)
+
+***
+
+或者，更确切地说是：

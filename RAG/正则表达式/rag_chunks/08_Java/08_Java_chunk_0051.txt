@@ -1,0 +1,33 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 51/51
+---
+注 9 : 递 归 结 构 ( ? 1 )未在文档中说明，在 Java 1.4.2中是非正式提供的，在1 . 5 . 5中已经不再包
+
+含 。PCRE 也是如此，但是Java 没有在文档中说明，我们在这里用脚注来说明。
+
+Java 1.4.2中的规则是“去掉官方代码块名字中的空格，和开头的In” 。 这样，区块引 用就类似\p{InHangulJamo} 和\p(InArabicPresentationForms-A}。
+
+1.5.0添加了两种新的区块命名。可以在官方块名称之前直接添加 'In', 所以名字可 以为\p{InHangul·Jamo )和\p{InArabic·Presentation·Forms-A) 。 也可以给Java的 区块标识符添加前缀‘In' ( 是官方名称，将空格和连字符替换为下画线) \p{InHangu1 _Jamo}和 \ p{InArabic_ Presentation_Forms_A}。
+
+· Java 1.4.2 存在一个古怪的bug, Arabic Presentation Forms-B和 Latin Extended-B
+
+结尾的“B” 必须写作“Bound”, 也就是说\p{InArabicPresentationForms-Bound} 和\p{InLatinExtended-Bound)。
+
+· Java 1.5.0中 Character 类的 issomeing 方法支持正则表达式(369)。
+
+1.5.0和1.6之间的差异
+
+Differences Between 1.5.0 and 1.6
+
+写作本书时已经发布的1.6和1.5.0在正则表达式的问题上只有两个细微的差别：
+
+· Java 1.6提供了之前没有的对Pi 和Pf 的 Unicode分类的支持。
+
+· Q…\EJ 结构的bug已经修正了，所以在字符组中可以正常工作。
+
+第
+
+.NET
+\

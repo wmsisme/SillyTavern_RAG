@@ -1,0 +1,38 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 7/51
+---
+Unicode Line Terminators
+
+在Unicode 之前的传统正则流派中，点号、^、$和\Z会对换行符(ASCII 中 的LF 字符)进 行特殊处理。在Java 中，大多数Unicode 行终结符(109)也会这样特殊处理。
+
+正常情况下，Java 会把下面的这些字符当作行终结符：
+
+字符代码	名称	说明
+
+U+000A	LF \n	ASCII换行符(“newline”)
+
+U+000D	CR \r	ASCII回车
+
+U+000D U+000A	CR/LF \r\n	ASCII回车/换行序列
+
+U+0085	NEL	Unicode NEXT LINE(Unicode换行符)
+
+U+2028	LS	Unicode LINE SEPERATOR(Unicode行分隔符)
+
+U+2029	PS	Unicode PARAGRAPH SEPARATOR(Unicode段分隔符)
+
+根据匹配模式(368)的不同，点号、^、$和\Z会对这些符号进行特殊处理：
+
+匹配模式	受影响符号	说明
+
+UNIX_LINE	^.$\Z	恢复到传统模式，只把换行符作为一行的终结
+
+MULTILINE	^$	字符串中的行终结符也可以由^和$匹配
+
+DOTALL	·	行终结符不再另行处理，点号可以匹配所有字符
+
+作为行终结标志的双字符CR/LF 值得一提。默认情况(没有使用UNIX_LINES时)是识别 完整的行终结符，匹配文本行边界的元字符会把CR/LF 视为不可分隔的单位，一次性匹配 这两个字符。
+
+举例来说，$和\Z 通常会匹配行终结符之前的位置。LF 是行终结符，但只有在它不属于 CR/LF ( 也就是说，LF 之前没有CR) 的情况下，$和\Z才能匹配字符串末尾的LF 之前的 位置。

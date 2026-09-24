@@ -1,0 +1,42 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 48/69
+---
+pcre_study 259
+\p{Currency} 124
+\p{Currency_ Symbol} 123
+\p{Cyrillic) 122,124 \p{Pd} 123
+\ p{Dash _Punctuation} 123
+\p{Decimal _Digit_ Number} 123 \p(Dingbats 124
+\p{Pe) 123
+PeakWebbosting.com xxiv
+\p{Enclosing _Mark) 123
+people
+Aho,Alfred 86,180 Barwise,J.85
+Byington,Ryan xxiv
+Click,Cliff xxiv
+Constable,Robert 85
+Conway,Damian 339
+Cruise,Tom 51
+Filo,David 397
+Fite,Liz 33
+Friedl,Alfred 176
+Friedl,brothers 33
+Friedl,Fumie v,xxiv
+birthday 11-12
+Friedl,Jeffrey xxii
+Friedl,Stephen xxiv,458 George, Kit xxiv
+Gill, Stuart xxiv
+Gosling,James 89
+Greant, Zak xxiv
+Gutierrez, David xxiv
+Hazel,Philip xxiv,91,440 Keisler,H.J.85
+Kleene, Stephen 85
+Kunen, K.85 Lord, Tom 183
+Lunde,Ken xxiv,29
+Maton,William xxiv,36 McCloskey,Mike xxiv
+McCulloch,Warren 85
+Morse, Ian xxiv
+Oram,Andy 5
+Papen,Jeffrey xxiv Perl Porters 90

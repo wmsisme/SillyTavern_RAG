@@ -1,0 +1,26 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 43/69
+---
+Nondeterministic Finite Automaton (see NFA)
+None (. NET)421,427
+non-greedy(see lazy) nonillion 226
+nonparticipation parentheses 450,
+453-454,469
+nonregular sets 180
+\p{Non_Spacing_Mark} 123
+non-word boundaries (see word boundaries)
+“normal” 263-266
+NUL 117
+with dot 119
+NULL 454
+\p{Number) 122
+
+10352-353
+with regex object 354
+
+Obfuscated Perl Contest 320
+object model
+Java 371-372
+.NET 416-417

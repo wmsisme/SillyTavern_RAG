@@ -60,6 +60,7 @@ out/
 
 # ==================== 备份文件 ====================
 backup/
+RAG/backup/
 *.bak
 *.backup
 
@@ -71,9 +72,19 @@ temp/
 
 # ==================== SQLite ====================
 RAG/record_manager_cache.sql
+RAG/translation_cache.json
 *.sql-journal
 *.sql-wal
 *.sql-shm
+
+# ==================== 可再生的索引产物（勿提交） ====================
+# 向量缓存：整库 ids/documents/embeddings 的落盘副本（约 9.4MB），
+# 由重建自动生成、更新文档后自动清除，随时可重建 —— 不该进仓库。
+RAG/vector_cache.npz
+RAG/vector_cache_meta.json
+
+# TypeScript 增量编译信息（跑一次 tsc -b 就生成）
+*.tsbuildinfo
 
 # ==================== 测试 / 覆盖率 ====================
 .coverage
@@ -91,3 +102,26 @@ htmlcov/
 *.rar
 credentials.json
 service-account.json
+
+# ==================== 本项目：后端 / 前端 本地数据（勿提交） ====================
+# SQLite 业务数据（角色卡 / 世界书），属于用户数据，不进公开仓库
+backend/data.db
+backend/data.db-journal
+backend/data.db-wal
+
+# 密钥文件：只允许提交 .env.example 模板，.env 永不入库
+# （索引更新.py 会执行 `git add .`，这条是防止明文 Key 被推到公开仓库的关键）
+.env
+.env.local
+!.env.example
+
+# ChromaDB 持久化目录：体积大且含二进制索引。
+# 注意：RAG/chroma_db/chroma.sqlite3 是历史遗留的已跟踪文件，
+# 本规则只拦截新文件；要让规则对旧文件生效需 `git rm --cached`。
+RAG/chroma_db/
+
+# 索引升级 / 重建前的备份目录
+RAG/backup/
+
+# Trae IDE 工作目录（内含执行方案文档，按需手动提交）
+.trae/

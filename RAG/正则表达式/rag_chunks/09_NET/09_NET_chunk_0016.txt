@@ -1,0 +1,58 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 16/37
+---
+End Try
+
+显然，根据情况的不同，在检测到异常之后可能需要不同的处理：你可能需要进行其他的 处理，而不仅仅是向控制台输出报错信息。
+
+Regex选 项
+
+在创建Regex 对象时，可以使用下面的选项：
+
+RegexOptions.IgnoreCase
+
+此选项表示，在应用正则表达式时，不区分大小写(110)。
+
+RegexOptions.IgnorePatternWhitespace
+
+此选项表示，正则表达式应该按照自由格式和注释模式(x111) 来解析。如果使用单 纯的#…注释，请确认在每一个逻辑行的末尾都有换行符，否则第一处注释会“注释 掉”之后的整个正则表达式。
+
+在VB.NET中，我们可以用chr(10) 来实现，例如：
+
+Dim R as Regex =New Regex(_ "#匹配一个浮点数 ...
+
+"\d+(?:\.\d*)? # 开 头 是 整 数 部 分 . . .
+
+" I # 或 者 . .
+
+"\.\d+ # 开 头 是 小 数 点 " , _
+
+Regexoptions.IgnorePatternWhitespace)
+
+"&chr(10)&_
+
+"&chr(10)&_
+
+"&chr(10)&_
+
+这样很累赘；VB.NET提供了更简便的(?#…) 注释：
+
+Dim R as Regex =New Regex(-
+
+"(?# 匹配 一个浮点数 . . .
+
+"\d+(?:.\d*)? (? #开头是整数部分...
+
+" I (? # 或 者 . . .
+
+" \.\d+ (?# 开头是小数点
+
+RegexOptions.IgnorePatternWhitespace)
+
+)"&
+
+)”& )”&_ )",_
+
+RegexOptions.Multiline

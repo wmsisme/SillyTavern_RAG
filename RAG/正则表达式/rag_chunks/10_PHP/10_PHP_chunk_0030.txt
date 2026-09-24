@@ -1,0 +1,80 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 30/52
+---
+★ 匹配成功之后，$matches[0] 中保存的是需要转换为HTML 的字符串，以此为接受参数，返回
+
+* HTML宇符串。因为此函数只在确保安全的情况下调用，此处不考虑意外情况
+
+*/
+
+function text2html_callback( $matches)
+
+{
+
+global $replacenent;
+
+return $replacement[$matches[0]]; }
+
+Snew_subjec t =preg_replace_callback('/[&<">]/S ', /*pattern */
+
+"text2html_callback",/*callback */
+
+$subject);
+
+如果$subject 的值是：
+
+"AT&T"sounds like"ATNT"
+
+则$new_subject 的值就是：
+
+&quot;AT&amp;T&quot; sound s like &quot; ATNT&quot;
+
+本例中的text2htm l_callback 是普通的PHP 函数，用作preg_replace_callback 中的
+
+回调函数，它的接收参数是smatches 数组(当然，这个变量可以随意命名，不过我选择遵 循之前使用Smatches 的惯例)。
+
+为完整起见，下面我给出使用匿名函数的办法(使用PHP 内建的create_function 函数)。 这段程序产生的$replacement 变量与上面一样。函数体也相同，只是此时函数没有名字， 只能在preg_replace_callback 中使用：
+
+$new_subject =preg_replace_callback('/[&<">]/S',
+
+create_function('$matches',
+
+'global $replacement;
+
+return $replacement[$matches[0]];'),
+
+$subject);
+
+使用callback, 还是模式修饰符e
+
+如果处理不复杂，使用模式修饰符的程序比preg_replace_callback 更容易看懂。但是， 如果效率很重要，那么请记住，如果使用模式修饰符e, 每次匹配成功之后都需要检查作为 PHP 代码的replacement 参数。相比之下，preg_replace_callback 的效率就要高许多(如 果使用回调，PHP 代码只需要审查1次)。
+
+preg _ sp lit
+
+使用方法
+
+preg_split(pattern,subjec t [,limit,[flags ]])
+
+参数简介
+
+pattern 分隔符包围起来的正则表达式，可能还有修饰符(444)。
+
+subject 需要分割的目标字符串。
+
+limit 非强制出现，是一个整数，表示切分之后元素的上限。
+
+flags 非强制出现，此标志位影响整个切割行为，以下三项可以随意组合：
+
+PREG_SPLIT_NO_EMPTY
+
+PREG_SPLIT_DELIM_CAPTURE
+
+PREG_SPLIT_OFFSET_CAPTURE
+
+它们的讲解从第468页开始。多个标志位使用二元运算符“或”来连接(与第456 页一样)。
+
+返回值
+
+返回一个字符串数组。

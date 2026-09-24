@@ -1,0 +1,51 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 49/69
+---
+people (cont'd)
+Wall,Larry 88-90,140,363
+Zawodny,Jeremy
+Zmievski,A ndrei Perl
+\p{ …}125
+$/ 35
+context(see also match,context)
+contorting 294
+efficiency 347-363
+flavor overview 92,287
+greatest weakness 286
+history 88-90,308
+introduction 37-38
+line anchors 130
+modifiers 292-293
+motto 348
+option
+-036
+-c 361
+-Dr 363
+-e 36,53,361
+-i 53
+-M 361
+-Mre=debug 363
+-n 36
+-p 53
+-w 38,296,326,361
+regex operators 285
+search and replace 318-321 ∑ 110
+Unicode 288
+version covered 283
+($^w variable)297
+use warnings 326,363 Perl Porters 90
+perladmin 299
+\p {Pf} 123
+Java 369
+\p{Final_Punctuation) 123
+\p{Format } 123
+\p{Gujarati} 122
+\p{Han) 122
+\p{Hangul_ Jamo} 124
+\p{Hebrew} 122,124 \p{Hiragana) 122
+PHP 439-484
+after-match data 138
+benchmarking 234-235 callback 463,465
+CSV parsing example 480 efficiency 478-480

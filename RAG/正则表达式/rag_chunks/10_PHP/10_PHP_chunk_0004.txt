@@ -1,0 +1,42 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 4/52
+---
+检查正则表达式字符串的语法错误
+
+每个函数的具体功能都取决于参数的个数、标志位( flag), 以及正则表达式所使用的模式 修饰符。在深入细节之前我们先通过几个例子来看看PHP 中的正则表达式的例子和处理方 式。
+
+/ * 测 试 HTML tag是 否< table>tag*/
+
+if( preg_ match('/^<table\b/i',$tag))
+
+print"tag is a table tag\n";
+
+/* 测试文本是否为整数*/
+
+if( preg_ match('/^-? \d+$/',$user _input))
+
+print "user input is an integer\n";
+
+/* 从字符串中取出HTML title*/
+
+if( preg_match('{<title>(.*?)</title> }si',$html,$matches))
+
+print"page title:$matches[1]\n";
+
+/*将字符串中的数值作为华氏温度，将其替换为摄氏温度*/
+
+Smetric = preg_ replace ('/(-?\d+(?:\.\d+)?) /e',/*	pattern *1
+
+'floor(($1-32)*5/9+0.5)',	/* 替换代码*/
+
+$string);
+
+/* 从逗号分割值数据创建字符串数组 */
+
+$values_array =preg_split('!s*,s*,!',$comma_separated_values);
+
+最后的程序，如果输入‘Larry,·Curly, · Moe’,返回三个元素的数组：'Larry ’,' Curly' 和‘Moe'。
+
+“pattern” 参数 "Pattern " Arguments

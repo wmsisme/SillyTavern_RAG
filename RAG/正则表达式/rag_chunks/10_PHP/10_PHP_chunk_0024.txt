@@ -1,0 +1,34 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 24/52
+---
+如果正则表达式匹配的单词是 'HEY’,replacement字符串中的$0会被替换为这个值。结果，
+
+replacement 字符串就成了‘strtolower("<b>HEY</b> ")’,执行这段PHP 代码，结果就是 '<b>hey</b>'。
+
+如果使用模式修饰符 e, replacement 字符串中的捕获引用会按照特殊的规定来插值：插值
+
+中的引号(单引号或双引号)会转义。如果不这样处理，插入的数值中的引号会导致 PHP 代码出错。
+
+如果使用模式修饰符e, 在replacement字符串中引用外部变量，最好是在replacement 字符 串文本中使用单引号，这样变量就不会进行错误的插值。
+
+这个例子类似于PHP 内建的htmlspecialchars() 函数：
+
+$replacement =array('&'=>'&amp;',
+
+'<'=>'&lt;';
+
+'>'=>'&gt;',
+
+'"'=>'&quot;');
+
+Snew_subject =preg_replace('/[&<">]/eS','$replacement["$0"]',$subject);
+
+需要注意，这个例子中的 replacement 使用了单引号字符串来避免$replacement 变量插值，
+
+直到将其作为 PHP 代码执行。如果使用双引号字符串，在传递给preg_replace 之前，插 值就会进行。
+
+可以用模式修饰符S 用来提高效率(478)。
+
+preg_ replace 的第4个参数用来设定替换操作次数的上限(单位是单个字符串-单个正则 表达式，参见下一节)。默认值是-1,表示“没有限制”。

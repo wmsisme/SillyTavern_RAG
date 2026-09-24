@@ -1,0 +1,53 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 14/69
+---
+Basic Regular Expressions 87-88
+\p{Basic _Latin}124
+\b\B 240
+benchmarking 232-239 comparative 249
+compile caching 351 Java 235-236
+for naughty variables 358
+.NET 237,410
+with neverending match 227
+Perl 360
+PHP 234-235
+
+索引 491
+
+benchmarking(cont'd)
+pre-match copy 356
+Python 238-239
+Ruby 238
+Tcl 239
+Berkeley 86
+Better-Late-Than-Never 236
+<B></B> 165-167 unrolling 270
+blocks 124,288,369,402,407
+BLTN 236
+Java 236
+BOL 362
+\p{Box _Drawing ) 124
+Boyer-Moore 245,247
+brace (see interval)
+bracket expressions 127
+BRE 87-88
+bread-crumb analogy 158-159
+<br/> 481
+bugs Java 365,368-369,387,392,399, 403
+Bulletin of Math. Biopbysics 85 bump-along
+avoiding 210
+distrusting 215-218
+introduction 148- 149
+optimization 255
+in overall processing 242
+Byington,Ryan xxiv
+byte matching 120,442,452-453,456
+
+\p{C) 122
+Java 369
+\c 120
+PHP 442
+C#(see also .NET) strings 103
+/c 131-132,315

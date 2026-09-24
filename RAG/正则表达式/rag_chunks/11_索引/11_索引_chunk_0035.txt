@@ -1,0 +1,52 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 35/69
+---
+link,matching(cont'd)
+VB.NET 204
+list context 294,310-311
+forcing 310
+literal string initial string discrimination 245-248,252,257-259,332,361
+literal text
+exposing 255
+introduced 5
+mechanics of matching 149
+pre-check optimization 245-248,252, 257-259,332,361
+literaltext mode 113,136,290
+inhibiting 292
+.NET 136
+\p(L1}123,406
+\p{Lm) 123,406
+\p{Lo) 123,406
+local 296,341
+in embedded code 336
+Vs.my 297
+locale 127-128
+overview 87
+\w 120-121
+localizing 296-297
+localtime 294,319,351
+lock up(see neverending match) locking in regex literal 352
+"A logical calculus of the ideas imminent in
+nervous activity”85
+longest match finding 334-335
+longest-leftmost match 148,177-179
+lookahead 133
+(see also lookaround) auto 410
+introduced 60
+mimic atomic grouping 174
+mimic optimizations 258-259
+negated
+<B></B>167
+positive vs. negative 66
+lookahead example 61-64
+lookaround
+backtracking 173-174
+conditional 140-141
+and DFAs 182
+doesn't consume text 60
+introduced 59
+mimicking class set operations 126
+mimicking word boundaries 134
+Perl 288

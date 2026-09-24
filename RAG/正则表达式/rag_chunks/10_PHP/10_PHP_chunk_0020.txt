@@ -1,0 +1,64 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 20/52
+---
+2 =>array(0=>"A.", 1=>"B." ),
+
+"Family"=>array(0=>"Smith",1=>"Miller"),
+
+3 =>array(0 =>"Smith",1=>"Miller")
+
+)
+
+如果使用 PREG_SET_ORDER:
+
+$subject ="
+
+Jack A.Smith
+
+Mary B.Miller";
+
+preg_match_all('/^(?P<Given>\w+)(?P<Middle>\w\.)(?P<Family>\w+)$/m',
+
+$subject,$all_matches,PRBG_SET_ORDBR);
+
+结果就是：
+
+array
+
+(
+
+0=>array(0 =>"Jack A.Smith",
+
+Given =>"Jack",
+
+1 =>"Jack", Middle => "A.",
+
+2 =>"A.",
+
+Family =>"Smith",
+
+3 => "Smith"),
+
+1=>array (0 =>"Mary B.Miller",
+
+Given => "Mary",
+
+1 => "Mary", Middle => "B.",
+
+2 =>"B.",
+
+Family =>"Miller*,
+
+3 =>"Miller")
+
+)
+
+我个人认为，在使用了命名分组之后，就应该去掉数字编号，因为这样程序更清晰，效率 更高，不过，如果它们被保留了，你可以当它们不存在。
+
+preg _replace
+
+使用方法
+
+preg _replace(pattern ,replacement,subject [,limit[,count ]])

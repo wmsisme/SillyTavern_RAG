@@ -1,0 +1,30 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 40/94
+---
+m/…/gc 最常见的用法是与\ G一 起，创建“词法分析器”,把字符串解析为各个记号(token)。 下例简要说明了如何解析$html 中 的HTML 代码：
+
+while(not $html =~m/G\z/gc) # 在全部检查完之前...
+
+{
+
+if ($html =~m/\G(<[^>]+> )/xgc)(print "TAG:$1\n" }
+
+elsif($html =~m/\G(&\w+; )/xgc)(print"NAMED ENTITY:$1\n"}
+
+elsif ($htm l =~m/\G( &\#\d+ ;)/xgc) {prin t"NUMERIC ENTITY:$1\n"}
+
+elsif($html =~m/G([^<>&\n]+)/xgc){print "TEXT:$1\n" }
+
+elsif(Shtml =~m/\G n /xgc ){ print "NEWLINE\n" }
+
+elsif(Shtml =~m/\G( . )/xgc ){ print"ILLEGAL CHAR: $1\n"}
+
+else {
+
+die"$0: oops ,this shouldn't happen!";
+
+}
+
+}

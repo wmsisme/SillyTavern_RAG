@@ -1,0 +1,22 @@
+---
+章节: 第6章：打造高效正则表达式
+章节ID: 06_打造高效正则表达式
+切片序号: 18/74
+---
+End Module
+
+在我的机器上，结果是：
+
+Alternation takes 13.311 seconds
+
+Character class takes 1.680 seconds
+
+在 .NET Framework中使用Regexopt ions.Compiled 作为正则表达式构造函数的第2个参 数，能够把正则表达式编译为效率更高的形式(410),其结果为：
+
+Alternation takes 5.499 seconds
+
+Character class takes 1.157 seconds
+
+使用Compile d功能之后，两个测试的速度都有提高，但是多选结构的相对上升幅度更为明 显(几乎是之前的3倍，而字符组的程序只提高到之前的1.5倍),所以多选结构从中获益 更大。
+
+Ruby 测试

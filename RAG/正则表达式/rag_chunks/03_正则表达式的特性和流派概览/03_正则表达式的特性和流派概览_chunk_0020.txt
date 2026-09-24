@@ -1,0 +1,54 @@
+---
+章节: 第3章：正则表达式的特性和流派概览
+章节ID: 03_正则表达式的特性和流派概览
+切片序号: 20/83
+---
+\n"+ \n"+
+
+\n"+ \n"+ \n"+ \n"+
+
+\n"+ \n“,
+
+请注意，字符串中的每个'\’都必须转义为‘I’, 所以，如果我们像本例中一样用文本 字符串来生成正则表达式，w 就必须写成‘\w' 。在调试时， System.out. print1n(r. pattern ())可以显示正则函数确切接收到的正则表达式。我在这个正则表达式中包括换行 符的原因是，这样看起来很清楚。另一个原因是，每个#引入一段注释，直到该行结束，所 以，为了约束注释，必须设定某些换行符。
+
+Perl 使用/ g 、/i 、/x 之类的符号来表示特殊的条件(这些修饰符分别代表全局替换、不区 分大小写和宽松排列模式135), java.util. regex 则使用不同的函数(replaceAl1 而不 是replace), 以及给函数传递不同的标志位(flag)参数(例如Pattern.CASE_ INSENSITIVE
+
+和Pattern. COMMENTS) 来实现。
+
+VB.NET 中的查找和替换
+
+VB.NET的程序与Java的类似：
+
+Dim R As Regex =New Regex_
+
+("\b
+
+"(?# 将捕获的地址保存到 $1 ...)
+
+"(
+
+"\wí-.\w]* (?#username)
+
+"@
+
+[)-\w]+(\.[-\w]+)*\.( comiedulinfo )(?# hostname)
+
+"\b
+
+"&_
+
+Ⅱ & _
+
+_
+
+"&
+
+" & _
+
+" & _
+
+"
+
+,
+
+RegexOptions.IgnoreCase Or RegexOptions.IgnorePatternWhitespace) text z R.Replace(text,"<a href=""mailto:$1}"">$(1}</a>")

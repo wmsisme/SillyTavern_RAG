@@ -1,0 +1,36 @@
+---
+章节: 第5章：正则表达式实用技巧
+章节ID: 05_正则表达式实用技巧
+切片序号: 15/40
+---
+Matcling Delimited Text
+
+匹配用分隔符(以某些字符表示)之类的文本是常见的任务，之前的匹配双引号内的文本 和 IP 地址只是这类问题中的两个典型例子。其他的例子还包括：
+
+· 匹配‘/*'和‘*1'之间的C 语言注释。
+
+· 匹配一个HTML tag, 也就是尖括号之内的文本，例如<CODE>。
+
+· 提取HTML tag标注的文本，例如在HTML 代码‘a <I>super exciting</I>offer!' 中的‘super exciting'。
+
+· 匹配.mailrc 文件中的一行内容。这个文件的每一行都按下面的数据格式来组织：
+
+alias 简称电子邮件地址
+
+例如 'alias jeffjfriedl@regex.info' ( 在这里，分隔符是每个部分之间的空白
+
+和换行符)。
+
+· 匹配引文字符串 (quoted string), 但是容许其中包含转义的引号，例如 ‘ a passport needs a "2\"x3\"likeness" ,of the holder'。
+
+· 解析CSV ( 逗号分隔值，comma-separated values) 文件。
+
+总的来说，处理这些任务的步骤是：
+
+1.匹配起始分隔符 (opening delimiter)。
+
+2.匹配正文 ( main text, 即结束分隔符之前的所有文本)。
+
+3. 匹配结束分隔符。
+
+我曾经说过，如果结束分隔符不只一个字符，或者结束分隔符能够出现在正文中，这种任 务就很难完成。

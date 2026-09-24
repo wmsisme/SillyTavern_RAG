@@ -1,0 +1,56 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 24/37
+---
+Dim Parts as String()=R.Split(MyDate)
+
+结果包含3个元素(均为字符串)。不过，使用捕获型括号的正则表达式([-/,]) j, 则会
+
+返回5个字符串：如果MyDate 包含‘2006-12-31',这5个元素是‘2006'、‘-'、‘12'、 ‘-’、'31’。多出来的‘-’是每次捕获的$1。
+
+如果有多组捕获型括号，它们会按照编号排序(也就是说，所有的命名捕获跟随在未命名 捕获之后409)。
+
+只要实际参与了匹配捕获型括号的捕获型括号，都会包含在 split 的结果中。不过，目前 的 .NET 有一个 bug, 即如果某组捕获型括号没有参与匹配，它和所有编号更靠后的捕获型 括号都不会包含在返回的结果中。
+
+来看个极端点的例子，如果需要以左右可能出现空白字符的逗号作为分隔，而且空白字符
+
+必须包含在返回结果中。用(\ s+)?,(\s+)? 分隔‘this,…tha t’, 得到四个字符串‘this'、
+
+’、‘…'和‘that’。 但是，如果目标字符串为‘this,that ’, 因为第一组捕获型括号
+
+没有参与最终匹配，所有的捕获型括号都不包含在最终结果中，所以只会返回两个字符串
+
+'this’ 和‘that ’。无法预知到底会返回多少字符串，是当前版本的.NET 的一个重大问 题。
+
+在这个例子中，我们可以使用(\ s*),(\s*) 绕开这个问题(这样两个分组一定都能参与匹 配)。不过，更复杂的表达式就没这么容易改写了。
+
+RegexObj. GetGroupNames()
+
+RegexObj. GetGroupNumbers()
+
+RegexObj. GroupNameFromNumber( number)
+
+RegexObj. GroupNumberFromName(name)
+
+这几个方法容许用户查询对应编号(可以用数字，如果是命名捕获，也可以用名字)的捕 获型分组的信息。它们引用的不是特定的匹配内容，只是正则表达式中存在的分组的名字 和编号。下面的补充内容说明了使用方法。
+
+RegexObj. ToString() RegexObj. RightToLeft RegexObj. Options
+
+这几个方法容许用户查询 Regex 对象本身(而不是将此对象应用到字符串上)的信息。 ToString() 方法返回正则表达式构造函数接收的字符串。 RightToLeft 属性返回一个 Boolean 值，表明它是否启用了RegexOptions. RightToLeft 选项。Options 属性返回与 此正则表达式相关的RegexOptions。下面说明了各个选项的值，把对应选项的值相加，就 得到返回结果。
+
+0	None	16	Singleline
+
+1	IgnoreCase	32	IgnorePatternwhitespace
+
+2	Multiline	64	RightToLeft
+
+4	ExplicitCapture	256	ECMAScript
+
+8	Compiled
+
+这里没有128,因为它用于微软内部的调试，没有出现在最终产品中。
+
+补充内容给出了这些方法的应用实例。
+
+使用Match对象

@@ -1,0 +1,34 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 24/51
+---
+长度变化的替换
+
+如果replacement的长度不同于要替换文本的长度，情况就复杂起来。对目标字符串的修改 是在“背后”进行的，所以“匹配指针 (match pointer)”(在目标字符串中进行下一次 find 的开始位置)会发生错误。
+
+要解决这个问题，我们可以自己维护匹配指针，明确告诉 find 下一次尝试应该从何处开始。 下面的例子做了这样的改进，在需要插入的小写文本两端添加了<b>…</b>:
+
+StringBuilder text =new StringBuilder("It's so very RUDE to shout!");
+
+Matcher m =Pattern.compile(" \b[\\p{Lu}\p{Lt}]+\\b"). matcher(text);
+
+int matchPointer= 0;// 首先从字符串起始位置开始
+
+while(m.find(matchPointer)){
+
+matchPointer =m.end(); / 记录本次匹配结束的位置
+
+text.replace(m,start(),m.end(),"<b>"+m.group().toLowerCase()+"</b>);
+
+matchPointer +=7; // 算上添加的'<b> ' 和 '</ b>' }
+
+System.out.println(text);
+
+结果是：
+
+It's <b>so</b>very <b>rude</b>to shout!
+
+注 5 : 代 码 中 的 表 达 式 是\ b\p{Lu}\p{Lt}]+\bj 。 在 第 3 章 ( 1 2 3 ) 介 绍 过 ，\ p{Lu} 匹 配 Unicode 中的所有大写字母，\p{Lt} 匹配首字母形式字符。对应ASCII 编码的正则表达式 是 ' \b[ A-Z]+\bj。
+
+Matcher的检索范围

@@ -1,0 +1,52 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 57/69
+---
+regex
+balancing needs 186
+cache 242-245,350-352,432,478
+compile 179-180,350
+default 308
+delimiters 291-292
+DFA(see DFA)
+encapsulation(see regex objects) engine analogy 143-147
+vs.English 275
+error checking 474
+frame of mind 6
+freeflowing design 277-281 history 85-91
+library 76,208
+longest-leftmost match 177- 179
+shortest-leftmost 182
+mechanics 241-242
+NFA( see NFA)
+nomenclature 27
+operands 288-292
+overloading 291,328
+inhibiting 292
+problems 344
+subexpression
+defined 29
+subroutines 476
+regex approach .NET 96-97
+regex delimiters PHP 445,448 regex flavor
+Java 366-370
+.NET 407
+regex literal 288-292,307
+inhibiting processing 292
+locking in 352
+parsing of 292
+processing 350
+regex objects 354
+Regex (.NET)
+CompileToAssembly 433,435
+creating
+options 419-421
+Escape 432
+GetGroupNames 427-428
+GetGroupNumbers 427-428
+GroupNameFromNumber 427-428 GroupNumberFromName 427-428 IsMatch 413,421,431
+Match 96,414,416,421,431 Matches 422,431
+object
+creating 96,416,419-421
+exceptions 419

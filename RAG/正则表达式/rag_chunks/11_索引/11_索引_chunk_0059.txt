@@ -1,0 +1,29 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 59/69
+---
+RegexOptions
+Compiled 237,408,410,420,427-428, 435
+ECMAScript 406,408,412-413,421,427
+ExplicitCapture 408,420,427
+I gnoreCase 96,99,408,419,427 IgnorePatternwhitespace 99,408,
+419,427
+Multiline 408,419-420,427
+None 421,427
+RightToLeft 408,411-412,420,
+426-427, 429-4 30
+Singleline 408,420,427
+region
+additional example 398
+anchoring bounds 388
+hitEnd 390 Java 384-389
+methods that reset 385
+requireE nd 390
+resetting 392-393
+setting one edge 386
+transparent bounds 387
+
+reg _match 454
+regsub 100
+regular expression origin of term 85

@@ -1,0 +1,42 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 52/69
+---
+POSIX NFA
+backtracking example 229
+testing for 146-147
+possessive quantifier 477,483
+possessive quantifiers 142,172-173,477,
+(see also atomic grouping) automatic 251
+for efficiency 259-260,268-270,482 mimicking 343-344
+optimization 250-251
+possessive quantifiers example 198,201
+postal code example 209-212
+\p{Other} 122
+\p{Other_Letter] 123
+\p{Other _Number} 123
+\p(Other_Punctuation} 123
+\p(Other_Symbol} 123
+\p{P} 122
+\p{Paragraph_Separator } 123
+\p{Pc) 123,406 \p{Pd) 123
+\p{ Pe} 123
+\p{Pf} 123
+Java 369
+\p{Pi} 123
+Java 369
+\p{Po} 123
+\p{Private _Use] 123
+\p {Ps} 123
+\p{Punctuation) 122
+pragma
+charnames 290
+(see also \N(name}) overload 342
+re 361,363
+strict 295,336,345
+warnings 326,363
+pre-check of required character 245-248,
+252,257-259,361 mimic 258-259
+viewing 332
+preg function interface 443-448

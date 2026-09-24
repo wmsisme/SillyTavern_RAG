@@ -1,0 +1,80 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 25/37
+---
+Using Match Objects
+
+有三种方法创建Match 对象：Regex的 Match 方法、静态函数Regex.Match (稍后介绍) 和Match 对象自己的NextMatch 方法。它封装某个正则表达式的单次应用的所有相关信息。 其属性和方法如下：
+
+MatchObj.Success
+
+返回一个 Boolean 值，表示匹配是否成功。如果不成功，则返回一个静态的 Match .Empty 对象(433)。
+
+MatchObj.Value
+
+MatchObj.ToString()
+
+它返回实际匹配文本的副本。
+
+显示Regex 对象的信息
+
+这段代码显示了Regex 对 象R 的 信 息 '显示关于Regex 变量R 的已知信息 Console.WriteLine("Regex
+
+is:"&R.ToString())
+
+Console.WriteLine("Options	are:"&R.Options)
+
+If R.RightToLeft
+
+Console.WriteLine("Is Right-To-Left:True")
+
+Else
+
+Console.WriteLine("Is Right-To-Left:False") End If
+
+Dim s as String
+
+For Each s in R.GetGroupNames()
+
+Console.WriteLine("Name"""&S&"""is Num #"&_ R.GroupNumberFromName(S))
+
+Next
+
+Console.WriteLine("---")
+
+Dim I as Integer
+
+For Each I in R.GetGroupNumbers()
+
+Console.WriteLine("Num #”&I&"is Name""&_ R.GroupNameFromNumber(I)&"""")
+
+Next
+
+再执行一次，用下面的方法创建 Regex 对象：
+
+New Regex("^(\w+)://([^/]+)(/S*)")
+
+New Regex("^(?<proto>\w+)://(?<host>[^/]+)(?<page>/S*)",
+
+RegexOptions. Compiled)
+
+得到下面的结果(为适应排版，有个正则表达式省略了后半段)
+
+Regex Option Is
+
+Name“0”is Name"1"is
+
+Name"2"is Name“3”is	　　　　is:^(\w+)://([^/]+)(/\S*) are: 0
+
+Right-To-Left:False	Regex is:^(?<proto>\w+)://(?<host>...
+
+Option are:8
+
+Is Right-To-Left: False
+
+Name"0"is Num #0
+
+Name"proto"is Num #1 Name "host"is Num #2 Name "page"is Num #3
+
+Num

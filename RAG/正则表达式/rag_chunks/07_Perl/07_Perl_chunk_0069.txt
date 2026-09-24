@@ -1,0 +1,36 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 69/94
+---
+SRegexLitera
+
+l
+
+=~s/\</(?<!\\w)(?=\\w)/g;
+
+=~s/\>/(?<=\\w)(?!\\w)/g;
+
+# 模拟单词起始边界\<
+
+# 模拟单词结束边界\>
+
+return $RegexLiteral; # 返回修改后的字符串
+
+}
+
+1; # 标 准 做 法 ，' use ' 此文件肯定会返回true
+
+将 MyRegexStuff.pm 放在Perl的库路径 (library path,请参考Perl 文档中的PERLLIB) 下， 所有需要使用此功能的 Perl 脚本都可调用。如果只是为了测试，可以将其放在测试脚本同 一目录内，这样调用：
+
+# 在当前目录中寻找库文件
+
+# 现在可以使用此功能了
+
+-*
+
+# 将单词之前任意数目任意形式的空白字符替换为单个空格
+
+每个需要这样处理正则文字的程序文件都必须使用MyRegexStuff, 但 是MyRegexStuff.pm 只 需要构建一次(此功能在MyRegexStuff.pm内部不可用，因为它没有use MyRegexstuff
+
+——我们肯定不会这样做)。

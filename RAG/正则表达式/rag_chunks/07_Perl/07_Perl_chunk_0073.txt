@@ -1,0 +1,108 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 73/94
+---
+模拟命名捕获
+
+package MyRegexStuff;
+
+use strict;
+
+use warnings;
+
+use overload;
+
+sub import(overload::constant('qr'=>\&MungeRegexLiteral)}
+
+my SNestedStuffRegex; # 在自身定义中使用，必 须 预 声 明
+
+SNestedStuffRegex = qr{
+
+(?>
+
+(? : # 非括号非转义的字符 . . .
+
+[^()\#\\] +
+
+# 转义字将 . . .
+
+1(?s:\\.)
+
+# 正则表达式注释...
+
+\ #.*\n
+
+# 匹配嵌套结构...
+
+I \ (??{SNestedStuffRegex })\) )*
+
+}x;
+
+sub SimpleConvert($); # 递归调用，必须预声明
+
+sub SimpleConvert($) {
+
+my $re = shift ;# 要处理的表达式 $re =~ s{
+
+A(\?#"(?"
+
+<((?>\w+))> # <$1>$1 是标识符
+
+($NestedStuffRegex) # $2 - 可能出现的嵌套结构
+
+\) #")"
+
+}{
+
+my $id=$1;
+
+my $guts =SimpleConvert($2);
+
+# 把
+
+#(?<id>guts)
+
+# 改 为
+
+#(?:( guts)# 配 guts
+
+#(?{
+
+# local($^N{$id})=$guts # 保存8^T 中的本地化元素
+
+#})
+
+# )
+
+"(?:($guts)(?{local(\$^T{'$id'})=\$^N }))" }xeog;
+
+return $re; # 返回处理结果
+
+}
+
+sub MungeRegexLiteral($)
+
+my($RegexLiteral)=@_; # 参数为字符串
+
+#print"BEFORE:SRegexLiteral\n";
+
+my Snew =SimpleConvert($RegexLiteral); if(Snew ne SRegexLiteral)
+
+# 调试时取消注释
+
+{
+
+my Sbefore =q/(?{local(8^T)=()})/;#本地化临时hash变量
+
+my Safter =q/(?{8^N =8^T })/; #把它们拷贝到"真正的"hash变量
+
+SRegexLiteral ="$before(?:$new)$after"; }
+
+#print"AFTER:$RegexLiteral\n"; #调试时取消注释
+
+return $RegexLiteral; }
+
+1;
+
+效率

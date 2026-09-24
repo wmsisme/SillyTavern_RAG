@@ -1,0 +1,38 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 26/51
+---
+if(!mAlt.find())
+
+System.out.println("Missing ALT attribute in:"+mImg.group());
+
+或许在一处指定目标字符串(创建 mAlt Matcher 时),另 一 处指定检索范围(调用
+
+mAIt.region 时 )的做法有些怪异。果真如此的话，我们可以为mAIt 创建虚构的目标字符
+
+串(一个空字符串),然后每次都调用mAlt. reset (htm1).region( …)。调用reset 可能
+
+会降低些效率，但是同时设定目标字符串和检索范围的逻辑更加清晰。
+
+无论采取哪种办法，都必须明白，如果不设定ALT Matcher的检索范围，对它调用find 就
+
+会检索整个 目标字符串，返回无关的‘ALT=' 属性。
+
+下面继续完善这个程序，返回找到的image tag 在 HTML 代码中的行数。我们首先隔离出 image tag之前的HTML 代码，然后计算其中的换行符数。
+
+标注部分为新增代码：
+
+/ / 查 找image tag的 matcher 。 变 量'html ' 包含需要处理的HTM1 代码
+
+Matcher mImg = Pattern.compile( "(?id)<IMG \\s+(.*?)/?>").matcher(html);
+
+/1 查 找ALT 属性的matcher ( 应用于刚刚找到的IMG tag 中)
+
+Matcher mAIt =Pattern.compile("(?ix)\\b ALT'\\s*=").matcher(html); 1/ 查找换行符的Matcher
+
+Matcher mLine =Pattern.compile("\\n").matcher(html);
+
+/ / 对HTML 中的每个 img tag ...
+
+while(mImg.find())

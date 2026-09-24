@@ -1,0 +1,28 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 20/51
+---
+Adzanced Search and Replace
+
+有两个方法可以直接操作 Matcher 的查找-替换过程。它们配合起来，把结果存入用户指定 的 StringBuffer 中。第一种方法每次匹配之后都会调用，在 result 中存入 replacement 字 符串和匹配之间的文本。第二种方法会在所有匹配完成之后调用，将目标字符串中最后的 文本拷贝过来。
+
+Met er appendReplacement (StrinEuffey result, Sr?ing replacement)
+
+在正则表达式应用成功之后(通常是 find) 马上调用此方法会把两个字符串添加到指 定的 result 中：第一个是原始目标字符串匹配之前的文本，然后是经过上面讲解的特 殊处理的replacement字符串。
+
+举例来说，如果matcher m与正则表达式w+J 和‘-->one+test<-- ' 相联系，while 循环的第一轮情况如下：
+
+while(m.find())
+
+m.appendReplacement(sb,"XXX")
+
+find 找到下画线标注的部分‘-->pne+test<-- ’。
+
+然后，第一次appendReplacement 调用会在StringBuffer result中加入匹配之前的
+
+文本‘-->',跳过匹配的文本，再插入replacement 字符串‘xxx'。
+
+While 循环的第二轮，find 匹配‘-->one+ test k--’ 。 此时调用appendReplacement 会给sb 附加上匹配之前的文本‘+',然后仍然是字符串 ‘ xxx'。
+
+这样 sb 的值就是‘--> XXX+XXX',m在原始目标字符串中对应的位置是- -> one+test <--'。现在该使用appendTail 方法了，下文将会介绍。

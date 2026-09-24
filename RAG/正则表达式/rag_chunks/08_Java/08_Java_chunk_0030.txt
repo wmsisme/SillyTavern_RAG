@@ -1,0 +1,20 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 30/51
+---
+Transparent Bounds
+
+与这个标志位相关的方法有两个：
+
+Mac.cher: useTransparentBounds( boo lean b)
+
+设定transparent bounds的值。默认为false。
+
+此方法返回Matcher本身，故可用在方法链中。
+
+oolean hasTransparentBounds()
+
+如果transparent 生效，则返回 true。
+
+Matcher 的 transparent-bounds 默认为false。也就是说检索范围的边界在顺序环视、逆序环视 和单词分界符“考察”时是不透明的。这样，正则引擎不会感知到检索边界之外的字符(注 6)。

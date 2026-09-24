@@ -1,0 +1,66 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 30/37
+---
+Support Functions
+
+除了之前讨论过的便捷函数，还有一些静态的支持函数：
+
+Regex. Bscape(string)
+
+Regex.Escape(…)返回此字符串的副本，其中的元字符会进行转义。这样处理的字符串就
+
+能够作为文字字符串供正则表达式使用。
+
+例如，如果用户的输入保存在字符串sear chTerm 中，我们可以这样构建正则表达式：
+
+Dim UserRegex as Regex =New Regex("^”& Regex.Escape(SearchTerm)&“$", RegexOptions.IgnoreCase)
+
+这样，用户输入的元字符就不会被特殊处理了。如果不转义，假设用户输入了‘:-)',就 会抛出ArgumentException 异常(419)。
+
+Regex.Unescape (string)
+
+这个函数有点奇怪，它接收一个字符串，返回此字符串的副本，不过要处理其中的元字符， 去掉其他的反斜线。如果输入的是‘:\-\)’,返回值就是‘:-)’。
+
+字符缩略表示法也会被解码。接收的字符串中的'\n ' 会被替换为换行符，'\ u1234’ 会被 替换为对应的Unicode字符。第407页列出的所有字符缩略表示法都会被处理。
+
+我想象不出 Regex.Unescape 有多么重要的价值，不过了解转义规定的用户也许能把它当 作生成VB 字符串的通用工具。
+
+Match. Rmpty
+
+此函数返回代表匹配失败的Match 对象。它的用处可能在于，如果初始化的某个Match对 象将来不一定会被用到，但又必须能够查询。这里有个简单的例子：
+
+Dim SubMatch as Match =Match.Empty '初始化一个Match, 但下面不一定会设定
+
+.*
+
+Dim Line as String
+
+For Each Line in EmailHeaderLines
+
+'如果这是标题，保存匹配的信息 ...
+
+Dim ThisMatch as Match =Regex.Match(Line,"^Subject:\s*(.*)",_
+
+RegexOptions.IgnoreCase)
+
+If ThisMatch.Success
+
+SubMatch= ThisMatch
+
+End If
+
+4
+
+Next
+
+……
+
+If SubMatch.Success
+
+Console.WriteLine(SubMatch. Result("The subject is: $1"))
+
+Else
+
+Console.WriteLine("No subject!")

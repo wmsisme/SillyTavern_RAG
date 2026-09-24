@@ -1,0 +1,42 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 5/51
+---
+表8-3:java.util.regex中 Match和 Regex的方法
+
+编译选项	(?mode)	描述
+
+Patern.UNIX_LINES	d	更改点号和^」的匹配(370)
+
+Pattern.DOTALL	S	点号能匹配任何字符(111)
+
+Pattern.MULTILINE	m	扩展^和$」的匹配规定(370)
+
+Pattern.COMMENTS
+
+X	宽松排列和注释模式(在字符组内部也有效)
+
+(072)
+
+Pattern.CASE_INSENSITIVE	i	对ASCII字符进行不区分大小写的匹配
+
+Pattern.UNICODE_CASE	u	对Unicode字符进行不区分大小写的匹配
+
+Pattern.CANNON_EQ		Unicode“按规则等价(canonical equivalence)” 匹配模式(不同编码中的同样字符视为相等
+
+108)
+
+Pattern.LITERAL		将regex参数作为文字文本，而非正则表达式
+
+业 血)
+
+Java 对\p{….}3和\ P{...}的支持
+
+|ava Support for p{ …?and P{!
+
+\p{ … 和'\P{…) 结构支持Unicode 的属性和区块，也支持特殊的“Java”字符属性。这 种支持针对Unicode Version 4.0.0(Java 1.4.2只支持 Unicode Version 3.0.0)。
+
+Unicode 属性
+
+Unicode属性是通过\p{Lu) 之类的缩写名字来引用的(参加122页的列表)。单字母属性名 可以省略括号，\pL等价于\p{L} 。而\p{Lowercase_Letter} 之类的长名称是不支持的。 Java 1.5及之前的版本是不支持 Pi 和 Pf 属性的，因此，具有这种属性的字符不能用\p{P} 来匹配 (Java 1.6 支持)。

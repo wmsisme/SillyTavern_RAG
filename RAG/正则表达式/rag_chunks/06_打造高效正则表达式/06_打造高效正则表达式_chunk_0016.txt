@@ -1,0 +1,34 @@
+---
+章节: 第6章：打造高效正则表达式
+章节ID: 06_打造高效正则表达式
+切片序号: 16/74
+---
+while(--count>0)
+
+regex2.reset(testString).find();
+
+seconds =(System.currentTimeMillis ()-s tartTime)/1000.0;
+
+System.out .println("Character class takes"+seconds +"seconds");
+
+}
+
+你注意到在这个程序中正则表达式如何初始化部分编译了吗?我们需要测试的是匹配的速 度，而不是编译的速度。
+
+236 第 6 章 ： 打 造 高 效 正 则 表 达 式
+
+速度取决于所使用的虚拟机(VM)。Sun 的标准JRE 有两种虚拟机，client VM为快速启动 而优化，server VM 为长时间、大负荷的作业而优化。
+
+在我的机器上，使用client VM运行测试的结果如下：
+
+Alternation takes 19.318 seconds
+
+Character class takes 1.685 seconds
+
+使用server VM的结果如下：
+
+Alternation takes 12.106 seconds
+
+Character class takes 0.657 seconds
+
+这样看来测试有点不可信了，之所以说它不够周到，原因在于计时的结果在很大程度上取 决于自动的预执行编译器 (automatic pre-execution compiler) 的工作，或者说运行时编译器 	(run-time compiler) 与测试代码的交互情况。某些虚拟机包含JIT(Just-In-Time compiler), JIT 会根据需要，在需要执行代码之前才进行编译。

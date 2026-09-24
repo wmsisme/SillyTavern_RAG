@@ -1,0 +1,58 @@
+---
+章节: 第2章：入门示例拓展
+章节ID: 02_入门示例拓展
+切片序号: 27/56
+---
+图2-4:嵌套的括号，$1和$2
+
+如果图2-4的正则表达式能够匹配，我们可以通过$2得到发送者的姓名，从$1得到可能的 回复地址。
+
+if($ line =~m/^From: (\s+ )\(([^()]*)\)/i){
+
+$reply_address =$1;
+
+$from_name =$2;
+
+}
+
+并非所有的E-mail 信息都包含 Reply-To 字段，所以我们把$1暂定为回复地址。如果之后 出现了SReply-To 字段，我们会重设$reply_a ddress 。 综合起来就得到：
+
+while($line =<>)
+
+{
+
+if($line =~m/^\s*$/){# 如果存在空行
+
+las t;# 就立即结束whil e 循 环 }
+
+if($line =~m/^Subject:(.*)/i){
+
+$subject =$1;
+
+}
+
+if($line =~m/^Date: (.*)/i){
+
+$date=$1;
+
+}
+
+if($line =~m/^Reply -To:(\s+)/i){
+
+$reply_address =$1; }
+
+if($line =~m/^From:(\s+)I(([^()]*)\)/i)(
+
+$reply_address =$1;
+
+$from_name =$2;
+
+}
+
+这段程序检查header的每一行，如果某个正则表达式能够匹配，则设置相应的变量。header 的许多行无法由这些正则表达式匹配，所以会被忽略。
+
+while 循环结束之后，我们就能够生成回复邮件的header了(注4 ) :
+
+print“To:$reply_address($from_name)\n”;
+
+print“From:jfriedl\@regex.info(Jeffrey Friedl)\n”;

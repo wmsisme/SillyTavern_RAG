@@ -1,0 +1,38 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 20/69
+---
+DFA
+acronym spelled out 156
+backreferences 150,182 boring 157
+compared with NFA 224,227
+
+implementation ease 183
+introduced 145,155
+longest-leftmost match 177-179 testing for 146-147
+dialytika 108
+\p{Dingbats} 124
+directed alternation(see alternation, ordered)
+dish-stacking analogy 159
+dollar for Perl variable 37
+dollar anchor 129
+introduced 8
+dollar valuce example 24-25,51-52, 167-170,175,194-195
+DOS 7
+dot 119
+vs.character class 119
+introduced 11-12
+Java 370
+mechanics of matching 149
+Tcl 113
+dot 370
+dot modes Java 111,370
+.NET xvii,405-438
+$+202
+after-match data 138
+benchmarking 237
+character-class subtraction 406
+code example 219
+flavor overview 92
+JIT 410

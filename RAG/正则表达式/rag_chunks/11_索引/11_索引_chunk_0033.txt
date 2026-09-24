@@ -1,0 +1,37 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 33/69
+---
+Tbe Kleene Sympostum 85
+\kname (see named capture)
+Korean text processing 29
+Kunen,K. 85
+
+124 \1290
+\p{L&} 122-123,125,442 Java 369
+Perl 288
+\p{L} 121-122,133,368,395
+language(see also:.NET;C#;Java;
+MySQL; Perl; procmail;Python;Ruby;
+Tcl;VB.NET)
+character class 10,13 identifiers 24
+\p{Latin} 122
+Latin-1 encoding 29,87,106,108,123
+lazy 166-167
+(see also greedy)
+essence 159,168-169
+
+剩
+
+lazy(cont'd)
+favors match 167-168
+vs.greedy 169,256-257
+optimization 248,257
+quantifier 141
+lazy evaluation 181,355
+\L \E 290
+inhibiting 292
+Ic 290
+lcfirst 290
+leftmost match 177- 179

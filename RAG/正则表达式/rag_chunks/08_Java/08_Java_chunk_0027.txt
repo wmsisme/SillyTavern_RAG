@@ -1,0 +1,50 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 27/51
+---
+{
+
+// 把查找范围局限在刚刚找到的tag 中
+
+mAlt.region(mImg.start(1),mImg.end(1));
+
+// 如果没有找到，则报错，输出找到的整个image tag
+
+if(!mAlt.find()){
+
+11 计算当前 image tag 之前的换行符的数量
+
+mLine.region(0,mImg.start());
+
+int lineNum = 1; 11 第一行编号为1 while(mLine.find())
+
+lineNum++;// 每遇到一个换行符就加1
+
+System.out .println ("Missing ALT attribute on line "+lineNum);
+
+与之前一样，每次设定ALT Matcher的检索范围时，都使用image matcher的 start(1) 方 法 得 到image tag body 在 HTML 中的起始位置。相 反 ，在设定换行符匹配的检索范围终点时， 使 用start() 方法来判断整 个 image tag 的开始位置(也就是换行符计算的终点)。
+
+几 点 提 醒
+
+记 住 ，某些检索相关的方法并非不受检索范围的影响，而是它们在内部调用了reset 方 法 ， 把检索范围设定为默认的“全部文本”。
+
+· 受检索范围影响的查找方法：
+
+matches
+
+lookingAt
+
+find() (不带参数)
+
+· 会 重 置matcher 及其检索范围的方法：
+
+find(text) (带一个参数)
+
+replaceAll
+
+replaceFirst
+
+reset (无须多言)
+
+另外请记住，匹配结果数据中的偏移值(也就是start 和 end 方法返回的数值)是不受检 索范围影响的，它们只与整个目标字符串的开始位置有关。

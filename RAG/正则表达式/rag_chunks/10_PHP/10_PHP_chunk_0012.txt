@@ -1,0 +1,52 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 12/52
+---
+命名捕获
+
+如果我们用命名捕获(138)重写之前的例子，正则表达式会长一些，不过代码更容易阅 读：
+
+/*从URL中提取协议、主机名和端口号 */
+
+if(preg_match('{^(?P<proto>https?)://
+
+{
+
+$proto =$matches['proto';
+
+$host =$matches['host';
+
+sport =$matches['port']?$matches['port']:($proto=="http"?80:443);
+
+print "Protocol:$proto\n";
+
+print "Host :$host\n";
+
+print "Port :$port\n";
+
+}
+
+命名捕获看起来更清晰，这样我们不需要把smatches的内容复制给各个变量，就能直接使 用变量名，而不是$matches , 例如这样：
+
+/*从URL中提取协议、主机名和端口号 */
+
+if(preg_match('{^(?P<proto>https?)://
+
+(?P<host>[^/:]+)
+
+(?::(?P<port>\d+))?}x',Surl,$UrlInfo))
+
+{
+
+if(!SUrlInfo['port')
+
+$UrlInfo['port']=($UrlInfo['proto']=="http"?80 :443); echo "Protocol:",$UrlInfo['proto',"\n";
+
+echo "Host :",$UrlInfo['host', "\n";
+
+echo "Port :",SUrlInfo['port', "\n";
+
+}
+
+如果使用了命名捕获，按数字编号的捕获仍然会插人$matches 。例如，在匹配Sur1 (值为 'http:// regex.info') 之 后 ，之前例子中的$UrlInfo 包含：

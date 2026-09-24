@@ -1,0 +1,43 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 46/69
+---
+plall}369
+panic:top_env 332
+\p{Any } 125,442
+Perl 288
+Papen, Jeffrey xxiv
+PARAGRAPH SEPARATOR 109,123,370 \ p[Paragraph _Separator] 123
+parentheses
+as (…\)86
+and alternation 13
+balanced 328-331,340-341,436, 475-478,481
+difficulty 193-194
+capturing 137,300
+and DFAs 150,182
+introduced with egrep 20-22 mechanics 149
+Perl 41
+capturing only 152
+counting 21
+elimination optimization 248
+grouping-only (see non-capturing parentheses)
+limiting scope 18
+named capture 138,344-345,408-409, 450-452,457,476-477
+nested 328-331,340-341,436,475-477, 481
+non-capturing 45,137-138
+non-participating 300
+nonparticipation 450,453-454,469 with split
+.NET 409,426
+Perl 326
+p{Arrows} 124
+parser 132,389,399
+parsing regex 410
+participate in match 140
+Pascal 36,59,183
+matching comments of 265
+p{Assigned) 125-126
+Perl 288
+patcb 88
+path(see backtracking)
+pathname example 190-192

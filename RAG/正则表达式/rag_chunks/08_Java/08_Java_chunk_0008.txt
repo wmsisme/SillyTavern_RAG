@@ -1,0 +1,28 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 8/51
+---
+MUTILINE 模式中的$和^也是如此，在这种模式下，只有在CR 之后没有LF 的情况下，^才 能匹配CR 之后的位置；只有在LF 之前不是CR 的情况下，$才能匹配LF 之前的位置。
+
+必须说清楚的是，DOTALL 对 CR/ LF 的处理没有影响 ( DOTALL 只影响点号，而点号总是逐 个处理字符的),UNIX_LINES根本不存在此类问题(它只识别CR, 所有其他行终结符都不 需要特殊处理)。
+
+使用java.util.regex
+
+Using java.util.regex
+
+通过 java.util. regex 使用正则表达式非常简单， 功能由两个类， 一个接口和一个 unchecked exception 组成。
+
+java. util. regex. Pattern
+
+java.util.regex.Matcher
+
+java. util. regex. MatchResult
+
+java.util. regex.PatternSyntaxException
+
+就我个人来说，更喜欢简称前两个为“pattern”和 “matcher”, 许多时候我们只会用到这两 个类。简单地说，Pattern 对象就是编译好的正则表达式，可以应用于任意多个字符串， Matcher 对象则对应单独的实例，表示将正则表达式应用到某个具体的目标字符串上。
+
+Java 1.5新提供的MatchResult, 它封装了成功匹配的数据。匹配数据可以在下一次匹配尝 试之前从Matcher 本身获得，也可以提取出来作为MatchResult 保存。
+
+如果匹配尝试所使用的正则表达式格式不正确(例如，[oops] 的语法就不正确),就会抛出 PatternSyntaxException 异常。这是一个 unchecked exception, 继承自 java.lang.

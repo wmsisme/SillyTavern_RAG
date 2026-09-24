@@ -1,0 +1,51 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 40/69
+---
+metacharacter
+conflicting 44-46
+differing contexts 10
+first-class 87,92
+introduced 5
+Vs.metasequence 27
+metasequence defined 27
+method chaining 389
+Java 389
+method index Java 366
+mimic
+$, 357
+$ 357
+$&302,357
+atomic grouping 174
+class set operations 126
+conditional with lookaround 140
+initial-character discrimination optimiza- tion 258-259
+named capture 344-345
+POSIX matching 335
+possessive quantifiers 343-344
+variable interpolation 321
+word boundaries 66,134,341-342
+minus in character class 9
+MISL .NET 410
+“missing”functions PHP 471
+\p(Mn) 123
+mode modifier 110,135-136
+mode-modified span 110,135-136,367, 392,407,446
+modes introduced with egrep 14-15 \p{Modifier_ Letter) 123
+modifiers 372
+(see also match,modes) combining 69
+example with five 316
+/g 51
+/i 47
+“locking in”304-305
+notation 99
+/osmosis 293
+Perl 292-293
+Perl'core 292-293
+with regex object 304-305
+unknown 448
+\ p(Modifier _Symbol} 123
+Morse, lan xxiv motto Perl 348
+-Mre=debug (see use re'debug') multi-character quotes 165-166
+Multiline(.NET)408,419-420,427

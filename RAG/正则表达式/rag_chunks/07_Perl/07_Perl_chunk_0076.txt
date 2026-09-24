@@ -1,0 +1,60 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 76/94
+---
+表7-6:填补 IP 地址的若干解法
+
+排名	耗时	解法
+
+1	1.0X	$ip =sprintf("803d.803d.803d.803d",split(m/八./,$ip));
+
+2
+
+1.3X	substr($ip,0,0)='0'if substr($ip,1,1)eq'.';
+
+substr($ip,0,0)='0'if substr($ip,2,1)eq.';
+
+substr($ip,4,0)='0'if substr($ip,5,1)eq'.';
+
+substr($ip,4,0)='0'if substr($ip,6,1)eq'.';
+
+substr($ip,8,0)='0'if substr($ip,9,1)eq'.';
+
+substr($ip,8,0)='0'if substr($ip,10,1)eq'.';
+
+substr($ip,12,0)='0'while length($ip)<15;
+
+3	1.6X	$ip =sprintf("803d.803d.803d.803d",$ip=~m/\d+/g);
+
+4	1.8X	$ip =sprintf("803d.803d.803d.803d",$ip =~m/(\d+)/g);
+
+5	1.8X	$ip =sprintf("803d.803d.803d.803d",
+
+$ip =~m/^(\d+)\. (\d+)\. (\d+)\. (\d+)$/);
+
+6	2.3X	$ip =~s/\b(?=\d\b)/00/g; $ip =~s/b(?=\d\d\b)/0/g;
+
+7	3.0X	$ip =~s/\b(\d(\d?)\b)7$2 eq''?“00$1”:"0$1"/eg;
+
+8	3.3X	$ip =~s/\d+/sprintf("803d",$&)/eg;
+
+9	3.4X	$ip =~s/(?:(?<=\.)1^)(?=\d\b)/00/g;
+
+$ip =~s/(?:(?<=\.)I^)(?=\d\d\b)/0/g;
+
+10	3.4X	$ip =~s/\b(\d\d?\b)/'0'x(3-length($1)).$1/eg;
+
+11	3.4X	$ip =~s/\b(\d\b)/00$1/g; $ip =~s/\b(\d\d\b)/0$1/g;
+
+12	3.4X	$ip =~s/\b(\d\d?\b)/sprintf("803d",$1)/eg;
+
+13	3.5X	$ip =~s/\b(\d{1,2}\b)/sprintf("803d",$1)/eg;
+
+14	3.5X	$ip =~s/(\d+)/sprintf("803d",$1)/eg;
+
+15	3.6X	$ip=~s/\b(\d\d?(?!\d))/sprintf("803d",$1)/eg;
+
+16	4.0X	$ip =~s/(?:(?<=\.)1^)(\d\d?(?!\d))/sprintf("803d",$1)/eg;
+
+式前，Perl 必须在幕后进行预处理工作。真正的准备工作依赖于正则运算元的类型。在大多 数情况下，正则运算元是正则文字，例如m/…1、s/…/…/ 或qr/…/。 Perl 必须对它们进行 幕后处理，而处理需要的时间，如果可能应该尽力避免。首先，让我们来看要做的事情， 然后讲解如何避免。

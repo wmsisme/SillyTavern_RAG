@@ -1,0 +1,38 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 88/94
+---
+用查找性能损失的办法找出问题代码的办法也值得一看：
+
+use Time::HiRes;
+
+sub CheckNaughtiness()
+
+{
+
+my $text ='x'x10_000;#创 建 一 定 量 的 数 据
+
+#计算纯循环的开销
+
+my $start =Time::HiRes::time();
+
+for(my $i =0;$i<5_000;$i++)(}
+
+my soverhead=Time::HiRes::time()-$start;
+
+#计算同样次数匹配的开销
+
+$start =Time::HiRes::time();
+
+for(my $i =0;$i<5_000;$i++)〔 Stext =~m/^/}
+
+my $delta =Time::HiRes::time()-$start;
+
+#计算差值
+
+printf"It seems your code is 8s(overhead=8.2f,delta=8.2f)\n",
+
+($delta >$overhead*5)?"naughty":"clean",Soverhead,sdelta; )
+
+Study 函数

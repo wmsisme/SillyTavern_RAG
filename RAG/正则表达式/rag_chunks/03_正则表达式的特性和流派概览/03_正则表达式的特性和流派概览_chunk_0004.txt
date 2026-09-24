@@ -1,0 +1,26 @@
+---
+章节: 第3章：正则表达式的特性和流派概览
+章节ID: 03_正则表达式的特性和流派概览
+切片序号: 4/83
+---
+The Origins ofRegular Expressions
+
+关于正则表达式，最初的想法来自20世纪40年代的两位神经学家，Warren McCulloch和
+
+Walter Pitts,他们研究出一种模型，认为神经系统在神经元层面上就是这样工作的(注1)。 若干年后，数学家Stephen Kleene 在代数学中正式描述了这种被他称为“正则集合”( regular sets ) 的模型，正则表达式才成为现实。Stephen 发明了一套简洁的表示正则集合的方法， 他称之为“正则表达式”(regular expressions)。
+
+20世纪50年代和60年代，理论数学界对正则表达式进行了充分的研究。Robert Constable 的文章为那些对数学感兴趣的读者提供了很不错的简介(注2)。
+
+尽管存在更古老的应用正则表达式的证据，但我能找到的是，关于在计算方面使用正则表 达式的资料，最早发表的是1968年 Ken Thompson 的文章 Regular Expression Search Algorithm (注3),在文中，他描述了一种正则表达式编译器，该编译器生成了 IBM 7094 的 object 代码。由此也诞生了他的qed, 这种编辑器后来成了Unix 中 ed 编辑器的基础。
+
+ed 的正则表达式并不如qed 的先进，但是这是正则表达式第一次在非技术领域大规模使用。 ed 有条命令，显示正在编辑的文件中能够匹配特定正则表达式的行。该命令“g/Regular
+
+Expression/p”, 读作“Global Regular Expression Print ”(应用正则表达式的全局输出)。这 个功能非常实用，最终成为独立的工具grep (之后又产生了egrep——扩展的grep)。
+
+注1:文章的标题是 Alogical calculus of the ideas imminent in nervous activity,首次刊载于Bulletin of Math.Biophysics 5(1943),然后收录于Embodiments of Mind (M IT Press 1965)。这篇文章 的开头简要描述了神经细胞的行为方式(你知道神经脉冲的速度在每秒1米到150米之间
+
+吗?),下 面就都是各种算式了，反正我是一点也不懂。
+
+注 2 : Robert L.Constable,"The Role of Finite Automata in the Development of Modern Computing Theory,"in The Kleene Symposium,Eds.Barwise,Keisler,and Kunen (North-Holland
+
+Publishing Company,1980),61-83。

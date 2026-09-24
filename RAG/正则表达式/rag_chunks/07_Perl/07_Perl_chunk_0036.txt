@@ -1,0 +1,34 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 36/94
+---
+Iterative Mntching:Scalar Context,with /g
+
+scalar context 中 ，m/…/g 是个特殊的结构。和正常的m/…/ 一样，它只进行一次匹配，但是 和 list context 中的m/…/ g一 样 ，它会检查之前匹配的发生位置。每次在s calar context中使 用 m/…/g——例如在循环中，它会寻找“下一个”匹配。如果失败，就会重置“当前位置 	(current position)”,于是下一次应用从字符串的开头开始。
+
+这里有个简单的例子：
+
+Stext ="WOW! This is a SILLY test.";
+
+$text =~m/\b([a-z]+\b)/g;
+
+print"The first all-lowercase word: $1\n';
+
+$text =~m/\b([A-Z]+\b)/g;
+
+print "The subsequent all-uppercase word:$1\n";
+
+有两次匹配是在scalar context中使用/g 进行的，结果为：
+
+The first all-1owercase word:is
+
+The subsequent all-uppercase word:SILLY
+
+后两次匹配配合起来，前者把“当前位置”设置到匹配的小写字母单词之后，第二个读取 这个位置，在后面寻找大写字母单词。对两个匹配来说，/g 都是必须的，这样匹配才能注 意到“当前位置”,所以如果任何一个没有使用/g, 第二行会指向‘wow’。
+
+scalar context 中的/g 匹配非常适合用作while 循环的条件：
+
+while($ConfigData =~m/^(\w+)=(.*)/mg){
+
+my($key,$value)=($1,$2);

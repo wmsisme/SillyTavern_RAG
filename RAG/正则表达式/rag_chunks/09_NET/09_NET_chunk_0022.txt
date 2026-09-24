@@ -1,0 +1,30 @@
+---
+章节: 第9章：.NET
+章节ID: 09_NET
+切片序号: 22/37
+---
+End Function
+
+Dim Evaluator as MatchEvaluator = New MatchEvaluator(Addressof MatchFunc)
+
++**
+
+Dim R_Temp as Regex =New Regex("(\d+)C\b",RegexOptions.IgnoreCase) Target =R_Temp.Replace(Target, valuator)
+
+如果目标字符串中包含 'Temp is 37C.', 它会被替换为‘Temp is 98.6F.’。
+
+RegexObj.Split (target ) Return type: array of string RegexObj.split(target,count)
+
+RegexObj.split(target,count,offset)
+
+Split 方法将目标正则表达式应用于目标字符串，返回由各匹配分隔的字符串数组。如下 面这个例子所示：
+
+Dim R as New Regex("\.")
+
+Dim Parts as String()=R.Split("209.204.146.22")
+
+R.Split 返回包含四个字符串的数组 (209'、‘204’、‘146'和‘22'),它们 由\ .在 目 标字符串中的三次匹配来分隔。
+
+如果提供了count 参数，则至多返回count 个字符串(除非使用了捕获型括号，一会儿会说 到这个问题)。如果没有提供count, Split 返回所有匹配分隔的字符串。提供count的意思 是，正则表达式可能在找到最终匹配之前停止应用，若果真如此，数组中最后的元素就是 目标字符串中余下的部分。
+
+Dim R as New Regex("\.")

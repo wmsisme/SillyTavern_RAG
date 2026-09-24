@@ -1,0 +1,32 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 55/69
+---
+Programming Perl 283,286,339
+Regular Expression Search Algorithm 85 "The Role of Finite Automata in the
+Development of Modern Comput- ing Theory”85
+
+after-match data 138
+benchmarking 238-239
+line anchors 130
+mode modifiers 135
+regex approach 97
+strings 104
+version covered 91
+word boundaries 134
+\z 112
+\p{Z} 121-122,368,407
+\pz PHP 442
+\p{Z1} 123
+\p(Zp} 123
+\p(Zs} 123
+
+Q Java 368,395,403 Qantas 11
+Q \E 290
+inhibiting 292
+qed 85
+qr/1(see also regex objects) introduced 76
+quantifier (see also:plus; star;question mark; interval;lazy;greedy ;posses- sive quantifiers)
+and backtracking 162
+factor out 255

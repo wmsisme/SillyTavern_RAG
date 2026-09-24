@@ -1,0 +1,36 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 26/52
+---
+$cooked = preg_ replace ($patterns,$ replacements, $text);
+
+preg _replace 能够接收数组作为参数是很方便的(这样程序员就不需要使用循环在各个 pattern和 subject 中进行迭代),但是它的功能并没有增强。比如，各个 pattern 并不是“并 行”处理的。但是，相比自己写 PHP 循环代码，内建的处理效率更高，而且更容易阅读。
+
+为了说清楚，请参考这个例子，其中所有的参数都是数组：
+
+$result_array =preg_replace($regex_array,Sreplace_array,$subject_array); 它等价于：
+
+$result_array =array();
+
+foreach ($subject _array as $subject)
+
+reset($regex_array);	//准备遍历两个数组
+
+reset($replace_array);//	把数组指针恢复到开头位置
+
+while(list( ,$regex)= each( $regex_array)) {
+
+list(,$replacement)=each($replace_array);
+
+// regex 和 replacemnet 已经准备就绪，应用到subject...
+
+$subject= preg_replace( $regex,$replacement,$subject);
+
+}
+
+1/ 已经处理完所有的regex, 此 subject 处理完毕...
+
+Sresult _array []= $subject;// .. 附加到结果数组中
+
+}

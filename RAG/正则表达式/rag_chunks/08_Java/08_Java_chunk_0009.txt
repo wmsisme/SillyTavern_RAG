@@ -1,0 +1,50 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 9/51
+---
+IllegalArgumentException。
+
+下面是一个完整的、详细的程序，示范了简单的匹配：
+
+pblic class SimplekegexTest(
+
+pubic static void tnain(St ring1)args)
+
+{
+
+String myText ="this is my 1st test string";
+
+String myRegex ="\\d+\w+";1/ 表 示 \d+\W+
+
+java.uti1. regex.Pattern p=java.util.regex. Pattern.compile(myRegex);
+
+java.util. regex.Matcher m=p.matcher(myText);
+
+if(m.find()){
+
+String matchedText =m.group();
+
+int matchedFrom =m.start();
+
+int matchedTo=m.end();
+
+System. out .println("matched〔”+ matchedTex t +" 〕"+
+
+"from"+matchedFrom +
+
+"to"+matchedTo +.".");
+
+}else{
+
+System.out. println("didn't match"); }
+
+结果是 ‘ matched [1st]from 12 to 15.'。在本章的所有例子中，我都用斜体表示变量 名。如果这样声明，可以省略粗体部分：
+
+import java.util.regex.*;
+
+它应该放在程序的头部，和第3章的例子(95)一样。
+
+这是标准的做法，而且程序更容易管理。本章的其他程序省略了import 语句。
+
+The Pattern.compile()Factory

@@ -1,0 +1,64 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 42/52
+---
+*检测和捕获此错误却不容易，尤其是希望获得友好提示，而且不修改全局状态
+
+* 所 以 如 果 打 开 了 ‘ track_errors', 则保存$php _ errormsg, 之后恢复它的状态
+
+* 如果没有打开，则打开它(因为需要用到),完成之后再关闭
+
+*/
+
+if($old_track =ini_get("track_errors"))
+
+$old_message =isset($php_errormsg)?Sphp_errormsg :false; el se
+
+ini_set('track_errors',1);
+
+/* 现在确认 track_errors 已经打开 */
+
+unset($php_errormsg);
+
+@preg_match($pattern ,"");/* 尝试使用pattern*/
+
+$return_value =isset($php_errormsg)?$php_ errormsg :false;
+
+/* 现在捕获了需要的内容，恢复全局状态*/
+
+if($old_track)
+
+s php _errormsg =isset($old_message)?$ old_message :false; else
+
+ini_set('track_errors',0);
+
+return $return_value; }
+
+对未知正则表达式进行语法检查
+
+Syntax-Checking an LInknown Regex
+
+这个函数使用刚刚开发的功能来检查一个纯正则表达式(没有分隔符也没有模式修饰符) 的语法。如果语法不正确，会返回对应的错误信息，如果语法正确，返回false。
+
+/*
+
+*如果表达式语法错误，返回错误信息，如果语法正确返回 false
+
+*/
+
+function preg_regex_error($regex)
+
+return preg_pattern _error(preg_regex_to_pattern($regex));
+
+递归的正则表达式
+
+Recursite Expressions
+
+preg 引擎所属的流派的大多数方面都在第3章中有所介绍，但是此流派还提供了某些新的 有意思的功能用于匹配嵌套结构：递归的表达式。
+
+序列(? R) 表示“在此处递归应用整个表达式 ”, 而 (?num) 表示“在此处递归应用 num 所对应编号的捕获型括号中的序列”。命名捕获的括号则使用(? P>name)j 表示法。
+
+下面几节展示了常见的递归。递归在扩展的“tagged data” 例子(7481)中占有重要地位。
+
+匹配嵌套括号内的文本

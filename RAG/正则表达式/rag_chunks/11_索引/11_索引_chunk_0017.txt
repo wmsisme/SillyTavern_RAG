@@ -1,0 +1,26 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 17/69
+---
+combining character 107,120 Inherited script 122
+commafying a number example 64-65
+introduced 59
+without lookbehind 67
+COMMAND.COM 7
+comments 99,136 Java 98
+matching of C comments 272-276 matching of Pascal comments 265 .NET 420
+XML 483
+comments and free-spacing mode 111 Communicatons of tbe ACM 85
+comparison of engine types(see NFA) Compilation failed 474
+compile
+caching 242-245
+once (/o)352-353
+on-demand 351
+regex 410-411
+compile method 372
+Compiled(.NET)237,408,410,420, 427-428,435
+
+Compilers-Principles,
+Tools 180
+CompileToAssembly	Tecbniques,and

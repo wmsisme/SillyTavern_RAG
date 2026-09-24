@@ -1,0 +1,34 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 7/94
+---
+正则文字支持的特性
+
+正则文字提供下面的特性：
+
+· 变量插值 正则表达式中以$和e 开头的变量会被替换为实际变量的值。$变量插入一个 简单的纯量值 (scalar value)。以@开头的插入数组或者数组的一部分，以空格分隔各
+
+个元素(其实是以$"变量作分隔符，它的默认值是空格)。
+
+在 Perl中，‘8'引入一个散列变量 (hash variable), 但是在字符串中插入一个散列变
+
+量并没有太大的意义，所以Perl 不支持8插值。
+
+·
+
+·
+
+·
+
+命名的Unicode 字符 如果程序中包含“use charnames': ful1' ;”,就可以用\ N(name} 序列引用Unicode 字符。例如，\ N{LATIN SMALLLETTER SHARP S}匹配“B”。在Perl 的 unicore 目录下的UnicodeData.txt 中可以找到 Perl 支持的Unicode 字符列表。下面 的代码能够报告文件的位置：
+
+use Config;
+
+print"$Config{privlib}/unicore/UnicodeData. txt\n";
+
+“use charnames ':fu11';”很容易忘记，或者忘记在 'full’ 前面添加冒号，果
+
+真如此的话，N{ … 就不能正常工作。同样，如果使用了下面介绍的正则表达式重载， N{ … 也不能正常工作。
+
+大小写转换前缀 \1和\u 能够把后面的字符转换为小写或大写形式。通常我们使用此 功能来转换插值变量的第一个字符。举例来说，如果变量stitle 包含“mr.”, m/ … \ustitle…/ 就能生成正则表达式… Mr. … 。Perl 的 1cfirst() 和 ucfirst() 函数提 供了同样的功能。

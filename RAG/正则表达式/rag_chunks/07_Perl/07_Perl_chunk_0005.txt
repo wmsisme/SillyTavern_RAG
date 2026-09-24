@@ -1,0 +1,28 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 5/94
+---
+③ Perl的 Unicode 支持针对的是 Unicode Version 4.1.0。
+
+Unicode 字母表也能支持。字母表和属性名可以有 'Is ' 前缀，但并非必须(125)。 区块名可以有 'In ' 前缀，但只有在区块和字母表的名字发生冲突时才必须使用。
+
+Perl也支持'\p(L&},' \p{Any}i 、'\p{Al1} 、\ p{Assigned );和'\p{Unassigned} 属性。 Perl 支持例如\p{Letter} 的长属性名。名字的各个单词之间可能是空格、下画线， 或者什么也没有，(例如'\ p{Lowercase _Letter}, 也可能写作'\p{Lowercase Letter}) 或者是'\p{Lowercase·Letter}i), 为了前后一致，我推荐使用第123页表 格中的长命名。
+
+'\p{^ … 等 价 于 \P. … .。
+
+④ 单词分界符完全支持Unicode。
+
+⑤ 顺序环视可能包含捕获型括号。
+
+逆序环视中的子表达式必须匹配固定长度的文本。
+
+⑥ /x 修饰符只能识别ASCII 空白字符。/m 只对换行符有影响，而且不是所有的Unicode 换行符。
+
+/i 能够在Unicode中正常工作。
+
+所有的元字符并不是生而平等的。“正则元字符”没有得到正则引擎的支持，但Perl的正则 文字预处理机制能对付。
+
+正则运算符和正则文字
+
+Regex Operands and Regex Literals

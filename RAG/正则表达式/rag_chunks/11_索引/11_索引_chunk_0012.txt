@@ -1,0 +1,50 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 12/69
+---
+analogy (cont'd)
+regex-directed match(see NFA)
+text-directed match(see DFA)
+transmission 148-149,228
+transparencies(Perl's local)298
+anchor(see also:word boundaries;
+enhanced line-anchor mode) caret 129
+dollar 129
+end-of-line optimization 246
+exposing 256
+line 87,112-113,150
+overview 129
+anchored() 362
+anchored 'string′ 362
+anchoring bounds 388
+Java 388
+AND class set operations 125-126
+ANSI escape sequences 79
+\p(Any} 125,442 Perl 288
+any character(see dot)
+appendReplacement method 380 appendTail method 381
+$ARGV 79
+array context(see list context) \p(Arrows) 124
+ASCII encoding 29,106-107,115,123 Asian character encoding 29
+AssemblyName 435
+\p(Assigned) 125-126
+Perl 288
+asterisk (see star)
+atomic grouping(see also possessive
+quantifiers)
+details 170-172
+for efficiency 171-172,259-260,268-270 essence 170-171
+introduced 139
+atomic grouping example 198,201,213,
+271,330,340-341,346 AT&T Bell Labs 86
+author email xxiii
+auto-lookaheadification 410
+automatic possessification 251
+awk
+after-match data 138
+gensub 182
+history 87
+search and replace 100
+version covered 91
+word boundaries 134

@@ -1,0 +1,48 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 19/69
+---
+CSV parsing example
+Java 217,401
+.NET 435
+Perl 213-219
+PHP 480
+unrolling 271
+VB.NET 219
+\p{Currency) 124
+currency
+e 123-124,367,406
+\p{Currency}124
+\p{Currency _Symbol}123
+\p{Sc) 123
+Unicode block 123-124
+\p{Currency_Symbol} 123
+current location Java 374,383,398,400 currentTimeMillis() 236
+\p{Cyrillic) 122,124
+
+\D 49,120 \d 49,120 Perl 288
+PHP 442
+Darth 197
+dash in character chass 9
+\p{Dash _Punctuation} 123
+date_default _timezone_set 235
+DBIx::DWIW 258
+debugcolor 363
+debugging 361-363
+with embedded code 331-332
+regex objects 305-306
+run-time 362
+\p{Decimal _Digit_Number} 123
+default regex 308
+define- key 101
+delegate 423-424
+delimited text 196-198
+standard formula 196,273
+delimiter
+with shell 7
+with substitution 319
+delimiters PHP 445,448
+description Java 365
+Deterministic Finite Automaton(see DFA) Devel:: FindAmpersand 358
+Devel:: SawAmpersand 358

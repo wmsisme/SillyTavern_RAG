@@ -1,0 +1,48 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 22/51
+---
+StingBuffer result =new StringBuffer();// 生成用于替换的副本
+
+while(m.find())
+
+n.aopendReplacement(result,replacement);
+
+.appendTail(result);
+
+re" : regult.tostring( );/7 转换为String. 然后返回
+
+}
+
+这里使用“方法链 (译注1)”结合 reset 和 region, 详细讲解请参阅第389页。
+
+下面的程序更加完善，它 将metric 变量中的摄氏温度转换为华氏温度：
+
+//构建一个matcher, 匹配"Metric" 变量中后面跟有"C"的数值
+
+// 下面的正则表达达式是： (\ d+(?:1.\d*)?)C\bj
+
+Matcher m=Pattern.compile("(\d+(?:\.d*)?)C\\b"). matcher(metric);
+
+StringBuffer result =new StringBuffer();//生成用于替换的副本
+
+while(m.find())
+
+{
+
+float celsius =Float.parseFloat(m.group(1)); / / 得到数值，转换为浮点数
+
+int fahrenheit =(int)(celsius *9/5+32); / / 转换为华氏温度
+
+m.appendReplacement(result,fahrenheit +"F");// 插入
+
+}
+
+m.appendTail(result);
+
+System. out. println(result.toString( ));/ / 显示结果
+
+如果metric 变量包含“from 36.3c to 40.1c.”,结果就是“from 97F to 104F.”。
+
+原地查找-替换

@@ -1,0 +1,28 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 19/51
+---
+Before Java 5.0 was Java 1.4.2.After Java 5.0 is Java 6.0
+
+如果只需要替换第一次出现的文本，可以使用 replaceFirst, 而不是 replaceAl1 。 除了 这种情况，还有一种情况可以使用replaceFirst, 即明确知道目标字符串中只存在一个匹 配时，使用 replaceFirst 可以提高效率(如果了解正则表达式或是目标字符串，可以预 知这一点)。
+
+replacement 参数
+
+replaceAl1 和 replaceFirst 方法(以及下一节的 appendReplacement 方法)接收的
+
+replacement 参数在插入到匹配结果之前，会进行特殊处理：
+
+· '$1'、'$2’ 之类会替换为对应编号的捕获型括号匹配的文本($0会被替换为所有匹 配的文本)。
+
+· 如果‘s’ 之后出现的不是ASCII的数字，会抛出I1legalArgumentException 异常。 's ' 之后的数字，只会应用“有意义”的部分。如果只有3组捕获型括号，则‘s25'
+
+会被视为$2然后是‘5',而此时$6会抛出IndexOutOfBoundsException。
+
+· 反斜线用来转义后面的字符，所以 ‘ s’ 表示美元符号。同样的道理，'’表示反斜 线 ( 在Java的字符串中，表示正则表达式中的‘\’需要用四个斜线 ' u') 。 同样， 如果有12组捕获型括号，而我们希望使用第一组捕获型括号匹配的文本，然后是‘2’, 应该是这样‘$1\2’。
+
+如果不清楚replacement 字符串的内容，最好使用Matcher.quoteReplacement 方法，确保 不会出错。如果用户的正则表达式是uRegex, replacement 是 uRepl ,下面的做法可以确保 替换的安全：
+
+Patten.conpile(u Regex). matcher(text).replaceAll(Matcher.quoteReplacement(uRepl))
+
+高级查找-替换

@@ -1,0 +1,26 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 6/51
+---
+“未赋值的代码点”属性\ p{Cn}匹配的字符，不能由“其他字符”属性\p{C} 来匹配。 Java 不支持组合属性\p{L&}。
+
+Java 支持伪属性\ p{all}, 它等价于(? S:.) , 但不支持\p{assigned} 和\p{unassigned}
+
+伪属性，不过我们可以用\ P{Cn}和\p{Cn} 来代替。
+
+Unicode 区块
+
+Unicode block的支持要求使用‘In’ 前缀。请翻到第402页查阅具体的版本信息，了解\p{…}j 和'\ P{ … 中能够出现的区块名称。
+
+为了保持向后兼容性，Java 1.5中有两个 Unicode 区块在Unicode Version 3.0和4.0之间发生 了变化。除了Unicode 4.0提供的Combining Diacritical Marks for Symbols和 Greek and Coptic 之外，还可以使用本不属于Unicode 4.0的名称Combining Marks for Symbols 和
+
+Greek。
+
+Java 1.4.2有个涉及Arabic Presentation Forms-B 和 Latin Extended-B的 bug , 在 Java 1.5
+
+中已经修正。
+
+特殊的Java字符属性
+
+从 Java 1.5.0 开 始 ，\p{ … 和 \P{…) 结构能够支持 java.lang.Character 中 未 弃 用 	(non-deprecated )的 isSomething 方法。为了在正则表达式中使用此功能，请把方法名开头 的‘is’ 替换成‘java', 然后使用\p{ … 和'\P{…}j。例如，由java.lang.Characer.

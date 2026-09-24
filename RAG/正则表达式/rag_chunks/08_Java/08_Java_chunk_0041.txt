@@ -1,0 +1,74 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 41/51
+---
+相邻匹配之间的空元素
+
+如果正则表达式能够在文本的最开头匹配，返回数组的第一个元素应该是空字符串(这是 一个合法的字符串，但是不包括任何字符)。同样，如果正则表达式能够在某个位置匹配两 次以上，应该返回空字符串，因为邻近的匹配“分割”了零长度的文本。例如：
+
+String[]result=Pattern.compile("\\s*,\\s*").split(",one,two,,,3");
+
+按照两边可能出现空白字符的逗号来分割，返回一个5个元素的数组：空字符串、'one'、 'two'、两个空字符串和‘3'。
+
+序列末尾出现的所有空字符串都会被忽略：
+
+String[] result =Pattern.compile(":").split(":xx:");
+
+这样会得到两个字符串：一个空字符串和‘xx’。如果希望保留这些元素，请使用下面介绍 的双参数版本的split。
+
+Pattern的split 方法，两个参数
+
+Pattern's split Method,with Two Arguments
+
+string[7 split( Char3eence text, int limit)
+
+这个版本的split 方法能够控制pattern 应用的次数 ，以及结尾部分可能出现的空元素
+
+的处理策略。String 类的split 方法也可以获得同样效果。
+
+limit 参数等于0,大于0,还是小于0,各有意义。
+
+limit 小于0
+
+如果limit 小于0,就会保留数组结尾的空元素。
+
+String1]result=Pattern.compile(”:").split(":xx:",-1);
+
+返回包含3个字符串的数组(一个空字符串，‘xx', 然后是另一个空字符串)。
+
+limit 等于0
+
+把 limit 设置为0,等于不设置limit, 所以不会保留结尾的空元素。
+
+limit 大于0
+
+如果limit 大于0,则split 返回的数组最多包括 limit 个元素。也就是说，正则表达式至多 会应用limit-1次。(如果limit=3, 则需要2次匹配来分割3个字符串)。
+
+数
+
+进行 limit-1 次匹配之后，匹配停止，目标字符串中其余的部分(在最后一次匹配之后的文 本)会作为结果数组的尾元素。
+
+如果某个字符串如下：
+
+Friedl, Jeffrey, Eric Francis,America,Ohio,Rootstown
+
+并且希望得到头三个部分，你可以将字符串分割为4个部分(头3个部分是名字，然后是 最后的“其他”字符串):
+
+String[] NameInfo =Pattern.compile(",").split(Text,4);
+
+// NameInfo[0] 是姓
+
+// NameInfo[1] 是名
+
+1/NameInfo[2] 是中名(这里中名包括两个词)
+
+//NameInfo[3] 是其他部分，因为这里没用，直接忽略
+
+为split 设置limit的理由在于，如果不需要更多地处理，它可以用来停止查找其他的字符 串、创建新字符串，限制数组的长度，提高效率。提供limit 能够限制工作量。
+
+拓 展 示 例
+
+Additional Examples
+
+为 Image Tag 添加宽度和高度属性

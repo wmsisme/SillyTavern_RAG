@@ -1,0 +1,48 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 62/69
+---
+/ 8 (cont' d)
+(see also: dot-matches-all mode;mode modifier)
+saved states (see backtracking, saved states)
+SawAmpersand 358
+say what you mean 195,274 SBOL 362
+\p(Sc}123-124
+scalar context 294,310,312-316
+forcing 310
+scanner 132,389,399
+schaffkopf 33
+scope lexical vs.dynamic 299
+scripts 122,288,442
+search and replace xvii awk 100
+Java 378-383
+.NET 414,423-424
+Perl 318-321
+PHP 458-465
+Tcl 100
+(see also substitution) sed
+after-match data 138
+dot 111
+history 87
+version covered 91
+word boundaries 134
+正 規表現は簡单だよ!5 self-closing tag 481
+p{Separator} 122
+server VM 236
+set operations (see class,set operations) Sethi,Ravi 180
+shell 7
+Z 110
+Java 110
+Perl 110
+simple quantifier optimization 247-248 single quotes delimiter 292,319
+Singleline(.NET)408,420,427
+single-quoted string PHP 444
+\p(Sk) 123
+\p {Sm} 123
+small quantifier equivalence 251-252 \p(So} 123
+\p{Space_Separator} 123
+\p(Spacing_Combining_Mark) 123
+span (see:mode-modified span;literal-
+text mode) “special”263-266
+Spencer,Henry 88,182-183,243

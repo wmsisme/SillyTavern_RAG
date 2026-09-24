@@ -1,0 +1,20 @@
+---
+章节: 第6章：打造高效正则表达式
+章节ID: 06_打造高效正则表达式
+切片序号: 12/74
+---
+$TestString =~m/^[a-g]+$/; }
+
+SEndTime =time();
+
+printf("Character class takes 8.3f seconds.\n",SEndTime -$StartTime);
+
+请注意，STestString 和$Count 的初始化在计时开始之前( STestString 使用了Perl 提供 的 x 操作符进行初始化，它表示将左边的字符串重复右边的次数)。在我的机器上，使用 Per15.8运行的结果是：
+
+Alternation takes 7.276 seconds.
+
+Character class takes 0.333 seconds.
+
+所以，对这个例子来说，多选结构要比字符组快22倍左右。此测试应该执行多次，选取最 短的时间，以减少后台系统活动的影响。
+
+理解测量对象

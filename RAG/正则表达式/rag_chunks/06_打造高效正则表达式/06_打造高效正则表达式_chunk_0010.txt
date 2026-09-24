@@ -1,0 +1,36 @@
+---
+章节: 第6章：打造高效正则表达式
+章节ID: 06_打造高效正则表达式
+切片序号: 10/74
+---
+Benchmarking
+
+本章主要讲解速度和效率，而且会时常使用性能测试，所以我希望介绍一些测试的原则。 我会用几种语言来介绍简单的测试方法。
+
+基本的性能测试就是记录程序运行的时间：先取系统时间，运行程序，再取系统时间，计 算两者的差，就是程序运行的时间。举个例子，比较^(alblcldlelflg)+$ 和 ^[a-g]+$J。 先来看Perl的表现，然后再来看其他语言。下面是简单的Perl 程序(不过，我们将会看到， 这个例子有欠缺):
+
+use Time::HiRes 'time';	# 这样 time( )的返回值更加精确
+
+SStartTime =time();
+
+"abababdedfg"=~m/^(alblc)dlelflg)+$/;
+
+SEndTime =time();
+
+printf("Alternation takes	8.3f seconds.\n",SEndTime	-$StartTime);
+
+$StartTime =time();
+
+"abababdedfg"=~m/^[a-g]+$/;
+
+$EndTime =time();
+
+printf("Character class takes %.3f seconds.\n",SEndTime - $startTime);
+
+它看来(而且也确实是)很简单，但是在进行性能测试时，我们需要记住几点：
+
+· 只记录“真正关心的 ( interesting)” 处理时间。尽可能准确地记录“处理”时间，尽 可能避免“非处理时间”的影响。如果在开始前必须进行初始化或其他准备工作，请 在它们完成之后开始计时；如果需要收尾工作，请在计时停止之后进行这些工作。
+
+· 进行“足够多”的处理。通常， 测试需要的时间是相当短暂的，而计算机时钟的单位
+
+精度不够，无法给出有意义的数值。

@@ -1,0 +1,80 @@
+---
+章节: 第5章：正则表达式实用技巧
+章节ID: 05_正则表达式实用技巧
+切片序号: 29/40
+---
+Hostname
+
+"
+
+,
+
+"
+
+"
+
+")
+
+=	="(?x-i:com\\b
+
+ledu\\b
+
+Ibiz\\b
+
+lin(?:tIfo)\\b |mil\\b
+
+I net\\b lorg\\b
+
+l[a-z][a-z]\b
+
+"(?:"+SubDomain	\n"+ \n”+ \n"+ \n”+ \n”+ \n”+ \n”+
+
+\n"+//country codes
+
+\n";
+
++"\1.)+"+TopDomains;
+
+String NOT_IN = ";\"'<>()\\]{}\s\\x7F-\\xFF";
+
+String NOT_END = "!.,?";
+
+String ANYWHERE = "[^"+NOT_IN +NOT_END+"]";
+
+String EMBEDDED = "["+NOT_END +"]";
+
+String UrlPath = "/"+ANYWHERE +"*("+EMBEDDED+"+"+ANYWHERE+"+)*";
+
+String Url =
+
+"(?x: \n"+
+
+" \b \n"+
+
+"## 匹 配hostname \n"+
+
+" ( \n"+
+
+" (?:ftp I http s?)://[-\w]+(\.w[-\\w]*)+\n"+
+
+"
+
+"
+
+"+Hostname +" ")
+
+" # 可 能 出 现 端 口 号 " (?::\\d+)?
+
+" # 下面的部分可能出现，以\开头
+
+"(?:"+UrlPath +")?
+
+")";
+
+/1 现 在 把 正 则 表 达 式 编 译 为 正 则 对 象
+
+Pattern UrlRegex =Pattern.compile(Url);
+
+1 1 现 在 准 备 在 文 本 中 应 用 ， 寻 找 u r 1 . . . …	　\n"+ \n*+ \n"+ \n"+ \n"+ \n"+ \n"+ \n"+
+
+保持数据的协调性

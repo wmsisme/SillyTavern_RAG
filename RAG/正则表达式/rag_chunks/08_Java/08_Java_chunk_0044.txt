@@ -1,0 +1,44 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 44/51
+---
+Boolean haswidth = mwidth.re gion(mImg.start(1),mImg.end( 1)).find();
+
+1/ 如果提供了SRC 属 性，但是没提供WIDTH和 / 或HEIGHT ..
+
+if(hasSrc &&(! hasWidt h Il! hasHeight))
+
+{
+
+java .awt. image.BufferedImage i= // 获取图像
+
+javax.imageio. ImageIO.read(new java.net.URL(mSrc.group(1)));
+
+String size; // 存放未提供的 WIDTH和 / 或HEIGHT 属性
+
+if(hasWidth)
+
+//得到了width, 根据比例计算 height
+
+size="height='" +(int)(Integer.parseInt(mWidth.group(1))*
+
+i.getHeight()/i.getWidth())+" ";
+
+else if(hasHeight)
+
+// 得到了height, 根据比例计算width
+
+size="width='" +(int)(Integer.parseInt(mHeight.group(1))*
+
+i.getWidth()/i.getHeight())+"'";
+
+else // 两个属性都没提供，按实际情况处理
+
+size="width='"+i.getWidth()+"'"+
+
+"height='"+i.getHeight()+"'";
+
+htm1. insert (mImg .star t(1), size); // 原地修改 HTML
+
+imgMatchPointer +=size.length();// 更新匹配指针

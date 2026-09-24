@@ -1,0 +1,44 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 63/94
+---
+A Warning About Emhedded Code and my Varinbles
+
+如果 my 变量在正则表达式之外声明，那么在正则表达式之中的内嵌代码引用，就必须非常 小心， Perl 中变量绑定的详细规定可能会产生重大的影响。在讲解这个问题之前，我必须 指出，如果正则表达式的内嵌代码中使用的都是全局变量就没有这种问题，完全可以跳过 这一节。忠告：这一节难度不小。
+
+下面的例子说明了问题：
+
+sub CheckOptimizer
+
+{
+
+my $text=shift; #第一个参数是要检索的文本
+
+my $start =undef; # 记录表达式第一次应用的位置
+
+my Smatch=Stext =~m{
+
+(?{$start =$-[0]if not defined $start}) # 保存第一次应用的位置
+
+}x;\d # 这是需要测试的正则表达式
+
+if(not defined $start){
+
+if ($match ){
+
+# 这种情况不可能发生!
+
+print "Whoa, but it matched!How can this happen!?\n";
+
+}
+
+}elsif($start ==0){
+
+print "The match start was not optimized.\n";
+
+}else {
+
+print"The optimizer started the match at character $start.\n" }
+
+程序中包含3个 my 变量，但是只有$start 与此问题有关(因为其他两个并没有在内嵌代

@@ -1,0 +1,50 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 13/51
+---
+注 3 : 事实上，java.util.regex 是非常方便的，因 为“string” 参数可以是任何实现Char-
+
+Sequence 接 口 的 对 象( String 、StringBuffer 、StringBuilder, 以 及CharBuffer
+
+都可以)。
+
+374 第 8 章 ： J a v a
+
+当前检索范围的起始和结束偏移值可以通过 regionStart 和 regionEnd 方法获得 	(386) 。r eset 方法(392)会把检索范围重新设置为整个目标字符串，任何在内 部调用reset 方法的方法也是一样。
+
+· anchoring bounds 标志位。如果检索范围不等于整个目标字符串，程序员可以设定，是 否将检索范围的边界设置为“文本起始位置”和“文本结束位置”,这会影响文本行边 界元字符 ( A^$\z \Z)。
+
+默认情况下，这个标志位为 true, 但也可能改变，可以通过 useAnchoringBounds
+
+( 3 8 8 ) 和hasAnchoringBound s 方法来修改和查询。 Reset 方法不会修改标志位。
+
+· transparent bounds 标志位。如果检索范围是整个目标字符串中的一段文本，设置为true 容许各种“考察 ( looking)” 结构(顺序环视、逆序环视，以及单词分界符)超越检索 范围的边界，检查外部的文本。
+
+默认情况下，这个标志位为false, 但也可能改变，可以通过 useTransparentBounds
+
+( 3 8 8 ) 和hasTran-sparentBounds 方法来修改和查询。Reset 方法不会修改标志 位。
+
+下面的只读数据保存在matcher 内部：
+
+· 当前 pattern的捕获型括号的数目可以通过groupCount (377) 方法查询。
+
+· 目标字符串中的match pointer 或 current location, 用于支持“寻找下一个匹配”的操 作(通过find 方法375)。
+
+· 目标字符串中的append pointer, 在查找-替换操作中(380),复制未匹配的文本部分 时使用。
+
+· 表示到达字符串结尾的上一次匹配尝试是否成功的标志位。可以通过 hitEnd 方法
+
+(3 90)获得这个标志位的值。
+
+· match result。如果最近一次匹配尝试成功，Java 会将各种数据收集起来，合称为match result( 376)。包括匹配文本的范围(通过group() 方法),匹配文本在目标字符串中 的起始和结束偏移值(通过start( )和end() 方法),以及每一组捕获型括号对应的信
+
+息(通过group(num) 、start( num)和 end( num) 方法)。
+
+match-result 数据封装在 MatchResult 对象中，通过 toMatchResult 方法获得。 MatchResult 方法有自己的group 、start 和 end 方法(377)。
+
+· 一个标志位，表明更长的目标文本是否会导致匹配失败(匹配成功之后才可用)。如果 边界元字符影响了匹配结果的生成，则此值为 true。可以通过requireEnd 方法查看它 的值 (390)。
+
+上面列出的内容很多，但是如果按照功能分别讲解，便很容易掌握。这正是下面几节的内 容。把这一章作为参考手册时，本章开头(366)的列表会很有用。
+
+应用正则表达式

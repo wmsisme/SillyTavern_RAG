@@ -1,0 +1,45 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 34/69
+---
+Length
+Group object method 430
+Match object method 429
+length-cognizance optimization 245,247
+\p{Letter} 122,288
+p{Letter_Number} 123
+SLevelN 330,343 lex 86
+$112
+dot 111
+history 87
+and trailing context 182
+lexer 132,389,399
+building 315
+lexical scope 299
+LF 109,370
+LFO backtracking 159
+limit
+backtracking 239
+preg_split 466-467
+recursion 249-250
+line(see also string)
+anchor optimization 246
+vs.string 55
+line anchor 112-113
+mechanics of matching 150
+variety of implementations 87
+line anchors
+Java 130,370,388
+.NET 130
+Perl 130
+PHP 130
+line feed 109,370
+LINE SEPARATOR 109,123,370
+line terminators 109-111,129-130,370
+with $ and ^ 112
+Java 370
+\p(Line_Separator} 123
+link
+matching 201
+(see also URL examples) Java 209

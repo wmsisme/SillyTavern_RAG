@@ -1,0 +1,49 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 56/69
+---
+|quantifier(cont'd)
+multiple levels 266
+optimization 247-248
+and parentheses 18
+possessive 477,483
+possesi quantifiers 142,172-173,477,
+for efficiency 259-260,268-270,482 automatic
+optimization
+mimicking question mark
+as \?141
+backtracking 160
+greedy 141,447
+introduced 17-18
+lazy 141
+possessive 142
+smallest preceding subexpression 29
+question mark
+as \?141
+backtracking 160
+greedy 141,447
+introduced 17-18
+lazy 141
+possessive 142
+qttdhinogd(se3d6o,9b5le-quoted string
+example)
+quoteReplacement method 379 quotes multi-character 165-166
+
+r" … · 104
+r 49,115-116
+machine-dependency 115
+(?R) 475
+PCRE 475
+PHP 475
+$^R 302,327
+re 361,363
+re pragma 361,363
+reirtivcekatc2he8e also dynamic
+regex)
+Java 402
+.NET 436
+PCRE 475-478
+PHP 475-478,481-484
+
+510 索引

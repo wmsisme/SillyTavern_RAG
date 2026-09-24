@@ -1,0 +1,42 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 15/69
+---
+caching(cont'd) Perl 350-352
+PHP 478
+procedural 244
+Tcl 244
+unconditional 350
+callback PHP 463,465 Capture 437
+CaptureCollection 438
+capturing parentheses Java 377
+car analogy 83-84
+caret anchor introduced 8
+carrlage return 109,370 case title 110
+case folding 290,292
+inhibiting 292
+case-insensitive mode 110
+egrep 14-15
+/i 47
+introduced 14- 15
+Ruby 110
+with study 359
+cast 294-295
+categories (see Unicode,properties) \p(Cc) 123
+CDATA 483
+Celsius (see temperature conversion
+example)
+\p{Cf} 123
+chaining (of methods)389 character
+base 120
+classes xvii
+(see also character class)
+combining 107,120
+Inherited script 122
+vs.combining characters 107
+control 117
+initial character discrimination 245-248, 252,257-259,332,361
+machine-dependent codes 115
+multiple code points 108
+as opposed to byte 29

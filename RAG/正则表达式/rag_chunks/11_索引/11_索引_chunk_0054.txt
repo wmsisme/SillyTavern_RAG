@@ -1,0 +1,36 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 54/69
+---
+Programming Perl 283,286,339 promote 294-295
+properties 121-123,125-126,288,368-369,
+PS 109,123,370
+\p{S} 122
+\p{Ps} 123
+\p{Sc) 123-124
+\p{S eparator } 122
+\p{Sk} 123 \p{Sm} 123
+\p(So} 123
+\p(Space_Separator } 123
+\p(Spacing_ Combining_Mark} 123
+\ p( Symbol} 122
+\p{Tamil} 124
+\p{Thai} 122
+
+索 引
+
+\p{Tibetan } 124
+\p{Titlecase_Letter ) 123
+publication
+Bulletin of Math. Biopbysics 85
+CJKV Information Processing 29
+Communications of the ACM 85
+Compilers—Principles , Tecbniques,and
+Tools 180
+Embodiments of Mind 85
+
+The Kleene Sympostum 85
+“A logical calculus of the ideas imminent
+in nervous activity”85 Object Oriented Perl 339
+Principles of Compiler Design 180

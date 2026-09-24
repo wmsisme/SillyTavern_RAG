@@ -1,0 +1,38 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 87/94
+---
+use English'-no_match_vars';
+
+这样就没有问题了。如果你从 CPAN 或者其他地方下载了模块，你可能需要检查一番，看 看它们是否使用了这些变量。请参考下一页的补充内容，里面有些诀窍，告诉你如何判断 程序是否用到了这些变量。
+
+如 何 检 查 代 码 是 否 包 含$&
+
+判断程序是否使用了不宜使用的变量$'、$&和$’,并不是件容易的事情，尤其使用库函 数时更是如此，但还是有几个办法来判断。最简单的是，如果你的二进制程序在编译
+
+时指定了-DDEBUGGING参数，就可以使用-c和-Mre=debug参数(361),观察输出
+
+的结尾，找到包含‘Enabling$'、$和$’support'或者‘Omitting $',&和$'、support' 的那一行。如果见到前面的文字，就表示使用了这些变量。
+
+另一种可能(但不太现实)的情况是，程序在eval语句中使用了这些变量，如果没 有实际运行，Perl不知道的是否使用了这些变量。解决办法之一就是安装CPAN
+
+(http://www.cpan.org)的Devel:SawAmpersand Package:
+
+END {
+
+require Devel::SawAmpersand;
+
+if(Devel::SawAmpersand::sawampersand){
+
+print"Naughty variable was used!\n";
+
+}
+
+}
+
+与Devel::SawAmpersand一起的还有Devel::FindAmpersand,这个package能够告
+
+诉用户有问题的代码的位置。不幸的是，对最新版本的Perl,它不能保证完全正确。
+
+这两个package的安装都不简单，所以要做的事没准很多(请参考http://regex.info/查 找可能的更新)。

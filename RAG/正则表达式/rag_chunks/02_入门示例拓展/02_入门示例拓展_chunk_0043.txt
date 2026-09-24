@@ -1,0 +1,44 @@
+---
+章节: 第2章：入门示例拓展
+章节ID: 02_入门示例拓展
+切片序号: 43/56
+---
+结果就是
+
+…with. 图 <p>四<p>图<p≥ Therefore …
+
+不过，如果我们用：
+
+$text =~ 8/ ^s*$/<p>/ mg;
+
+结果要更好看一些：
+
+…with.四p Therefore …
+
+所以，在最终的程序中，我们会使用'^\ s*$j。
+
+将E-mail 地址转换为超链接形式
+
+Text-to-HTML 转换的下一步是识别出 E-mail 地址，然后把它们转换为“mailto ”链接。例 如 ，jfriedl@oreilly.com 会被转换为<a· href=“mailto: jfriedl@oreilly .com”>jfriedl
+
+@oreilly.com</a>。
+
+用正则表达式来匹配或者验证E-mail地址是常见的情况。E-mail 地址的标准规范异常繁杂， 所以很难做到百分之百的准确，但是一些简单的正则表达式就可以应付遇到的大多数E-mail 地址。E-mail地址的基本形式是username@hostname。在思考该用怎样的表达式来匹配各个 部分之前，我们先看看这个正则表达式的具体应用环境：
+
+Stext =~s/\b(username regex\@hostname regex)\b/<a href=“mailto:$1”>S1</a>/g;
+
+需要注意的一点是其中两个用下画线标注的反斜线，第一个在正则表达式('@')中，另
+
+一个在replacement 字符串的末尾。使用这两个反斜线的理由各不相同。我会在稍后讨论\@
+
+(77), 现在我们只需要知道，Perl规定作为文本字符的@符号必须转义。
+
+先介绍replacement 字符串中在‘/’之前的反斜线比较好。我们已经看到，Perl 中查找替换 的基本形式是s/ regex/replacement/modifier, 用斜线来分隔。所以，如果我们需要在某个部分 中使用斜线，就必须使用转义，否则反斜线会被识别为分隔符，作为字符串的一部分。也 就是说，如果我们希望在 replacement 字符串中使用</a>, 就必须写作<↓/ a>。
+
+这么做当然可以，但不太好看，所以Perl容许用户自定义分隔符。例如sIregex!string!modifier, 或者 s{regex}{string}modifier。无论采用哪种形式，因为replacement 字符串中的斜线不再与 分隔符有冲突，也就不需要转义。第二种形式的分隔符非常明显，所以从现在开始我们采 用这种形式。
+
+回到程序中来，请注意整个地址是处于\ b…\ bj之间的。添加这些单词分界符能够避免不 完整匹配的情况，例如 ‘ jfriedl@oreilly.com piler ’。尽管遭遇这种无意义的字符串的
+
+几率很小，但使用单词分界符来避免此类匹配一点也不麻烦，所以我会这么做。请注意我
+
+是如何用括号包围整个 E-mail 地址的，这样我们就能使用 replacement 字 符 串 '<a·href=“mailto:$1”>$1</a>'。

@@ -1,0 +1,48 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 11/69
+---
+\a 115-116
+e escaping 77
+A 112,129-130
+(see also enhanced line-anchor mode) optimization 246
+after-match data Java 138
+.NET 138
+PHP 138
+after-match variables
+Perl 299
+pre-match copy 355
+Aho,Alfred 86,180
+\p{all} 369
+\p(A11} 125
+Perl 288
+$all_ matches 455
+collated 455
+US.$matches 454
+stacked 456
+alternation 139-140
+and backtracking 231
+efficiency 222,231
+greedy 174-175
+hand tweaking 261
+introduced 13-14
+order of 175-177,223,260,482 for correctness 28,189,197 for efficiency 224
+and parentheses 13
+analogy
+backtracking
+bread crumbs 158-159
+stacking dishes 159
+ball rolling 262
+building a car 31
+charging batteries 179
+engines 143-147
+first come,first served 153
+gas additive 150
+learning regexes
+Pascal 36
+playing rummy 33
+regex as a language 5,27
+regex as filename patterns 4
+
+490 索引

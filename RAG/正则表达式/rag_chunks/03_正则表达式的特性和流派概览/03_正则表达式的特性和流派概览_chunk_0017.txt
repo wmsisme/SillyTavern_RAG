@@ -1,0 +1,26 @@
+---
+章节: 第3章：正则表达式的特性和流派概览
+章节ID: 03_正则表达式的特性和流派概览
+切片序号: 17/83
+---
+End If
+
+Java 的 Pattern. matches 函数会自动在正则表达式两端添加^…$ j, 微软则提供了更为一 般的函数。Java的做法只是对核心对象的简单包装，但程序员需要使用的字符和变量更少， 而代价只是一点点性能下降。
+
+PHP 中的正则处理
+
+下面是使用PHP的 preg套件中的正则表达式函数处理 'subjectj 的例子，这是纯粹的函数 式方法(第10章详细介绍PHP)。
+
+if (p , $1ine, Smatches))
+
+Python 中的正则处理
+
+最后我们来看Python中 'subjectj 的例子，Python 采用的也是面向对象式的办法。
+
+import re;
+
+R=re.compile("^Subject: (.*)", re.IGNORECASE);
+
+subject = M.group (1)
+
+这个例子与我们之前看过的非常类似。

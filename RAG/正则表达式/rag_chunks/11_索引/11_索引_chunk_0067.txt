@@ -1,0 +1,73 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 67/69
+---
+Unicode
+block 124
+Java 369,402
+.NET 407
+Perl 288
+Unicode, properties) 107,120,122
+code point
+beyond U+FPPF 109
+introduced 107
+multiple 108
+unassigned in block 124
+combining character 107,120,122 Java 368-369,402-403
+line terminators 109-111,370 Java 370
+
+514 索引
+
+Unicode(cont'd)
+loose matching(see case-insensitive mode)
+.NET 407
+official web site 127
+overview 106-110
+Perl 288
+PHP 442,447
+properties 121,369 (see also \ p }) Java 368
+list 122-123
+\p(A1l}125,288
+p{Any}125,288,442
+\p{Assigned) 125-126,288 Perl 288
+PHP 442
+p(Unassigned)123,125,288 script 122
+Perl 288
+PHP 442
+Version 3.1109
+\w 120
+whitespace and /x 288
+UnicodeData.txt 290
+unlcore 290
+unmatch 152,161,163 ,★ 165
+atomic grouping 171
+unrolling the loop 261-276
+example 270-271,477
+general pattern 264
+\p{Uppercase_Letter} 123 URL encoding 320
+URL example 74-77,201-204,208,260, 303-304,306,320,450-451
+egrep 25
+Java 209
+.NET 204
+plucking 206-208
+use charnames 290
+use Config 290,299
+use Eng lish 357
+use overload 342
+(see also regex overloading) use re'debug’ 361,363
+use re'eval′ 337
+use strict 295,336,345
+use Time::HiRes 358,360
+use warnings 326,363
+useAnchoringBounds method 388 usePattern method 393,399
+
+username example 73,76,98 plucking from text 71-73
+in URL 74-77
+useTransparentBounds method 387
+using System.Text.RegularExpres-
+sions 416
+UTF-16 encoding 107
+UTF8 encoding 107,442,447
+
+\v 115-116,364 V 364

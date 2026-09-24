@@ -1,0 +1,40 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 28/51
+---
+设定及查看检索范围的边界
+
+与设定及查看检索范围边界的方法有3个：
+
+Matcher region(int start,int end)
+
+将 matcher的检索范围设定在整个目标字符串的start 和 end 之间，数值均从目标字符 串的起始位置开始计算。它同样会重置Matcher, 将“匹配指针”指向检索范围的开头， 所以下一次调用find 从此处开始。
+
+如果没有重新设定，或是调用reset 方法(无论是显式调用还是在其他方法内部调用
+
+392),检索范围都不会变化。
+
+返回值为Matcher 对象本身，所以此方法可用于方法链(389)。
+
+如果start 或end 超出了目标字符串的范围，或者start 比 end 要大，会抛出IndexOutof- BoundsException。
+
+int regionStart()
+
+返回当前检索范围的起始位置在目标字符串中的偏移值，默认为0。
+
+int regionEnd()
+
+返回当前检索范围的结束位置在目标字符串中的偏移值，默认为目标字符串的长度。 因为region 方法要求同时提供start 和 end, 如果只希望设置其中一个，可能不太方便操作。 表8-4给出了方法。
+
+表8-4:设定检索范围的单个边界
+
+起始边界	结束边界	Java代码
+
+明确设定	不修改	m.region(start,m.regionEnd());
+
+不修改	明确设定	m.region(m.regionStart(),end);
+
+明确设定	不修改	m.reset().region(start,m.regionEnd());
+
+不修改	明确设定	m.region(0,end);

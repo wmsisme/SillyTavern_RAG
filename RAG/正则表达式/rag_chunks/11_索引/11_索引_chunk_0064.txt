@@ -1,0 +1,49 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 64/69
+---
+string (see also line)
+double-quoted(see double-quoted string example)
+initial string discrimination 245-248, 252,257-259,332,361
+vs.line 55
+match position(see pos)
+pos (see pos)
+StringBuffer 373,380,382,397
+StringBuilder 373,382,397
+strings
+C#103
+Emacs 101
+Java 102
+PHP 103-104
+Python 104
+as regex 101-105,305
+Tcl 104
+VB.NET 103
+stripping whitespace 199-200
+str_ replace 458
+PHP 458
+study PHP 447
+study 359-360
+when not to use 359
+subexpression defined 29
+subroutines regex 476
+substitution xvii
+delimiter 319
+s/ …1150,318-321
+(see also search and replace)
+s ubstring initial substring discrimination
+245-248,252,257-259,332,361
+subtraction
+character class 406
+class (set)126
+class(simple)125 Succes8
+Group object method 430
+Match object method 427
+Sun's regex package(see java. util.regex)
+super-linear(see neverending match) super-linear short-circuiting 250
+Ap(Symbol} 122
+synchronized Match objcct method 430 syntax class Emacs 128
+System. currentTimeillis () 236
+System.Reflection 435
+System.Text. RegularBxpressions 413,

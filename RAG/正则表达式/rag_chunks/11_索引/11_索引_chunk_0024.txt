@@ -1,0 +1,38 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 24/69
+---
+CSV parsing
+Java 217,401
+.NET 435
+Perl 213-219
+PHP 480
+unrolling 271
+VB.NET 219
+dollar value 24-25,51-52,167-170,175, 194-195
+double-quoted string
+allowing escaped quotes 196 egrep 24
+final regex 264
+makudonarudo 165,169,228-232,
+sobering example 222-228
+unrolled 262,268
+double-word finder 81
+description 1
+egrep 22
+Emacs 101
+Java 81
+Perl 35,77-80
+email address 70-73,98 Java 98
+.NET 99
+filename 190-192,444
+five modifiers 316
+floating-point number 194
+form letter 50-51
+
+example (cont'd) gr[ea]y 9
+hostname 22,73,76,98-99,137-138, 203,260,267-268,304,306,
+450-451
+egrep 25
+Java 209
+plucking from text 71-73,206-208 in URL 74-77

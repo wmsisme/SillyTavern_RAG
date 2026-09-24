@@ -1,0 +1,41 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 13/69
+---
+\b 65,115-116,134
+(see also:word boundaries;backspace) backspace and word boundary 44,46
+Java 368
+Perl 286
+PHP 442
+B 111,128,290 \B 134
+\b\B 240
+<B></B> 165-167 unrolling 270
+backreferences 118,137 DFA 150,182
+introduced with egrep 20-22
+vs.octal escape 412-413
+remembering text 21
+backspace (see \b)
+backtracking 163-177
+and alternation 231
+avoiding 171-172
+computing count 227
+counting 222,224
+detecting excessive 249-250
+efficiency 179-180
+essence 168-169
+exponential match 226
+global view 228-232
+introduction 157-163
+LIFO 159
+of lookaround 173-174
+neverending match 226
+non-match example 160-161
+POSIX NFA example 229
+saved states 159
+simple example 160
+simple lazy example 161
+balanced constructs 328-331,340-341,436, 475-478,481
+balancing regex issues 186
+Barwise,J. 85
+base character 107,120

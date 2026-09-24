@@ -1,0 +1,2501 @@
+﻿Java\
+\
+Java\
+\
+\
+\
+\
+\
+自2002年早期发布的Java 1.4.0以 后 ，Java 就内建了正则表达式包，java.util. regex,\
+\
+它的API 毫不复杂(可以称得上简单),提供了强大而有创意的功能。对Unicode的支持很 棒，文档很清晰，运行速度也很快。它能够用来匹配 CharSequence 对象，所以使用起来 非常方便。\
+\
+sjava.util. regex 一经发布就给人留下了深刻印象。它的功能、速度和正确性都达到了非 常高的水平，尤其是对初次发布的软件来说，更是如此。Java 1.4的最终版本是1.4.2。写作 本书时，Java 1.5.0 ( 也叫Java 5.0)已经发布，而Java 1.6.0 ( 也叫Java 6.0) 已经发布了第 二个beta 版本。本书针对的是Java 1.5.0,不过我会在合适的时候提到它与Java 1.4.2或 Java 1.6.0之间的重要差异(这些差异的总结在本章末尾401)(注1)。\
+\
+\
+\
+与之前各章的联系\
+\
+\
+\
+在阅读本章之前，我必须说明，这一章不会重复第1章到第6章介绍的所有知识。有些只 关心Java 的读者可能会直接从这章开始阅读，我希望他们不要错过前言和开头几章的内容： 第1、2、3章介绍了正则表达式的基本概念、特性和技巧，第4、5、6章包含了理解正则 表达式的关键知识，它们可以直接应用到java,uti1. regex 中。开头几章讲解的重要概念 包括NFA引擎的工作原理、匹配优先性、回溯和效率。\
+\
+\
+\
+\
+\
+注1:本书可以适用于Java 1.5.0Update 7 。Java 1.5的最初版本在进行不区分大小写的匹配时存 在若干bug 。Update2 修整了这些问题，所以如果你的Java 版本低于它，我推荐你升级。 Java 1.6 beta的信息针对当前发布的beta2,build59g 版 。\
+\
+\
+\
+\
+\
+表8-1:方法名索引(按字母、页码排序)\
+\
+\
+\
+380 appendReplacement\
+\
+381 appendTail\
+\
+372 compile\
+\
+377 end\
+\
+375 find\
+\
+394 flags\
+\
+377 group\
+\
+377 groupCount\
+\
+388 hasAnchoringBounds\
+\
+387 hasTransparentBounds\
+\
+390 hitEnd\
+\
+376 lookingAt	373 matcher\
+\
+376 matcher(Matcher)\
+\
+395 matcher(Pattern)\
+\
+393 pattern(Matcher)\
+\
+394 pattern(Pattern)\
+\
+395 quote\
+\
+379 QuoteReplacement\
+\
+386 region\
+\
+386 regionEnd\
+\
+386 regionStart\
+\
+378 replaceAl1\
+\
+382 replaceAllRegion	379 replaceFirst\
+\
+390 reguireEnd\
+\
+392 reset\
+\
+395 split\
+\
+377 start\
+\
+394 text\
+\
+377 toMatcheResult\
+\
+393 tostring(Matcher)\
+\
+394 toString(Pattern)\
+\
+388 useAnchoringBounds\
+\
+393 usePattern\
+\
+387 useTransparentBounds\
+\
+这张表格供简要查询，详细的API讲解从第371页开始。\
+\
+\
+\
+在这里我还是要强调，尽管第367页的表格查阅起来很方便，第3章第114和第123页的 表格也是如此，但本书的目的不是作为参考手册，而是“掌握”正则表达式的详细教程。\
+\
+前面几章已经出现过 java.util .regex 的例子(81、95、98、217、235),本章在讲解 各种类及其实际应用时会给出更多的例子。不过，首先还是来看 Java 支持的正则流派，以 及对应的修饰符。\
+\
+\
+\
+Java的正则流派\
+\
+ava 's Regex Flaor\
+\
+\
+\
+java.util.r egex 使用传统型NFA, 所以第4、5、6章介绍的丰富特性都适用于它。下页 的表8-2总结了它的元字符。此流派的某些方面已经发生了变化，原因是各种匹配模式，匹 配模式的启用通过各种 method 和 factory 来设定标志位，或者内嵌在表达式中的 (? mods-mods) 和(?mods-mods:…) 修饰符。这些模式在第368页的表8-3中有列出。\
+\
+下面是对表8-2的说明：\
+\
+\
+\
+①只有在字符组内部，\b 才代表退格字符。在其他场合，\b 都代表单词分界符。\
+\
+\
+\
+表中给出的是“纯 (raw)” 反斜线，但是用作Java正则表达式的字符串时必须使用双 反斜线。例如，表中的'\n 在Java 的字符串中必须写作“\\n” 。请参考“作为正则表 达式的字符串”(101)。\
+\
+\x##容许且只容许出现两位十六进制数字，所以'\xFCber 匹配‘über'。\
+\
+\
+\
+\
+\
+表8-2:java.util.regex的正则流派\
+\
+\
+\
+字符缩略表示法\
+\
+⑦115 (c)\
+\
+字符组及相关结构 118(c)\
+\
+119\
+\
+⑦120(c) 121(c)\
+\
+锚点及其他零长度\
+\
+370\
+\
+370\
+\
+370\
+\
+133\
+\
+133\
+\
+注释及模式修饰符\
+\
+135\
+\
+⑦135\
+\
+⑦368(c)\
+\
+113(c)\
+\
+分组及捕获\
+\
+137\
+\
+137\
+\
+139\
+\
+139\
+\
+141\
+\
+141\
+\
+142	\a [\b]le \f \n \r \t \Ooctal \x##\u####\cchar\
+\
+\
+\
+字符组：[…][^…](可包含集合运算符125)\
+\
+几乎任何字符：点号(根据模式的不同，有各种含义)\
+\
+字符组缩略表示法②:\w \d \s \W \D \S\
+\
+Unicode属性和区块：\p{Prop}\P{Prop}\
+\
+断言\
+\
+行/字符串起始位置：^\A\
+\
+行/字符串结束位置：$\z \Z 当前匹配的起始位置：\G\
+\
+单词分界符④:\b\B\
+\
+环视结构⑤:(?=…)(?!…)(?<=…)(?<!…)\
+\
+\
+\
+模式修饰符：(?mods-mods)容许出现的模式：xd s miu\
+\
+模式修饰范围：(?mods-mods:…)\
+\
+注释：从#到行末(只在启用时有效)\
+\
+文字文本模式：Q…\E\
+\
+\
+\
+捕获型括号：(…)\1 \2 …\
+\
+仅分组的括号：(?:…)\
+\
+固化分组：(?>…)\
+\
+多选结构： I\
+\
+匹配优先量词：*+?{n}[n,}{x,y}\
+\
+忽略优先量词：*?+???{n}?{n,}?{x,y}?\
+\
+占有优先量词：*+++?+{n}+(n,}+{x,y}+\
+\
+(c)——可用于字符组内部 ①……⑦见说明\
+\
+\u#### 容许且只容许四位十六进制数字，例如，'\u00FCberj 匹配‘über',\u20AC」 匹配‘'。\
+\
+10octal 要求开头为0,后接1到3位十进制数字。\
+\
+\ cchar 是区分大小写的 ，直接对后面字符的十进制编码进行异或(xoring )操作。与我 见过的任何流派都不一样，在这里\cA 和\ca 是不同的。\cA 等于传统意义上的\ x01, \ca 则等价于\x21, 匹配‘!’。\
+\
+② \w 、\d 和\s (以及对应的大写缩略法)只适用于ASCII 字符，而不包括其他的字母、 数字或者 Unicode 空白字符。也就是说，\d 等价于[0-9],\w 等价于[0-9 a-zA-Z], \s 等价于[ ·\t\n\f\r\x0B](x0B 是 ASCII 中基本不用的VT 字符)。\
+\
+\
+\
+\
+\
+要覆盖完整的Unicode 字符，可以使用Unicode 属 性 ( 1 2 1 ): 用\p(L) 表示\w,\p{Nd} 表示\d, 用 \p{Z} 表示\s 。( 把小写的p 替换为大写的P, 就可以对应\W、\D 和\s)。\
+\
+③\ p{…)和\P{…3支持 Unicode 属性和区块，以及某些额外的“Java 属性”。它不支持 Unicode 字母表。详细信息在下一页。\
+\
+\
+\
+④对单词分界符元字符\b 和\B来说，“单词字符”的规定不同于w 和\W。单词分界符能 够识别Unicode字符，而\w和\W只能识别ASCII 字符。\
+\
+\
+\
+⑤ 顺序环视结构中可以使用任意正则表达式，但是逆序环视中的子表达式只能匹配长度有 限的文本。也就是说，?」可以出现在逆序环视中，但*和'+1则不行。请参考第3章133 页开始的内容。\
+\
+\
+\
+⑥只有在使用/x 修饰符，或者使用Pattern. COMMENTS 选项(368)(请不要忘记在多 行文本字符串中添加换行符，如第401页的例子)时，#…四才算注释。没有转义的ASCII 字空白字符会被忽略。注意： 这一点与大多数支持此模式的正则引擎不同，在Java 中 字符组内部的注释和空白字符也会被忽略。\
+\
+\
+\
+⑦\ Q…\E一直是被支持的，但在Java 1.6之前，字符组内部的此种结构是不可靠的。\
+\
+表8-3:java.util.regex中 Match和 Regex的方法\
+\
+\
+\
+编译选项	(?mode)	描述\
+\
+Patern.UNIX_LINES	d	更改点号和^」的匹配(370)\
+\
+Pattern.DOTALL	S	点号能匹配任何字符(111)\
+\
+Pattern.MULTILINE	m	扩展^和$」的匹配规定(370)\
+\
+Pattern.COMMENTS\
+\
+X	宽松排列和注释模式(在字符组内部也有效)\
+\
+(072)\
+\
+Pattern.CASE_INSENSITIVE	i	对ASCII字符进行不区分大小写的匹配\
+\
+Pattern.UNICODE_CASE	u	对Unicode字符进行不区分大小写的匹配\
+\
+\
+\
+Pattern.CANNON_EQ		Unicode“按规则等价(canonical equivalence)” 匹配模式(不同编码中的同样字符视为相等\
+\
+108)\
+\
+Pattern.LITERAL		将regex参数作为文字文本，而非正则表达式\
+\
+\
+\
+\
+\
+业 血)\
+\
+\
+\
+\
+\
+Java 对\p{….}3和\ P{...}的支持\
+\
+|ava Support for p{ …?and P{!\
+\
+\
+\
+\p{ … 和'\P{…) 结构支持Unicode 的属性和区块，也支持特殊的“Java”字符属性。这 种支持针对Unicode Version 4.0.0(Java 1.4.2只支持 Unicode Version 3.0.0)。\
+\
+\
+\
+Unicode 属性\
+\
+\
+\
+Unicode属性是通过\p{Lu) 之类的缩写名字来引用的(参加122页的列表)。单字母属性名 可以省略括号，\pL等价于\p{L} 。而\p{Lowercase_Letter} 之类的长名称是不支持的。 Java 1.5及之前的版本是不支持 Pi 和 Pf 属性的，因此，具有这种属性的字符不能用\p{P} 来匹配 (Java 1.6 支持)。\
+\
+“未赋值的代码点”属性\ p{Cn}匹配的字符，不能由“其他字符”属性\p{C} 来匹配。 Java 不支持组合属性\p{L&}。\
+\
+Java 支持伪属性\ p{all}, 它等价于(? S:.) , 但不支持\p{assigned} 和\p{unassigned}\
+\
+伪属性，不过我们可以用\ P{Cn}和\p{Cn} 来代替。\
+\
+\
+\
+Unicode 区块\
+\
+\
+\
+Unicode block的支持要求使用‘In’ 前缀。请翻到第402页查阅具体的版本信息，了解\p{…}j 和'\ P{ … 中能够出现的区块名称。\
+\
+为了保持向后兼容性，Java 1.5中有两个 Unicode 区块在Unicode Version 3.0和4.0之间发生 了变化。除了Unicode 4.0提供的Combining Diacritical Marks for Symbols和 Greek and Coptic 之外，还可以使用本不属于Unicode 4.0的名称Combining Marks for Symbols 和\
+\
+Greek。\
+\
+Java 1.4.2有个涉及Arabic Presentation Forms-B 和 Latin Extended-B的 bug , 在 Java 1.5\
+\
+中已经修正。\
+\
+\
+\
+特殊的Java字符属性\
+\
+\
+\
+从 Java 1.5.0 开 始 ，\p{ … 和 \P{…) 结构能够支持 java.lang.Character 中 未 弃 用 	(non-deprecated )的 isSomething 方法。为了在正则表达式中使用此功能，请把方法名开头 的‘is’ 替换成‘java', 然后使用\p{ … 和'\P{…}j。例如，由java.lang.Characer.\
+\
+is JavaIdentifierstart 匹配的字符也能用正则表达式\p{j avaJavaIdentifierstart))\
+\
+来匹配(请参考java.lang.Character 类的文档)。\
+\
+\
+\
+\
+\
+Unicode行终结符\
+\
+Unicode Line Terminators\
+\
+\
+\
+在Unicode 之前的传统正则流派中，点号、^、$和\Z会对换行符(ASCII 中 的LF 字符)进 行特殊处理。在Java 中，大多数Unicode 行终结符(109)也会这样特殊处理。\
+\
+正常情况下，Java 会把下面的这些字符当作行终结符：\
+\
+\
+\
+字符代码	名称	说明\
+\
+U+000A	LF \n	ASCII换行符(“newline”)\
+\
+U+000D	CR \r	ASCII回车\
+\
+U+000D U+000A	CR/LF \r\n	ASCII回车/换行序列\
+\
+U+0085	NEL	Unicode NEXT LINE(Unicode换行符)\
+\
+U+2028	LS	Unicode LINE SEPERATOR(Unicode行分隔符)\
+\
+U+2029	PS	Unicode PARAGRAPH SEPARATOR(Unicode段分隔符)\
+\
+根据匹配模式(368)的不同，点号、^、$和\Z会对这些符号进行特殊处理：\
+\
+\
+\
+匹配模式	受影响符号	说明\
+\
+UNIX_LINE	^.$\Z	恢复到传统模式，只把换行符作为一行的终结\
+\
+MULTILINE	^$	字符串中的行终结符也可以由^和$匹配\
+\
+DOTALL	·	行终结符不再另行处理，点号可以匹配所有字符\
+\
+作为行终结标志的双字符CR/LF 值得一提。默认情况(没有使用UNIX_LINES时)是识别 完整的行终结符，匹配文本行边界的元字符会把CR/LF 视为不可分隔的单位，一次性匹配 这两个字符。\
+\
+举例来说，$和\Z 通常会匹配行终结符之前的位置。LF 是行终结符，但只有在它不属于 CR/LF ( 也就是说，LF 之前没有CR) 的情况下，$和\Z才能匹配字符串末尾的LF 之前的 位置。\
+\
+MUTILINE 模式中的$和^也是如此，在这种模式下，只有在CR 之后没有LF 的情况下，^才 能匹配CR 之后的位置；只有在LF 之前不是CR 的情况下，$才能匹配LF 之前的位置。\
+\
+必须说清楚的是，DOTALL 对 CR/ LF 的处理没有影响 ( DOTALL 只影响点号，而点号总是逐 个处理字符的),UNIX_LINES根本不存在此类问题(它只识别CR, 所有其他行终结符都不 需要特殊处理)。\
+\
+\
+\
+\
+\
+使用java.util.regex\
+\
+Using java.util.regex\
+\
+\
+\
+通过 java.util. regex 使用正则表达式非常简单， 功能由两个类， 一个接口和一个 unchecked exception 组成。\
+\
+java. util. regex. Pattern\
+\
+java.util.regex.Matcher\
+\
+java. util. regex. MatchResult\
+\
+java.util. regex.PatternSyntaxException\
+\
+就我个人来说，更喜欢简称前两个为“pattern”和 “matcher”, 许多时候我们只会用到这两 个类。简单地说，Pattern 对象就是编译好的正则表达式，可以应用于任意多个字符串， Matcher 对象则对应单独的实例，表示将正则表达式应用到某个具体的目标字符串上。\
+\
+Java 1.5新提供的MatchResult, 它封装了成功匹配的数据。匹配数据可以在下一次匹配尝 试之前从Matcher 本身获得，也可以提取出来作为MatchResult 保存。\
+\
+如果匹配尝试所使用的正则表达式格式不正确(例如，[oops] 的语法就不正确),就会抛出 PatternSyntaxException 异常。这是一个 unchecked exception, 继承自 java.lang.\
+\
+IllegalArgumentException。\
+\
+下面是一个完整的、详细的程序，示范了简单的匹配：\
+\
+pblic class SimplekegexTest(\
+\
+pubic static void tnain(St ring1)args)\
+\
+{\
+\
+String myText ="this is my 1st test string";\
+\
+String myRegex ="\\d+\w+";1/ 表 示 \d+\W+\
+\
+java.uti1. regex.Pattern p=java.util.regex. Pattern.compile(myRegex);\
+\
+java.util. regex.Matcher m=p.matcher(myText);\
+\
+\
+\
+if(m.find()){\
+\
+String matchedText =m.group();\
+\
+int matchedFrom =m.start();\
+\
+int matchedTo=m.end();\
+\
+System. out .println("matched〔”+ matchedTex t +" 〕"+\
+\
+"from"+matchedFrom +\
+\
+"to"+matchedTo +.".");\
+\
+}else{\
+\
+System.out. println("didn't match"); }\
+\
+\
+\
+\
+\
+结果是 ‘ matched [1st]from 12 to 15.'。在本章的所有例子中，我都用斜体表示变量 名。如果这样声明，可以省略粗体部分：\
+\
+import java.util.regex.*;\
+\
+它应该放在程序的头部，和第3章的例子(95)一样。\
+\
+\
+\
+\
+\
+这是标准的做法，而且程序更容易管理。本章的其他程序省略了import 语句。\
+\
+\
+\
+java.util. regex 使用的对象模型与其他大多数语言不同。请注意，前面例子中的Matcher 对象 m, 是通过把Pattern 对象和目标字符串联系起来得到的，它用来进行实际的匹配尝 试(使用find 方法),以及查询结果(使用group 、start 和 end 方法)。\
+\
+这办法初看起来可能有点古怪，但你很快就能适应了。\
+\
+\
+\
+\
+\
+The Pattern.compile()Factory\
+\
+The Pattern.compile()Factory\
+\
+\
+\
+正则表达式的Pattern 对象是通过Pattern. compile 生成的。第一个参数是代表正则表达 式的字符串(101)。368页表格8-3中的选项可以作为第二个参数。下面的代码从字符串 myRegex 生成一个 pattern,进行不区分大小写的匹配：\
+\
+Pattern pat = Pattern.compile(myR egex,\
+\
+Pattern.CASE_INSENSITIVE |Pattern.UNICODE_CASE);\
+\
+预定义的 pattern 常量用来指定编译选项(例如 Pattern .CASE_INSENSITIVE), 这可能有 点笨拙(注2),所以我会使用正则表达式内部的模式修饰符(110)。包括378页的(? x), 399页的(? s) 和多个(? i)。\
+\
+不过，预定义常量固然复杂，但这种“笨办法 (unwieldy)” 能够降低新手阅读代码的难度。 如果没有页面宽度限制，我们可以这样写第384页的 Pattern.compile 的第二个参数：\
+\
+Pattern. UNIX_LINES I Pattern.CASE_INSENSITIVE\
+\
+\
+\
+而不是在正则表达式开头使用不那么清楚的(?id)J。\
+\
+\
+\
+从名字可以看出，这一步把正则表达式解析并编译为内部形式。第6章对此有详细讲解 	(241), 简单地说，在字符串内应用表达式的整个过程中，编译 pattern 通常是最耗时间 的。所以要把编译独立出来，作为第一步——这样就可以先期将正则表达式编译好，重复 使用。\
+\
+当然，如果正则表达式编译之后只需要使用一次，编译时机就不是个问题，但如果需要多 次应用(例如应用到读入文件的每一行),预编译Pattern 对象就很有价值。\
+\
+\
+\
+\
+\
+注 2 : 尤其是在页面宽度固定的书籍中安排代码的时候——我对此深有体会。\
+\
+\
+\
+\
+\
+建\
+\
+\
+\
+\
+\
+调 用Patern.compile 可能抛出两种类型的异常：如果正则表达式不合规则，抛出Pattern- SyntaxException, 选项不合规则，抛出IllegalArgumentException。\
+\
+\
+\
+Pattern的matcher 方法\
+\
+Pattern's mtcher mcthod\
+\
+\
+\
+下 一 节 ( 3 9 4 )我们会看到，Pattern 提供了某些简便的方法，但是大多数情况下，我们 只需要一个方法完成所有工作：matcher 。 它接受一个参数：需要检索的字符串(注3)。 此时并没有确切应用这个正则表达式，而只是为将pattern 应用到特定的字符串做准备。 matcher 方法返回一个Matcher 对象。\
+\
+\
+\
+Matcher 对象\
+\
+The Matcher Object\
+\
+\
+\
+\
+\
+把正则表达式和目标字符串联系起来，生成Matcher 对象之后，就可以以多种方式将其应用 到目标字符串中，并查询应用的结果。例如，对于给定的Matcher 对象m,我们可以用m.find() 来把m 的表达式应用到目标字符串中，返回一个Boolean 值，表示是否能找到匹配。如果能 找到，m.group() 返回实际匹配的字符串。\
+\
+在讲解Matcher 的各种方法之前，不妨先了解了解它保存的各种信息。为了方便阅读，下面 的清单都提供了对应的详细讲解部分的页码。第一张清单中的元素是程序员能够设置和更 改的，而第二张清单中的元素是只读的。\
+\
+程序员能够设置和修改的是：\
+\
+\
+\
+· Pattern 对象，由程序员在创建 Matcher 时指定。可以通过 usePattern() 方法更改\
+\
+(393)。 当前所用的Pattern 可以用pattern() 方法获得。\
+\
+· 目标字符串(或其他 charSequence 对象), 由程序员在创建Matcher 时指定。可以通 过 reset (text )方法更改(392)。\
+\
+· 目标字符串的“检索范围 (region )”( 394)。默认情况下，检索范围就是整个目标字 符串，但是程序员可以通过 region 方法，将其修改为目标字符串的某一段。这样某 些(而不是全部)匹配操作就只能在某个区域内进行。\
+\
+\
+\
+\
+\
+注 3 : 事实上，java.util.regex 是非常方便的，因 为“string” 参数可以是任何实现Char-\
+\
+Sequence 接 口 的 对 象( String 、StringBuffer 、StringBuilder, 以 及CharBuffer\
+\
+都可以)。\
+\
+\
+\
+374 第 8 章 ： J a v a\
+\
+\
+\
+\
+\
+当前检索范围的起始和结束偏移值可以通过 regionStart 和 regionEnd 方法获得 	(386) 。r eset 方法(392)会把检索范围重新设置为整个目标字符串，任何在内 部调用reset 方法的方法也是一样。\
+\
+· anchoring bounds 标志位。如果检索范围不等于整个目标字符串，程序员可以设定，是 否将检索范围的边界设置为“文本起始位置”和“文本结束位置”,这会影响文本行边 界元字符 ( A^$\z \Z)。\
+\
+默认情况下，这个标志位为 true, 但也可能改变，可以通过 useAnchoringBounds\
+\
+( 3 8 8 ) 和hasAnchoringBound s 方法来修改和查询。 Reset 方法不会修改标志位。\
+\
+\
+\
+· transparent bounds 标志位。如果检索范围是整个目标字符串中的一段文本，设置为true 容许各种“考察 ( looking)” 结构(顺序环视、逆序环视，以及单词分界符)超越检索 范围的边界，检查外部的文本。\
+\
+默认情况下，这个标志位为false, 但也可能改变，可以通过 useTransparentBounds\
+\
+( 3 8 8 ) 和hasTran-sparentBounds 方法来修改和查询。Reset 方法不会修改标志 位。\
+\
+下面的只读数据保存在matcher 内部：\
+\
+· 当前 pattern的捕获型括号的数目可以通过groupCount (377) 方法查询。\
+\
+· 目标字符串中的match pointer 或 current location, 用于支持“寻找下一个匹配”的操 作(通过find 方法375)。\
+\
+· 目标字符串中的append pointer, 在查找-替换操作中(380),复制未匹配的文本部分 时使用。\
+\
+\
+\
+· 表示到达字符串结尾的上一次匹配尝试是否成功的标志位。可以通过 hitEnd 方法\
+\
+(3 90)获得这个标志位的值。\
+\
+· match result。如果最近一次匹配尝试成功，Java 会将各种数据收集起来，合称为match result( 376)。包括匹配文本的范围(通过group() 方法),匹配文本在目标字符串中 的起始和结束偏移值(通过start( )和end() 方法),以及每一组捕获型括号对应的信\
+\
+息(通过group(num) 、start( num)和 end( num) 方法)。\
+\
+\
+\
+match-result 数据封装在 MatchResult 对象中，通过 toMatchResult 方法获得。 MatchResult 方法有自己的group 、start 和 end 方法(377)。\
+\
+\
+\
+\
+\
+· 一个标志位，表明更长的目标文本是否会导致匹配失败(匹配成功之后才可用)。如果 边界元字符影响了匹配结果的生成，则此值为 true。可以通过requireEnd 方法查看它 的值 (390)。\
+\
+上面列出的内容很多，但是如果按照功能分别讲解，便很容易掌握。这正是下面几节的内 容。把这一章作为参考手册时，本章开头(366)的列表会很有用。\
+\
+\
+\
+应用正则表达式\
+\
+Applying the Regex\
+\
+\
+\
+把matcher的正则表达式应用到目标文本时，主要会用到Matcher 的这些方法：\
+\
+\
+\
+hoolean find()\
+\
+\
+\
+此方法在目标字符串的当前检索范围(384)中应用Matcher的正则表达式，返回的 Boolean 值表示是否能找到匹配。如果多次调用，则每次都在上次的匹配位置之后尝试 新的匹配。没有给定参数的find 只使用当前的检索范围(384)。\
+\
+下面是简单示例：\
+\
+St.ring regex :"w+";/7 w+\
+\
+St.ting text ="Mastering Regular”Expressions";\
+\
+Matcher m=Pattern.compile(regex) .matcher(text);\
+\
+if(m . find())\
+\
+System.out. println("match ["+ m.group()+"]");\
+\
+结果是：\
+\
+\
+\
+match [Mastring]\
+\
+\
+\
+如果这样写：\
+\
+while(m.find())\
+\
+System .out. print1n("match ["+ m.group()+"]");\
+\
+结果就是：\
+\
+\
+\
+match [Mastering]\
+\
+match [Regular]\
+\
+match[Expressions]\
+\
+\
+\
+boolean find( int offset)\
+\
+如果指定了整型参数，匹配尝试会从距离目标字符串开头offset个字符的位置开始。如 果offset 为负数或超出了目标字符串的长度，会抛出 IndexoutofBoundsExcep tion 异 常。\
+\
+\
+\
+\
+\
+这种形式的find 不会受当前检索范围的影响，而会把它设置为整个“目标字符串”(它 会在内部调用reset 方法392)。\
+\
+第400页的补充内容(作为第399页问题的答案)给出了恰当的例子。\
+\
+\
+\
+2) matches ()\
+\
+\
+\
+此方法返回的Boolean值表示matcher的正则表达式能否完全匹配目标字符串中当前检 索范围的那段文本。也就是说，如果匹配成功，匹配的文本必须从检索范围的开头开 始，到检索范围的结尾结束(默认情况就是整个目标字符串)。如果检索范围设置为默 认的“所有文本”,matches 比使用'A(?:…)\zj 要简单。\
+\
+不过，如果当前检索范围不等于默认情况(384),使用matches 可以在不受anchoring- bounds标志位(388)影响的情况下检查整个检索范围中的文本。\
+\
+举例来说，如果使用 CharBuffer 来保存程序中用户输入的文本，而检索范围设定为 用户用鼠标选定的部分。如果用户点击选区的部分，可以用m.usePattern (urlPattern). matches() 来检查选定部分是否为URL ( 如果是，则进行相应的处理)。\
+\
+String 对象也支持matches 方法：\
+\
+\
+\
+"1234".matches("\\d+");//true\
+\
+"123!".matches("\\d+");//false\
+\
+\
+\
+7: lookingAt ()\
+\
+\
+\
+此方法返回的 Boolean 值表示 Matches 的正则表达式能否在当前目标字符串的当前检 索范围中找到匹配。它类似于matches 方法，但不要求检索范围中的整段文本都能匹\
+\
+配。\
+\
+\
+\
+\
+\
+查询匹配结果\
+\
+Querying Match Results\
+\
+\
+\
+下面列出的Matcher 方法返回了成功匹配的信息。如果正则表达式还未应用过，或者匹配尝 试不成功，它们会抛出IllegalStateException 。 接收 num 参数(对应一组捕获型括号) 的方法，如果给定的num 非法，会抛出IndexOutofBoundsException。\
+\
+\
+\
+\
+\
+请注意start 和 end 方法，它们返回的偏移值不受检索范围的影响——偏移值从整个目标 字符串的开头开始计算，而不是检索范围的开头。\
+\
+后面还给出了一个例子，讲解其中大部分方法的使用。\
+\
+group ()\
+\
+返回前一次应用正则表达式的匹配文本。\
+\
+\
+\
+groupCount()\
+\
+返回正则表达式中与Matcher 关联的捕获型括号的数目。在 group、start 和 end 方 法中可以使用小于此数目的数字作为numth 参数，下文介绍(注4)。\
+\
+ring gropu (. num)\
+\
+返回编号为num"的捕获型括号匹配的内容，如果对应的捕获型括号没有参与匹配，则 返回null 。 如果num? 为0,表示返回整个匹配的内容， group(0) 就等于group()。\
+\
+start( int num)\
+\
+此方法返回编号为 num 的捕获型括号所匹配文本的起点在目标字符串中的绝对偏移 值——即从目标字符串起始位置开始计算的偏移值。如果捕获型括号没有参与匹配， 则返回-1。\
+\
+1 start ()\
+\
+此方法返回整个匹配起点的绝对偏移值，start( )就等于start(0)。\
+\
+end( in: num)\
+\
+此方法返回编号为 num 的捕获型括号所匹配文本的终点在目标字符串中的绝对偏移 值——即从目标字符串起始位置开始计算的偏移值。如果捕获型括号没有参与匹配， 则返回-1。\
+\
+int.end ()\
+\
+次方法返回整个匹配的终点的绝对偏移值，end() 就等于end(0)。\
+\
+\
+\
+Matchekesu it toMatchResult()\
+\
+此方法从Java 1.5.0开始提供，返回的MatchResult 对象封装了当前匹配的信息。它 和Matcher 类一样，也包含上面列出的group 、 start 、end 和 groupCount 方法。\
+\
+如果前一次匹配不成功，或者 Matcher 还没有进行匹配操作，调用 toMatcheResult 会 抛 出IllegalStateException。\
+\
+\
+\
+注 4 : groupCount 方法任何时候都可调用，而这里列出的其他方法必须在匹配尝试成功之后才 可调用。\
+\
+\
+\
+\
+\
+示例\
+\
+下面的例子示范了若干方法的使用。给定一个 URL 字符串，这段代码会找出URL的协议 名 ('http ' 或是‘https')、 主机名，以及可能出现的端口号：\
+\
+String url ="http: //regex. info/blog";\
+\
+String regex ="(?x)^(https?)://([^/:]+)(?:(\\d+))?";\
+\
+Matcher m =Pattern. compile( regex). matcher(url);\
+\
+if(m.find())\
+\
+{\
+\
+System.out. print(\
+\
+"Overall ["+m.group() +"]"+\
+\
+"(from" +m.start() +" to"+m.end() +")\n"+\
+\
+"Protocol ["+m.group(1)+"]"+\
+\
+"(from" +m.start(1)+"to"+m.end(1)+")\n"+\
+\
+"Hostname ["+m.group(2)+"]"+\
+\
+"(from" +m.start(2)+"to"+m.end(2)+")\n"\
+\
+);\
+\
+//group(3) 可能未参与匹配，此处应小心对待\
+\
+if( m.group(3) ==null)\
+\
+System.out.println("No port;default of '80'is assumed"); else {\
+\
+System.out.print("Port is ["+m.group(3)+"]"+\
+\
+"(from"+m.start(3)+"to"+m.end(3)+")\n");\
+\
+}\
+\
+执行的结果是：\
+\
+Overall [http://regex. info]( from 0 to 17)\
+\
+Protocol [http](from 0 to 4)\
+\
+Hostname [regex.info](from 7 to 17)\
+\
+No port; default of '80' is assumed\
+\
+简单查找-替换\
+\
+Simple Search and Replace\
+\
+上面介绍的方法足够进行查找-替换操作了，只是比较麻烦，但是 Matcher 提供了简便的方 法。\
+\
+St.ring replaceAll(String replacement)\
+\
+\
+\
+返回目标字符串的副本，其中Matcher 能够匹配的文本都会被替换为 replacement, 具 体处理过程在380页。\
+\
+此方法不受检索范围的影响(它会在内部调用reset 方法),不过第382页介绍了在检 索范围中进行这样操作的方法。\
+\
+String 类也提供了replaceAl l 的方法，所以：\
+\
+string. replaceAl1 (regex,replacement)\
+\
+就等于：\
+\
+Pattern.compile (regex). matcher(string). replaceAl1(replacement)\
+\
+\
+\
+\
+\
+S.ing replaceFirst (String replacement)\
+\
+\
+\
+此方法类似replaceAl1, 但它只对第一次匹配(如果存在)进行替换。\
+\
+\
+\
+String 类也提供了replaceFirst 方法。\
+\
+\
+\
+stia !ie String quoteReplacement( String text)\
+\
+\
+\
+此 static 方法从Java 1.5开始提供，返回 text 的文字用作 replacement的参数。它为 text 副本中的特殊字符添加转义，避免了下一页讲解的正则表达式特殊字符处理(下一节 也给出了Matcher. quoteReplacement 的例子)。\
+\
+\
+\
+简单查找-替换的例子\
+\
+\
+\
+下面的程序将所有的“Java 1.5” 改为“Java 5.0”,用市场化的名称取代开发名称：\
+\
+\
+\
+3t:g tExt="Before Java 1.5 was Java 1.4.2.After Java 1.6s?iva i.6";\
+\
+Strirg Tegex=" ava s*1 .5b";\
+\
+Mach”n=Patterr.compile(regex).matcher(Lext);\
+\
+String result =m.replaceAll(" Java 5.0");\
+\
+systm.out.print.in(resuit);\
+\
+\
+\
+结果是：\
+\
+\
+\
+Before Java 5.0 was Java 1.4.2. After Java 5.0 is Java 1.6\
+\
+如果pattern和matcher不需要复用，可以使用链式编程：\
+\
+Pattern.compile("\\bJava\\s*1\1.5\\b").matcher(text).replaceAll("Java 5.0") (如果单个线程中需要多次用到同一 pattern, 预编译pattern 对象可以提升效率372)\
+\
+对正则表达式稍加修改，就 可以用它来把“Java 1.6” 改为“Java 6.0” ( 当然也需要修改 replacement 字符串，讲解见下页)。\
+\
+Patterm.compile( "\\bJava\\s* 1\\.([56])\b").matcher(text).replaceAll("Java $1.0") 对于同样的输入文本，结果如下：\
+\
+Before Java 5.0 was Java 1.4.2.After Java 5.0 is Java 6.0\
+\
+\
+\
+如果只需要替换第一次出现的文本，可以使用 replaceFirst, 而不是 replaceAl1 。 除了 这种情况，还有一种情况可以使用replaceFirst, 即明确知道目标字符串中只存在一个匹 配时，使用 replaceFirst 可以提高效率(如果了解正则表达式或是目标字符串，可以预 知这一点)。\
+\
+\
+\
+\
+\
+replacement 参数\
+\
+\
+\
+replaceAl1 和 replaceFirst 方法(以及下一节的 appendReplacement 方法)接收的\
+\
+replacement 参数在插入到匹配结果之前，会进行特殊处理：\
+\
+\
+\
+· '$1'、'$2’ 之类会替换为对应编号的捕获型括号匹配的文本($0会被替换为所有匹 配的文本)。\
+\
+\
+\
+· 如果‘s’ 之后出现的不是ASCII的数字，会抛出I1legalArgumentException 异常。 's ' 之后的数字，只会应用“有意义”的部分。如果只有3组捕获型括号，则‘s25'\
+\
+会被视为$2然后是‘5',而此时$6会抛出IndexOutOfBoundsException。\
+\
+\
+\
+· 反斜线用来转义后面的字符，所以 ‘ s’ 表示美元符号。同样的道理，'’表示反斜 线 ( 在Java的字符串中，表示正则表达式中的‘\’需要用四个斜线 ' u') 。 同样， 如果有12组捕获型括号，而我们希望使用第一组捕获型括号匹配的文本，然后是‘2’, 应该是这样‘$1\2’。\
+\
+如果不清楚replacement 字符串的内容，最好使用Matcher.quoteReplacement 方法，确保 不会出错。如果用户的正则表达式是uRegex, replacement 是 uRepl ,下面的做法可以确保 替换的安全：\
+\
+Patten.conpile(u Regex). matcher(text).replaceAll(Matcher.quoteReplacement(uRepl))\
+\
+\
+\
+高级查找-替换\
+\
+Adzanced Search and Replace\
+\
+\
+\
+有两个方法可以直接操作 Matcher 的查找-替换过程。它们配合起来，把结果存入用户指定 的 StringBuffer 中。第一种方法每次匹配之后都会调用，在 result 中存入 replacement 字 符串和匹配之间的文本。第二种方法会在所有匹配完成之后调用，将目标字符串中最后的 文本拷贝过来。\
+\
+Met er appendReplacement (StrinEuffey result, Sr?ing replacement)\
+\
+在正则表达式应用成功之后(通常是 find) 马上调用此方法会把两个字符串添加到指 定的 result 中：第一个是原始目标字符串匹配之前的文本，然后是经过上面讲解的特 殊处理的replacement字符串。\
+\
+\
+\
+\
+\
+举例来说，如果matcher m与正则表达式w+J 和‘-->one+test<-- ' 相联系，while 循环的第一轮情况如下：\
+\
+while(m.find())\
+\
+m.appendReplacement(sb,"XXX")\
+\
+\
+\
+find 找到下画线标注的部分‘-->pne+test<-- ’。\
+\
+然后，第一次appendReplacement 调用会在StringBuffer result中加入匹配之前的\
+\
+文本‘-->',跳过匹配的文本，再插入replacement 字符串‘xxx'。\
+\
+While 循环的第二轮，find 匹配‘-->one+ test k--’ 。 此时调用appendReplacement 会给sb 附加上匹配之前的文本‘+',然后仍然是字符串 ‘ xxx'。\
+\
+这样 sb 的值就是‘--> XXX+XXX',m在原始目标字符串中对应的位置是- -> one+test <--'。现在该使用appendTail 方法了，下文将会介绍。\
+\
+\
+\
+appendTai l(stringbuffer result)\
+\
+\
+\
+找到所有匹配之后(或者是，找到期望的匹配之后——此时用户可以停止匹配过程), 这个方法将目标字符串中剩下的文本附加到提供的StringBuffer 中。\
+\
+在上例中，接下来就是：\
+\
+\
+\
+m. appendTail(sb)\
+\
+将‘<--’附加到sb 。这样就得到‘--> XXX+XXX<--', 查找-替换完成。\
+\
+\
+\
+\
+\
+查找-替换示范\
+\
+\
+\
+下面实现了一个自己的replaceAll 的方法(并非必须，只是作为示范)。\
+\
+public static String replaceAl1(Matcher m,String replacement)\
+\
+{\
+\
+m. reset(); // 保 证Matcher 不受之前的影响\
+\
+StringBuffer result = new StringBuffer();/ / 生成用于替换的副本\
+\
+while(m.find())\
+\
+m.appendReplacement(result,replacement);\
+\
+m.appendTail(result);\
+\
+return result.toString();// 转换为String, 然后返回\
+\
+}\
+\
+它与Java 内建的 replaceAll 方法一样，它不受检索范围(384)的影响，而是在查找- 替换之前重置检索范围。\
+\
+\
+\
+\
+\
+为了弥补这个缺憾，下面的replaceAl1 只在检索范围中进行，修改和新增的代码会标注出 来：\
+\
+\
+\
+Integer start =m.regionstart();\
+\
+Integer end =m.regionBnd();\
+\
+m.reset ().region (start , end);1/ 直置matcher, 之后恢复region\
+\
+StingBuffer result =new StringBuffer();// 生成用于替换的副本\
+\
+\
+\
+while(m.find())\
+\
+n.aopendReplacement(result,replacement);\
+\
+.appendTail(result);\
+\
+re" : regult.tostring( );/7 转换为String. 然后返回\
+\
+}\
+\
+这里使用“方法链 (译注1)”结合 reset 和 region, 详细讲解请参阅第389页。\
+\
+下面的程序更加完善，它 将metric 变量中的摄氏温度转换为华氏温度：\
+\
+//构建一个matcher, 匹配"Metric" 变量中后面跟有"C"的数值\
+\
+// 下面的正则表达达式是： (\ d+(?:1.\d*)?)C\bj\
+\
+Matcher m=Pattern.compile("(\d+(?:\.d*)?)C\\b"). matcher(metric);\
+\
+StringBuffer result =new StringBuffer();//生成用于替换的副本\
+\
+while(m.find())\
+\
+{\
+\
+float celsius =Float.parseFloat(m.group(1)); / / 得到数值，转换为浮点数\
+\
+int fahrenheit =(int)(celsius *9/5+32); / / 转换为华氏温度\
+\
+m.appendReplacement(result,fahrenheit +"F");// 插入\
+\
+}\
+\
+m.appendTail(result);\
+\
+System. out. println(result.toString( ));/ / 显示结果\
+\
+如果metric 变量包含“from 36.3c to 40.1c.”,结果就是“from 97F to 104F.”。\
+\
+\
+\
+原地查找-替换\
+\
+In-Place Search and Replace\
+\
+\
+\
+现在还只出现过对 String 对象使用java. util.regex 的例子，但是Matcher 其实适用于 任何实现了Charsequence 接口的类，所以我们能够对目标文本进行实时的、原地( in place) 的修改。\
+\
+StringBuffer 和 StringBuilder 是两种常用的实现了CharSequence 接口的类，前者保 证线程安全性，但效率略低。这两者都可以作为String 来使用，但它们的值可以变化。本 书中的例子使用了StringBuilder, 但如果在多线程环境中，请使用StringBuffer。\
+\
+\
+\
+译注1: method chaining, 也叫“链式编程”。\
+\
+\
+\
+\
+\
+这个简单的例子在StringBuilder 中 搜 索 大 写 单 词 ，将 它们替换为小写形式(注5):\
+\
+StringBuilder text = new StringBuilder("It's so very RUDE to shout!");\
+\
+Matcher m =Pattern.compile ("\\b[\\p{Lu}\\p{Lt)]+\\b"). matcher(text);\
+\
+while(m.find())\
+\
+text.replace(m.start(),m.end(),m.group().toLowerCase()); System. out.println(text);\
+\
+结果是：\
+\
+It's Bo very rude to shout!\
+\
+\
+\
+其中匹配了两次，调用了两次text .replace 。 头两个参数指定需要替换的文本范围(跳过 表达式匹配的文本),然后是用作replacement的文本(也就是匹配文本的小写形式)。\
+\
+因为 replacement 和匹配文本长度相同，原地的查找-替换很简单。如果不需要迭代进行查找\
+\
+-替换，这种方法非常方便。\
+\
+\
+\
+\
+\
+长度变化的替换\
+\
+\
+\
+如果replacement的长度不同于要替换文本的长度，情况就复杂起来。对目标字符串的修改 是在“背后”进行的，所以“匹配指针 (match pointer)”(在目标字符串中进行下一次 find 的开始位置)会发生错误。\
+\
+要解决这个问题，我们可以自己维护匹配指针，明确告诉 find 下一次尝试应该从何处开始。 下面的例子做了这样的改进，在需要插入的小写文本两端添加了<b>…</b>:\
+\
+StringBuilder text =new StringBuilder("It's so very RUDE to shout!");\
+\
+Matcher m =Pattern.compile(" \b[\\p{Lu}\p{Lt}]+\\b"). matcher(text);\
+\
+int matchPointer= 0;// 首先从字符串起始位置开始\
+\
+while(m.find(matchPointer)){\
+\
+matchPointer =m.end(); / 记录本次匹配结束的位置\
+\
+text.replace(m,start(),m.end(),"<b>"+m.group().toLowerCase()+"</b>);\
+\
+matchPointer +=7; // 算上添加的'<b> ' 和 '</ b>' }\
+\
+System.out.println(text);\
+\
+\
+\
+结果是：\
+\
+It's <b>so</b>very <b>rude</b>to shout!\
+\
+\
+\
+\
+\
+注 5 : 代 码 中 的 表 达 式 是\ b\p{Lu}\p{Lt}]+\bj 。 在 第 3 章 ( 1 2 3 ) 介 绍 过 ，\ p{Lu} 匹 配 Unicode 中的所有大写字母，\p{Lt} 匹配首字母形式字符。对应ASCII 编码的正则表达式 是 ' \b[ A-Z]+\bj。\
+\
+\
+\
+\
+\
+Matcher的检索范围\
+\
+The Matcher's Region\
+\
+\
+\
+从 Java1.5 开始，Matcher 支持可变化的检索范围，通过它，我们可以把匹配尝试限制在目 标字符串之中的某个范围。通常情况下，Matcher的检索范围包含整个目标字符串，但可以 通过region 方法实时修改。\
+\
+下面的例子检索 HTML 代码字符串，报告不包含 ALT 属性的 image tag。对同一段文本 (HTML), 它使用了两个Matcher: 一个寻找image tag, 另一个寻找ALT属性。\
+\
+尽管两个Matcher 应用到同一个字符串，但它们的关联只局限于，用找到的image tag 来限 定寻找ALT属性的范围。在调用ALT-matcher的 find 方法之前，我们用刚刚完成的image-tag 的匹配来设定ALT-matcher的检索范围。\
+\
+单拿出image tag的 body 之后，就可以通过查找ALT来判断当前的tag 内是否包含ALT属 性：\
+\
+/ / 查 找image tag 的matcher 。 变量'html ' 包含需要处理的HTM1 代码\
+\
+Matcher mImg = Pattern.compile( "(?id)<IMG\\s+(.*?)/?>") .matcher(html);\
+\
+1/ 查找ALT属性的matcher (应用于刚刚找到的IMG tag中)\
+\
+Matcher mAlt =Pattern .compile("(?ix)\\b ALT \s*=").matcher(html);\
+\
+/ / 对html 中的每个image tag\
+\
+while(mImg.find()〉(\
+\
+// 把查找范围局限在刚刚找到的tag 中\
+\
+mAIt.region(mImg.start(1),mImg.end(1));\
+\
+// 如果没有找到，则报错，输出找到的整个 image tag\
+\
+if(!mAlt.find())\
+\
+System.out.println("Missing ALT attribute in:"+mImg.group());\
+\
+\
+\
+\
+\
+或许在一处指定目标字符串(创建 mAlt Matcher 时),另 一 处指定检索范围(调用\
+\
+mAIt.region 时 )的做法有些怪异。果真如此的话，我们可以为mAIt 创建虚构的目标字符\
+\
+串(一个空字符串),然后每次都调用mAlt. reset (htm1).region( …)。调用reset 可能\
+\
+会降低些效率，但是同时设定目标字符串和检索范围的逻辑更加清晰。\
+\
+\
+\
+无论采取哪种办法，都必须明白，如果不设定ALT Matcher的检索范围，对它调用find 就\
+\
+会检索整个 目标字符串，返回无关的‘ALT=' 属性。\
+\
+\
+\
+下面继续完善这个程序，返回找到的image tag 在 HTML 代码中的行数。我们首先隔离出 image tag之前的HTML 代码，然后计算其中的换行符数。\
+\
+\
+\
+\
+\
+标注部分为新增代码：\
+\
+/ / 查 找image tag的 matcher 。 变 量'html ' 包含需要处理的HTM1 代码\
+\
+Matcher mImg = Pattern.compile( "(?id)<IMG \\s+(.*?)/?>").matcher(html);\
+\
+/1 查 找ALT 属性的matcher ( 应用于刚刚找到的IMG tag 中)\
+\
+Matcher mAIt =Pattern.compile("(?ix)\\b ALT'\\s*=").matcher(html); 1/ 查找换行符的Matcher\
+\
+Matcher mLine =Pattern.compile("\\n").matcher(html);\
+\
+/ / 对HTML 中的每个 img tag ...\
+\
+while(mImg.find())\
+\
+{\
+\
+// 把查找范围局限在刚刚找到的tag 中\
+\
+mAlt.region(mImg.start(1),mImg.end(1));\
+\
+// 如果没有找到，则报错，输出找到的整个image tag\
+\
+if(!mAlt.find()){\
+\
+11 计算当前 image tag 之前的换行符的数量\
+\
+mLine.region(0,mImg.start());\
+\
+int lineNum = 1; 11 第一行编号为1 while(mLine.find())\
+\
+lineNum++;// 每遇到一个换行符就加1\
+\
+System.out .println ("Missing ALT attribute on line "+lineNum);\
+\
+\
+\
+\
+\
+与之前一样，每次设定ALT Matcher的检索范围时，都使用image matcher的 start(1) 方 法 得 到image tag body 在 HTML 中的起始位置。相 反 ，在设定换行符匹配的检索范围终点时， 使 用start() 方法来判断整 个 image tag 的开始位置(也就是换行符计算的终点)。\
+\
+\
+\
+\
+\
+几 点 提 醒\
+\
+\
+\
+记 住 ，某些检索相关的方法并非不受检索范围的影响，而是它们在内部调用了reset 方 法 ， 把检索范围设定为默认的“全部文本”。\
+\
+· 受检索范围影响的查找方法：\
+\
+matches\
+\
+lookingAt\
+\
+find() (不带参数)\
+\
+\
+\
+· 会 重 置matcher 及其检索范围的方法：\
+\
+find(text) (带一个参数)\
+\
+replaceAll\
+\
+replaceFirst\
+\
+reset (无须多言)\
+\
+另外请记住，匹配结果数据中的偏移值(也就是start 和 end 方法返回的数值)是不受检 索范围影响的，它们只与整个目标字符串的开始位置有关。\
+\
+\
+\
+\
+\
+设定及查看检索范围的边界\
+\
+\
+\
+与设定及查看检索范围边界的方法有3个：\
+\
+\
+\
+Matcher region(int start,int end)\
+\
+\
+\
+将 matcher的检索范围设定在整个目标字符串的start 和 end 之间，数值均从目标字符 串的起始位置开始计算。它同样会重置Matcher, 将“匹配指针”指向检索范围的开头， 所以下一次调用find 从此处开始。\
+\
+如果没有重新设定，或是调用reset 方法(无论是显式调用还是在其他方法内部调用\
+\
+392),检索范围都不会变化。\
+\
+返回值为Matcher 对象本身，所以此方法可用于方法链(389)。\
+\
+如果start 或end 超出了目标字符串的范围，或者start 比 end 要大，会抛出IndexOutof- BoundsException。\
+\
+int regionStart()\
+\
+\
+\
+返回当前检索范围的起始位置在目标字符串中的偏移值，默认为0。\
+\
+\
+\
+int regionEnd()\
+\
+\
+\
+返回当前检索范围的结束位置在目标字符串中的偏移值，默认为目标字符串的长度。 因为region 方法要求同时提供start 和 end, 如果只希望设置其中一个，可能不太方便操作。 表8-4给出了方法。\
+\
+表8-4:设定检索范围的单个边界\
+\
+\
+\
+起始边界	结束边界	Java代码\
+\
+明确设定	不修改	m.region(start,m.regionEnd());\
+\
+不修改	明确设定	m.region(m.regionStart(),end);\
+\
+明确设定	不修改	m.reset().region(start,m.regionEnd());\
+\
+不修改	明确设定	m.region(0,end);\
+\
+\
+\
+超越检索范围\
+\
+\
+\
+如果将检索范围设定为整个目标字符串中的一段，正则引擎会忽略范围之外的文本。也就 是说，检索范围的起始位置可以用^」匹配，而它可能并不是目标字符串的起始位置。\
+\
+不过，某些情况下也可以检查检索范围之外的文本。启用transparent bounds 能够让“考察\
+\
+\
+\
+\
+\
+(looking)”结构检查范围之外的文本，如果禁用anchoring bounds, 则检索范围的边界不 会被视为输入数据的起始/结束位置(除非实际情况如此)。\
+\
+修改这两个标志位的理由与修改默认检索范围密切相关。之前用到了检索范围的例子都不 需要设定这两个标志位—与检索范围相关的查找既不需要锚点也不需要“考察”结构。\
+\
+如果程序把需要用户编辑的文本存放在 CharBuffer 中 ，用户希望执行查找-替换操作，就 应当把操作的范围限定在光标之后的文本中，所以应当把检索范围的起始位置设定为当前 光标所在的位置。如果用户的光标指向下面的位置：\
+\
+Madagas car is much too large to see on foot,so you'll need a car.\
+\
+要求把'\bcar \bj 替换为“automobile”。设定了检索范围之后(即将其设定为光标之后的文 本),你可能会很惊奇地发现第一次匹配就是在检索范围的开头：' Madagascar ’。这是因为 默认情况下 transparent bounds标志位设定为false, 因 此 \bj将检索范围起始位置设定为文 本的起始位置，而“看不到”左侧还有字符。如果将transparent bounds 设定为true,'\b 就 能看到‘c ' 之前还有‘s', 因此'\b 不能匹配。\
+\
+\
+\
+\
+\
+Transparent Bounds\
+\
+\
+\
+与这个标志位相关的方法有两个：\
+\
+\
+\
+Mac.cher: useTransparentBounds( boo lean b)\
+\
+\
+\
+设定transparent bounds的值。默认为false。\
+\
+\
+\
+此方法返回Matcher本身，故可用在方法链中。\
+\
+\
+\
+oolean hasTransparentBounds()\
+\
+\
+\
+如果transparent 生效，则返回 true。\
+\
+Matcher 的 transparent-bounds 默认为false。也就是说检索范围的边界在顺序环视、逆序环视 和单词分界符“考察”时是不透明的。这样，正则引擎不会感知到检索边界之外的字符(注 6)。\
+\
+\
+\
+\
+\
+注 6 : Java 1.5 Update 7 中 有 个bug, 我已经报告给Sun 。使 用 Pattern. MULTILINE 之 后 ，如 果 之前正好有一个行终结符，即使已经取消了anchoring bounds,^」 (如果修改了检索边界， 它可以看作某种查看结构)也可以匹配检索范围的起始位置。\
+\
+\
+\
+\
+\
+也就是说尽管检索范围的起始位置可能在某个单词内部，\ b 仍然能够匹配-它看不到之 前的字母。\
+\
+下面的例子说明了transparent bounds设置为false (默认)的情况：\
+\
+String regex ="\\bcar\\b";/1 \b car\bj\
+\
+String text ="Madagascar is best seen by car or bike.";\
+\
+Matcher m= Pattern.compile( regex).matcher(text);\
+\
+m.region(7,text.length());\
+\
+m.find();\
+\
+Syste m.out.println(" Matches starting at character"+m.start());\
+\
+结果是：也就是说尽管检索范围的起始位置可能在某个单词内部，\b 仍然能够匹配-—它 看不到之前的字母。\
+\
+Matches starting at character 7\
+\
+单词分界符的确匹配了检索范围的起始位置，即 Madagas car, 尽管此处根本不是单词的 边界。如果不设定 transparent bounds, 单词分界符就“受骗 (spoofed)” 了 。\
+\
+如果在find 之前添加这条语句：\
+\
+m.useTransparentBounds(true);\
+\
+结果就是：\
+\
+Matches starting at character 27\
+\
+因为边界现在是透明的，引擎可以感知到起始边界之前有个字母‘s', 所 以 \bi 在此处无 法匹配。于是结果就成了“… by'caror·bike.”。\
+\
+同样，transparent-bounds 只有在检索范围不等于“整个目标字符串”时才有意义。即使reset 方法也不会重置它。\
+\
+\
+\
+Anchoring bounds\
+\
+\
+\
+与anchoring bounds有关的方法有：\
+\
+\
+\
+Matcher useAnchoringBounds(Boolean b)\
+\
+设置 matcher的 anchoring-bounds 的值，默认为true。\
+\
+此方法会返回 matcher 对象本身，故可用于方法链中。\
+\
+boolean hasAnchoringBounds()\
+\
+如果启用了anchoring bounds, 则返回true, 否则返回false。\
+\
+默认状态下，anchoring bounds为 true,也就是说行锚点(^\ A$\z \Z) 能匹配检索范围 的边界，即检索范围不等于整个目标字符串。将它们设置为false 表示行锚点只能匹配检索\
+\
+\
+\
+\
+\
+范围内，整个目标字符串中符合规定的位置。\
+\
+禁用anchoring bounds的理由可能与使用transparent bounds 一样，当用户的“光标不在整段 文本的起始位置时”保证语意的完备。\
+\
+与transparent-bounds 一 样，anchoring bounds也只有在检索范围不等于“整个目标字符串” 时才有意义。即使reset 方法也不会重置它。\
+\
+\
+\
+方法链\
+\
+Metltod Chaining\
+\
+\
+\
+下面的程序初始化一个Matcher, 并设定某些选项：\
+\
+Pattern p= Pattern .compil e(regex); 1/ 编 译regex\
+\
+Matcher m =p.matcher(text); / / 将rege x 与text 建立联系，创建Matcher\
+\
+m. region(5,text. length());	// 将检索范围设定为从第5个字符开始\
+\
+m.useAnchoringBounds(false);	//^之类不能匹配检索范围的起始位置\
+\
+m.useTransparentBounds(true);	// 考察结构能够超越检索范围\
+\
+在前面的例子中我们看到，如果创建Matcher 之后不再需要regex, 可以把前面两步合并起 来：\
+\
+\
+\
+Matcher m = Pattern.compile(regex).matcher\
+\
+n.region(5,t ext. length());\
+\
+m.useAnchoringBounds(false);\
+\
+m.useTransparentBounds(true)\
+\
+\
+\
+\
+\
+(text);\
+\
+1 / 将 检 索 范 围 设 定 为 从 第5 个 字 符 开 始 1/ ^之类不能匹配检索范围的起始位置 / / 考 察 结 构 能 够 超 越 检 索 范 围\
+\
+\
+\
+不过，因为Matcher 的两个方法会返回Matcher 本身，可以把它们整合成一行(尽管因为排 版的原因必须列为两行):\
+\
+Matcher m= Pattern.compile(regex).matcher(text). region(5,text.length())\
+\
+.useAnchoringBounds(false) .useTransparent Bounds(true);\
+\
+\
+\
+功能并没有增加，但用起来更加简便。这种“方法链”格式紧凑，一行程序可能很难对应 到单个步骤的文档，不过，好的文档重在说明“为什么”而不是“干什么”,所以这可能并 不是个问题。在第399页的程序中，使用方法链可以保证格式紧凑清晰。\
+\
+\
+\
+构建扫描程序\
+\
+Methods for Building a Scanner\
+\
+\
+\
+Java 1.5的 matcher 提供了两个新方法，hitEnd 和 requireEnd, 它们主要用来构建扫描程 序 ( Scanner)。扫描程序将字符流解析为记号 ( token) 流。举例来说，编译器的扫描程序 会把 'var<·34 ' 解析为三个记号：INDENTIFIER·LESS_THAN·INTEGER。\
+\
+\
+\
+\
+\
+这两个方法帮助扫描程序决定， 刚刚完成的匹配尝试的结果是否应该用来解释 	(interpretation) 当前输入。一般来说，只要其中一个返回 true, 就表示在做出决定之前还 应该输入更多的数据。例如，如果当前的输入数据(比如用户在交互式调试器中输入的命 令)是单个字符‘<',最好还是看看下一个字符是否‘=', 才能决定这个记号是LESS_THAN 还是 LESS_THAN_OR_EQUAL。\
+\
+\
+\
+在大多数应用正则表达式的项目中，这两个方法可能派不上用场，可是一旦需要，它们就 是不可替代的。在这些不常见的场合，Java 1.5中 hitEnd 方法存在的bug 就很让人恼火。 不过，看起来Java 1.6已经修正了这个错误，Java 1.5中的解决办法将在本章末尾介绍。\
+\
+构建扫描程序已经远远偏离了本书的主旨，所以我只会介绍些具体方法的定义，并给出例 子(如果你确实需要扫描程序，应该去看看java.util.Scanner)。\
+\
+\
+\
+boolean hitEnd()\
+\
+\
+\
+(Java 1.5中这个方法是不可靠的，解决办法参见第392页)。\
+\
+\
+\
+此方法表示，正则引擎在上一次匹配尝试中，是否检查了输入数据结束之后的数据(而 无论上一次匹配是否成功)。其中包含\bj 和'sj 之类的边界检查。\
+\
+如果hitEnd 返回 true, 则输入更多数据可能会改变匹配结果(匹配成功变为匹配失败， 匹配失败变为匹配成功，或者匹配文本发生变化)。相反，如果返回false, 则匹配结果 已经确定，输入更多的数据也不会改变匹配结果。\
+\
+常见的应用是，如果匹配成功，而hitEnd 返回 true, 则必须等待更多的输入数据才能 最后做出决定。如果匹配失败，而 hitEnd 返回 false, 应该期待更多的输入数据，而 不是报告语法错误。\
+\
+boolean requireEnd()\
+\
+\
+\
+此方法只有在匹配成功之后才有意义，它表示正则引擎的匹配成功与否是否受输入数 据结尾的影响。也就是说，如果requireEnd 返回 true, 更多的输入数据可能导致匹配\
+\
+\
+\
+\
+\
+尝试失败，如果返回false, 更多的输入数据可能改变匹配的细节，但不会导致匹配失 败。\
+\
+常见的应用是，如果requireEnd 返回true, 在最后做出决定之前，必须接受更多的输 入数据。\
+\
+hitEnd 和 requireEnd 都受到检索范围的影响。\
+\
+\
+\
+\
+\
+使用hitEnd 和 requireEnd 的例子\
+\
+\
+\
+表8-5给出了在lookingAt 搜索之后使用hitEnd 和 requireEnd 的例子。所给的两个例子 虽然很简单，但足够解释这两个方法。\
+\
+表8-5:在lookingAt搜索之后使用hitEnd 和 requireEnd的例子\
+\
+\
+\
+正则表达式	目标文本	匹配文本	hitEnd()	requierEnd()\
+\
+1	\d+\bl[><]=?	‘1234'	'1234′	true	true\
+\
+2	\d+\bl[><]=?	‘1234*> ·567′	'1234 ·> ·567'	false	false\
+\
+3	\d+\bl[><]=?	'>'	S'	true	false\
+\
+4	\d+\bl[><]=?	'> ·567'	·567'	false	false\
+\
+5	\d+\bl[><]=?	'>='	'>='	false	false\
+\
+6	\d+\bl[><]=?	'>=*567′	'>= ·567'	false	false\
+\
+7	\d+\bl[><]=?	'oops'	匹配失败	false\
+\
+8	(setlsetup)\b	'se′	匹配失败	true\
+\
+9	(set Isetup)\b	'set'	'set’	true	true\
+\
+10	(setlsetup)\b	'setu'	匹配失败	true\
+\
+11	(setisetup)\b	'setup'	'setup'	true	true\
+\
+12	(set Isetup)\b	'set ·x=3′	'set ·x=3′	false	false\
+\
+13	(set isetup)\b	'setupx'	'setup ·x'	false	false\
+\
+14	(setisetup)\b	'self'	匹配失败	false\
+\
+15	(setlsetup)\b	'oops'	匹配失败	false\
+\
+\
+\
+表8-5中上面7行的正则表达式寻找一个非负整数以及4个比较运算符：大于、大于等于、 小于、小于等于。下面8行的正则表达式更简单，寻找单词set 或是setup 。 这些例子很 简单，但能说明问题。\
+\
+举例来说，第5行中，虽然整个目标字符串都能匹配，hitEnd 仍然会返回false。原因在于， 尽管匹配文本包含目标字符串的最后一个字符，引擎也不需要检查之后的字符(无论是字 符还是分界符)。\
+\
+\
+\
+\
+\
+hitEnd 的 bug 及解决办法\
+\
+\
+\
+Java 1.5中的hitEnd 方法存在bug(Java 1.6 已经修正)(注7),在某些特殊情况下hitEnd 会得到不可靠的结果：在不区分大小写的匹配模式下，如果正则表达式的某个可选元素为 单个字符(尤其是当它的匹配尝试失败时),就会出错。\
+\
+例如，在不区分大小写的情况下使用>=?」(它作为大的正则表达式的一部分)会诱发这个 错误，因为‘='是可选的单个字符。在不区分大小写的情况下使用'alan|thej (仍然是包 含在大的正则表达式中)也会诱发这个错误，因为单个字符 aj 是众多多选分支之一，因此 是可选的。\
+\
+另两个例子是'values? 和'\r ?\n\r?\nj。\
+\
+\
+\
+解决办法解决的办法是破坏诱发条件，或者禁用不区分大小写的匹配(至少是对诱发的子 表达式禁用),或者是把单个字符替换为其他元素，例如字符组。\
+\
+第一种办法会把>=?」替换为(?- i:>=?), 使用模式修饰范围(110)保证不区分大小写 的匹配不会应用于这个子表达式(这里不存在大小写的区别，所以这种办法完全没问题)。\
+\
+如果使用第二种办法，alanithej 就变成了[ aA] lanlthe , 代表了使用 Pattern. CASE_ INSENSITIVE 进行不区分大小写匹配的情况。\
+\
+\
+\
+Matcher的其他方法\
+\
+Other Mntcher Methods\
+\
+\
+\
+这些Matcher 方法尚未介绍过：\
+\
+\
+\
+Matcher reset()\
+\
+\
+\
+这个方法会重新初始化 Matcher 的大多数信息，弃用前一次成功匹配的所有信息，将 匹配位置指向文本的开头，把检索范围(384)恢复为默认的“全部文本”。只有 anchoring bounds 和 transparent bounds(388) 不会变化。\
+\
+Matcher 有三个方法会在内部调用reset, 因此也会重新设定检索范围：replaceAl1、\
+\
+replaceFirst, 以及只使用一个参数的find。\
+\
+\
+\
+这个方法返回Matcher 本身，所以它可以用在方法链中(389)。\
+\
+\
+\
+\
+\
+注7: 本书写作过程中，Sun 告诉我在“5.0u9”, 也 就 是Java 5.0 Update 9中修正了此bug (你可 能还记得，365页的脚注提到过本书针对的 Java 1.5 update 7)。在 Java 1.6 beta中 ，这个 bug 也不存在。\
+\
+\
+\
+\
+\
+Mat cher reset( Charsecuence text)\
+\
+\
+\
+这个方法与 reset() 差不多，但还会把目标文本改为新的 String (或者任何实现 CharSequence的对象)。\
+\
+如果你希望对多个文本应用同样的正则表达式(例如，对所读入的文件的每一行),使 用reset 方法比多次创建新的Matcher 更有效率。\
+\
+这个方法返回Matcher 本身，所以可以用在方法链中(389)。\
+\
+\
+\
+Patten pattern()\
+\
+\
+\
+Matcher 的 pattern 方法返回与此Matcher 关联的 Pattern 对象。如果希望观察所使 用的正则表达式，请使用 m.patter n() .pattern(), 它会调用 Pattern 对象(名字 相同，但对象不同)的pattern 方法(394)。\
+\
+\
+\
+Matche r usePattern (Pattern p)\
+\
+\
+\
+从Java 1.5开始添加，这个方法会用给定的Pattern 对象替换当前与Matcher 关联的 Pattern 对象。这个方法不会重置Matcher, 所以能够在文本的“当前位置”开始使用 不同的pattern。第399页有此方法实际应用的例子和讨论。\
+\
+这个方法返回Matcher 本身，所以可以用在方法链中(389)。\
+\
+String toString ()\
+\
+\
+\
+从Java 1.5中添加，这个方法返回包含Matcher 基本信息的字符串，调试时这很有用。 字符串的内容可能会变化，在Java 1.6 beta中是这样：\
+\
+Matcher m=Pattern.compile("(\\w+)").matcher("ABC 123");\
+\
+System.out. println(m .toString());\
+\
+m. find();\
+\
+System.out. println(m .toString());\
+\
+\
+\
+结果是：\
+\
+\
+\
+java.util.regex.Matcher[pattern=(\w+)region=0,7 lastmatch=]\
+\
+java.util .regex.Matcher[pattern=(\w+)region=0,7 lastmatch=ABC]\
+\
+Java 1.4.2的 Matcher 类只有继承自java.lang .Object 的 tostring 方法，它返回没\
+\
+什么信息含量的字符串：'java.util. regex. Matcher@480457’。\
+\
+\
+\
+\
+\
+查询Matcher 的目标字符串\
+\
+\
+\
+Matcher 类没有提供查询当前目标字符串的方法，但有些办法绕过了这种限制：\
+\
+/ / 此pattern 在下面的函数中使用，此处编译并保存，是为了提高效率\
+\
+static final Pattern pNeverFail=Pattern.compile("^");\
+\
+\
+\
+//返回与matcher 对象关联的目标字符串\
+\
+public static String text(Matcher m)\
+\
+{\
+\
+// 记住这些位置，以备之后恢复\
+\
+Integer regionstart =m.regionStart();\
+\
+Integer regionEnd =m.regionEnd();\
+\
+Pattern pattern =m.pattern();\
+\
+//只有这样才能返回字符串\
+\
+String text =m.usePattern(pNeverFail).replaceFirst("");\
+\
+\
+\
+// 恢复之前记录的位置\
+\
+m. usePattern(pattern).region (regionS tart, regionEnd);\
+\
+// 返回文本\
+\
+return text;\
+\
+}\
+\
+这里使用replaceFirst 方法，以及虚构的pattern和 replacement 字符串，来取得目标字符 串的未经修改的副本。其中它重置了Matcher, 但也恢复了之前的检索范围。它不是特别好 的解决方案(效率也不是很高，而且即便 Matcher 的目标字符串可能是其他类型也会返回 String ), 但是在Sun 给出更好的办法之前，它还凑合。\
+\
+\
+\
+Pattern的其他方法\
+\
+Other Pattern Methods\
+\
+除了主要的compile factories, Pattern 类还提供了一些辅助方法：\
+\
+\
+\
+sp lit\
+\
+下一页会详细讲解两种形式的split 方法。\
+\
+Strin g pattern()\
+\
+这个方法返回用于创建本pattern 的正则表达式字符串。\
+\
+Stri: g tostring ()\
+\
+这个方法从Java 1.5之后可用，等价于pattern 方法。\
+\
+\
+\
+int flags ()\
+\
+\
+\
+这个方法返回pattern 创建时传递给compile factory的 flag 参数(作为整数)。\
+\
+\
+\
+\
+\
+n! quote (S tring text)\
+\
+\
+\
+从 Java 1.5 开始提供的 static 方法，返回 text 对应的正则文字字符串，能够作为 Pattern.compile 的参数。例如， Pattern.quote ("main()" )返回字符串 '\Qmain ()\E ’,作为正则表达式它解释为'\Qmain()\E, 完全能够匹配原始的参数‘main()’。\
+\
+\
+\
+Sta: 0iear: matches (String regex,CharSequence text)\
+\
+\
+\
+这个static 方法返回的Boolean 值表示正则表达式能否匹配文本(与matcher 方法的参 数一样，可以是一个String 或者任何实现CharSequence 的对象373)。其实，它等 价于：\
+\
+Pattern. compile( regex).matcher(text). matches();\
+\
+如果需要传递编译参数，或者所要的信息不只是简单的匹配是否成功，则应该使用之 前介绍的办法。\
+\
+如果这个方法需要多次调用(例如，在循环中，或者其他经常调用的代码中),预先把 正则表达式编译为一个 Pattern 对象，然后每次应用的效率会高很多。\
+\
+Pattern的split 方法，单个参数\
+\
+Pattern 's split Method,with One Argument\
+\
+\
+\
+sp lit(CharS equence text)\
+\
+\
+\
+pattern 的这个方法接收文本(一个CharSequence 对象),然后返回一个数组，包含由 这个 pattern 对应的正则表达式在其中的匹配分隔的文本。String 类的 split 方法也 提供了同样的功能。\
+\
+String[] result =Pattern.compile("\.").split("209.204.146.22");\
+\
+\
+\
+返回4个字符串构成的数组('209’、‘204’、‘146’和‘22'),由文本中的三个.分隔。 这个简单例子只用单个字符分隔，但其实我们可以使用任何正则表达式。例如，你可以用 非字母和数字的字符把一个字符串粗略地分为“单词”:\
+\
+String[]result=Pattern.compile("\\W+").split(Text);\
+\
+如果给出的字符串是“what'su Doc”, 则返回4个字符串(‘what' 、‘s’ 、‘up’ 、'Doc'),\
+\
+由这个表达式的3次匹配(如果包含非 ASCII 文本，你可能需要使用'\P{L}+1或 (^\p{L}p{N)_] 而不是'\W+J 367) 分隔。\
+\
+\
+\
+\
+\
+相邻匹配之间的空元素\
+\
+\
+\
+如果正则表达式能够在文本的最开头匹配，返回数组的第一个元素应该是空字符串(这是 一个合法的字符串，但是不包括任何字符)。同样，如果正则表达式能够在某个位置匹配两 次以上，应该返回空字符串，因为邻近的匹配“分割”了零长度的文本。例如：\
+\
+String[]result=Pattern.compile("\\s*,\\s*").split(",one,two,,,3");\
+\
+按照两边可能出现空白字符的逗号来分割，返回一个5个元素的数组：空字符串、'one'、 'two'、两个空字符串和‘3'。\
+\
+序列末尾出现的所有空字符串都会被忽略：\
+\
+String[] result =Pattern.compile(":").split(":xx:");\
+\
+\
+\
+这样会得到两个字符串：一个空字符串和‘xx’。如果希望保留这些元素，请使用下面介绍 的双参数版本的split。\
+\
+\
+\
+\
+\
+Pattern的split 方法，两个参数\
+\
+Pattern's split Method,with Two Arguments\
+\
+\
+\
+string[7 split( Char3eence text, int limit)\
+\
+\
+\
+这个版本的split 方法能够控制pattern 应用的次数 ，以及结尾部分可能出现的空元素\
+\
+的处理策略。String 类的split 方法也可以获得同样效果。\
+\
+limit 参数等于0,大于0,还是小于0,各有意义。\
+\
+\
+\
+limit 小于0\
+\
+如果limit 小于0,就会保留数组结尾的空元素。\
+\
+\
+\
+String1]result=Pattern.compile(”:").split(":xx:",-1);\
+\
+返回包含3个字符串的数组(一个空字符串，‘xx', 然后是另一个空字符串)。\
+\
+\
+\
+limit 等于0\
+\
+把 limit 设置为0,等于不设置limit, 所以不会保留结尾的空元素。\
+\
+\
+\
+limit 大于0\
+\
+如果limit 大于0,则split 返回的数组最多包括 limit 个元素。也就是说，正则表达式至多 会应用limit-1次。(如果limit=3, 则需要2次匹配来分割3个字符串)。\
+\
+\
+\
+\
+\
+数\
+\
+\
+\
+\
+\
+进行 limit-1 次匹配之后，匹配停止，目标字符串中其余的部分(在最后一次匹配之后的文 本)会作为结果数组的尾元素。\
+\
+如果某个字符串如下：\
+\
+Friedl, Jeffrey, Eric Francis,America,Ohio,Rootstown\
+\
+\
+\
+并且希望得到头三个部分，你可以将字符串分割为4个部分(头3个部分是名字，然后是 最后的“其他”字符串):\
+\
+String[] NameInfo =Pattern.compile(",").split(Text,4);\
+\
+// NameInfo[0] 是姓\
+\
+// NameInfo[1] 是名\
+\
+1/NameInfo[2] 是中名(这里中名包括两个词)\
+\
+//NameInfo[3] 是其他部分，因为这里没用，直接忽略\
+\
+为split 设置limit的理由在于，如果不需要更多地处理，它可以用来停止查找其他的字符 串、创建新字符串，限制数组的长度，提高效率。提供limit 能够限制工作量。\
+\
+\
+\
+\
+\
+拓 展 示 例\
+\
+Additional Examples\
+\
+\
+\
+为 Image Tag 添加宽度和高度属性\
+\
+Adding Width and Heighit Attributes fo Inage Tags\
+\
+\
+\
+这里给出个高级的例子，原地 ( in-place) 查找替换，修改HTML, 保证所有的image tag都 包含WIDTH 和 HEIGHT 属性( HTML必须是StringBuilder 、 StringBuffer, 或者其他\
+\
+CharSequence)。\
+\
+只要有一副图像没有规定宽度或者高度，就可能降低整个页面的装载速度，因为浏览器在 显示这幅图像之前必须读入整个文件。如果包含了宽度和高度的尺寸，文本和其他元素就 可以立刻正确摆放，这样用户会感觉页面读取速度更快(注8)。\
+\
+如果找到image tag,程序会寻找SRC 、WIDTH和HEIGHT属性，如果存在，提取他们的 值。如果WIDTH和 HEIGHT有一个不存在，就先取回图像，计算尺寸，然后补充上属性。\
+\
+如果WIDTH和HEIGHT都没有，就按照图像的真实尺寸来设置这些属性。如果存在一个， 就只需要算出另一个属性，它的值是按比例计算出来的(例如，如果WIDTH是真实尺寸的 一半，则添加的HEIGHT的值也是真实高度的一半；现代的浏览器就是这样处理的)。\
+\
+\
+\
+注8:“所有的图像都必须有size 属性”,这是Yahoo!的规定，即使在早期也是如此。显然，今天 仍然有许多流量巨大的站点页面的<img>tag不包含尺寸信息。\
+\
+\
+\
+\
+\
+和第383页的代码 一 样，这个程序手动维护匹配指针。它还使用了检索范围(384)和方 法 链 ( 389)。代码如下：\
+\
+/ / 匹 配 独 立 的<img>tags\
+\
+Matcher mImg = Pattern.compile(" (?id)<IMG\\s+( .*?)/?>").matcher(html);\
+\
+//匹配独立的tag 中 的SRC 、WIDTH 和 HEIGHT 属性(所用的表达式很简单)\
+\
+Matcher mSrc= Pattern .compile ("(?ix)\\bSR C =(\S+)").matcher(html);\
+\
+Matcher mwidth= Pattern.comp ile("(?ix)\\bWIDTH=(\S+)") .matcher(html);\
+\
+Matcher mHeight= Pattern.compile("(?ix)\\ bHEIGHT=(\S+)"). matcher(html);\
+\
+int imgMatchPointer =0;// 第一次搜索从字符串起始位置开始\
+\
+while( mImg.find( imgMatchPointer))\
+\
+{\
+\
+imgMatchPointer =mImg.end(); // 下一次查找从这里开始\
+\
+// 在刚刚找到的tag 中查找各字段\
+\
+Boolean hassrc = msrc.region(mImg. start(1),mImg.end(1)).find();\
+\
+Boolean hasHeight =mHeight. region(mImg.start(1) ,mImg.end(1)).find();\
+\
+Boolean haswidth = mwidth.re gion(mImg.start(1),mImg.end( 1)).find();\
+\
+1/ 如果提供了SRC 属 性，但是没提供WIDTH和 / 或HEIGHT ..\
+\
+if(hasSrc &&(! hasWidt h Il! hasHeight))\
+\
+{\
+\
+java .awt. image.BufferedImage i= // 获取图像\
+\
+javax.imageio. ImageIO.read(new java.net.URL(mSrc.group(1)));\
+\
+String size; // 存放未提供的 WIDTH和 / 或HEIGHT 属性\
+\
+if(hasWidth)\
+\
+//得到了width, 根据比例计算 height\
+\
+size="height='" +(int)(Integer.parseInt(mWidth.group(1))*\
+\
+i.getHeight()/i.getWidth())+" ";\
+\
+else if(hasHeight)\
+\
+// 得到了height, 根据比例计算width\
+\
+size="width='" +(int)(Integer.parseInt(mHeight.group(1))*\
+\
+i.getWidth()/i.getHeight())+"'";\
+\
+else // 两个属性都没提供，按实际情况处理\
+\
+size="width='"+i.getWidth()+"'"+\
+\
+"height='"+i.getHeight()+"'";\
+\
+htm1. insert (mImg .star t(1), size); // 原地修改 HTML\
+\
+imgMatchPointer +=size.length();// 更新匹配指针\
+\
+\
+\
+\
+\
+尽管这例子很有教育意义，但还是有少数地方没考虑到。因为这个例子的重点在于本地查 找和替换，尽可能地简化了其他方面，对需要处理的HTML 进行了理想的假设。例如，正 则表达式不容许属性的等号两边出现空白，属性中不会出现引号(参考第202页的 Perl 正 则表达式，可以得到有实际意义的，Java 版本的 tag 属性匹配的办法)。这个程序不能处理 相 对URL, 也不能处理格式错误的URL, 也不能处理获取图像的代码抛出的任何异常。\
+\
+不过，这个例子仍然说明了几个重要的概念。\
+\
+\
+\
+\
+\
+对于每个Matcher, 使用多个Pattern 校验HTML\
+\
+Validating HTML with Multiple Patterns Per Matcher\
+\
+\
+\
+我们也可以用Java 来写校验简单HTML的程序( 132)。这段代码通过usePattern 方法 实时更换Matcher的 pattern。这样能够处理多个以' GJ 开头的pattern, 进行对应的操作。请 参考第132页的内容了解此方法的更多细节。\
+\
+\
+\
+Pattern	pAtEnd	=Pattern.compile("\\G\\z");\
+\
+Pattern	pWord	=Pattern. compil e("\G\\w+");\
+\
+Pattern	pNonHtml	=Pattern.compile("\G[^\\w<>&]+");\
+\
+Pattern	pImgTag	=Pattern.compile( "\\G(?i) <img\s	+([^>]+)>");\
+\
+Pattern	pLink	=Pattern.compile("\\G(?i)<A\s+([^>]+)>");\
+\
+Pattern	pLinkX	=Pattern.compile ("\\G(?i )</A>");\
+\
+Pattern	pEntity	=Pattern.compile("\\G&(#\\d+;\w+);");\
+\
+\
+\
+Boolean needClos e=false;\
+\
+Matcher m = pAtEnd.matche r(htm1);// 每个 Pattern 对象都能生成Matcher 对 象\
+\
+while(!m. usePattern(pAtEnd). find())\
+\
+{\
+\
+if(m. usePattern( pWord).find()){\
+\
+...m.group() 包含一个单词或数值，可以进行对应的检查\
+\
+}e lse if(m.usePattern(pImgTag) .find ()){\
+\
+. . . 包 含 image tag, 检查是否合适...\
+\
+}else if(!needClose &&m.usePattern(pLink).find())(\
+\
+. . . 有 超 链 接 ， 验 证 . . .\
+\
+needCl ose= true;\
+\
+}else if(needClose &&m.usePattern(pLinkX),find()){\
+\
+System.out. println("/LINK [" +m.group()+"]");\
+\
+needClose =false;\
+\
+}else if(m.usePattern(pEntity).find()){\
+\
+// 容许出现&gt; 和 & # 1 2 3 ; 之 类 的entity\
+\
+}else if(m.usePattern(pNonHtml ). find()){\
+\
+// 容许出现其他非单词的非HTML 代码\
+\
+}else {\
+\
+// 完全无法匹配，肯定出了错，在此处选取一段文字用于错误输出\
+\
+m.usePattern(Pattern.compile( "\\G(?s).{1,12}")).find();\
+\
+System. out. println("Bad char before '"+m.group()+"'");\
+\
+System.exit(1);\
+\
+}\
+\
+}\
+\
+if(needClose){\
+\
+System.out.println("Missing Final </A>");\
+\
+System.exit(1);\
+\
+\
+\
+因为java. util.r egex 的 bug , 非 HTML的匹配尝试即使不成功，仍然会“占用”目标字 符串中的一个字符，所以我把这段程序放在最后。这个 bug 仍然存在，只是表现为错误输 出中缺少第一个字符。我已经把这个bug 提交给 Sun。\
+\
+此 bug 没有修正之前，该如何使用单个参数的 find 方法来解决此问题呢?◆请翻到下页 查看答案。\
+\
+\
+\
+\
+\
+在单个参数的find()中使用多个Pattern\
+\
+\
+\
+◆ 第 3 9 9 页 问 题 的 答 案\
+\
+在第399页的程序中，java.util.regex错误地设置了matcher的“当前位置”,所以 下 一 次 查 找 会 从 错 误 的 位 置 开 始 。 我 们 可 以 绕 过 这 个 b u g , 自 己 记 录 “ 当 前 位 置 ” , 使\
+\
+用 单 个 参 数 的 f i n d 从 此 位 置 开 始 查 找 。\
+\
+程 序 中 修 改 的 部 分 以 高 亮 显 示 ：\
+\
+Pattern pWord =Pattern.compile("\\G\\w+");\
+\
+Pattern pNonHtml =Pattern.compile("\G[^\w<>&]+");\
+\
+Pattern pImgTa =Pattern.compile("\\G(?i)<img\s+([^>]+)>");\
+\
+Pattern pLink =Pattern.compile("\\G(?i)<A\\s+([^>]+)>");\
+\
+Pattern pLinkX =Pattern.compile("\G(?i)</A>");\
+\
+Pattern pEntity =Pattern.compile("\\G&(#\\d+I\w+);");\
+\
+Boolean needClose =false;\
+\
+Match er m =p word .matcher(html);//每个Pattern对 象 都 能 生 成M atch e r 对 象 Integer currentLoc =0;\
+\
+while(currentLoc<htm1.length())\
+\
+{\
+\
+if(m.usePattern(pword).find(currentLoc)){\
+\
+...m.group() 包 含 一 个 单 词 或 数 值 ， 可 以 进 行 对 应 的 检 查\
+\
+}else if(m,usePattern(pImgTag).find(currentLoc)){\
+\
+. . . 包含image tag,检 查 是 否 合 适 ...\
+\
+}else if(!needClose &&m.usePattern(pLink).find(currentLoc))( .. . 有 超 链 接 ， 验 证 . ..\
+\
+needClose =true;\
+\
+}else if(needclose &&m.usePattern(pLinkx).find(currentLoc))( System.out.println("/LINK["+m.group()+"]");\
+\
+needclose =false;\
+\
+}else if(m.usePattern(pEntity).find(currentLoc ))(\
+\
+/1 容 许 出 现&gt;和&#123;之 类 的entity\
+\
+}else if(m.usePattern(pNonHtml).find(currentLoc )){\
+\
+/ 1 容 许 出 现 其 他 非 单 词 的 非 H T M L 代 码\
+\
+}else{\
+\
+/1完全无法匹配，肯定出了错，在此处选取一段文字用于错误输出\
+\
+m.usePattern(Pattern.compile("\\G(?s). {1,12}")).find(currentLoc);\
+\
+System.out.print1n( "Bad char at'”+m.group()+"'");\
+\
+System.exit(1);\
+\
+}\
+\
+currentLoc =m.end();//“当 前 位 置 ” 指 向 上 次 匹 配 的 结 尾\
+\
+}\
+\
+if(needClose)(\
+\
+System.out.print1n("Missing Final </A>");\
+\
+System.exit(1);\
+\
+}\
+\
+与 之 前 的 程 序 不 同 ， 这 里 调 用f i n d 时 指 定 了 检 索 的 开 始 偏 移 值 ， 所 以 不 必 指 定 r e g io n 。 不 过 ， 你 可 以 自 己 维 护 这 个 r e g io n , 在 每 次 f i n d 之 前 恰 当 地 调 用 r e g ion。\
+\
+m.usePattern(pWord).region(start,end).find(currentLoc)\
+\
+\
+\
+\
+\
+解析CSV 文档\
+\
+Parsing Comma-Separated Values(CSV)Text\
+\
+\
+\
+这里是用 java. util .regex 写的解析 CSV 的例子(参见第6章271)。这里的程序使用 占有优先量词(142)取代固化分组，因为这样看起来更清楚。\
+\
+String regex =// 双引号字段保存到group(1), 非引号字段保存到group(2)\
+\
+" G(?:^1,) \n"+ 鞋 (? : \n"+\
+\
+#要么是双引号字段 ... \n"+\
+\
+\” #开头双引号 \n"+\
+\
+# ([^\"]*+(?:\"\"[^\"]*+)*+) \n"+\
+\
+\”#结束双引号 \n"+\
+\
+" |#...或者是 .. \n"+\
+\
+#非引用， 非逗号文本 ... \n"+\
+\
+# ([^\",]*+) \n"+\
+\
+" ) n";\
+\
+// 根据上面的表达式创建 matcher, 解析其中的一行CSV 文档\
+\
+Matcher mMain = Pattern .compile(regex, Pattern.COMMENTS) .matcher(line);\
+\
+// 创建匹配""」的matcher, 目标文本暂时为虚构\
+\
+Matcher mQuote =Pattern.compile("\"\"").matcher("");\
+\
+while(mMain.find())\
+\
+{\
+\
+String field;\
+\
+if(mMain.start(2)>=0)\
+\
+field = mMain.group(2 );// 非引号字段，直接使用\
+\
+else\
+\
+// 引用字段，用单引号替换两个相连的引号\
+\
+field = mQuote.reset( mMain. group(1)).replaceAl l("\"");\
+\
+// 现在处理字段的内容 ...\
+\
+System.out. println( "Field ["+field+"]");\
+\
+\
+\
+\
+\
+这个程序比第217页的原始程序效率要高很多，原因在于：正则表达式效率更高，按照第6 章第271页介绍的办法，重复使用单个Matcher ( 通过单个参数版本的reset 方法),而没 有不断创建-回收Mather。\
+\
+\
+\
+\
+\
+Java版本差异\
+\
+Jazva Version Differences\
+\
+\
+\
+本章开头已经提到，本书主要针对Java 1.5.0。不过，目前Java 1.4.2 仍然在广泛应用，而 Java 1.6已经整装待发(已经发布了beta 版 ，但不会很快发布正式版)。所以，我得简要地 提一下1.4.2和1.5.0 (Update 7) 之间的差异，以及1.5.0和目前的1.6“build 59g” 的差异。\
+\
+\
+\
+\
+\
+1.4.2和1.5.0之间的差异\
+\
+Differences Betureen 1.4.2 and 1.5.0\
+\
+\
+\
+相对Java 1.4.2, Java 1.5.0 添加了许多新的方法。大多数新的方法主要是为了支持 Matcher 的检索范围。此外，Unicode 支持也升级并提高了效率。所有的变化都在下面两节详细介绍 	(注9)。\
+\
+\
+\
+1.5.0中的新方法\
+\
+\
+\
+与检索范围相关的Matcher 方法都没有出现在Java 1.4.2中：\
+\
+region\
+\
+· regionStart\
+\
+● regionEnd\
+\
+useAnchoringBounds\
+\
+· hasAnchoringBounds\
+\
+· useTransparentBounds\
+\
+● hasTransparent Bounds Java 1.4.2也不包含下面的方法：\
+\
+\
+\
+toMatchResult\
+\
+hitEnd\
+\
+requireEnd\
+\
+usePattern\
+\
+· toString\
+\
+Java 1.4.2不包含下面这个static 方法：\
+\
+Pattern.quote\
+\
+\
+\
+1.4.2和1.5.0关于Unicode 支持的差异\
+\
+1.4.2和1.5.0在Unicode 相关的问题上有这些变化：\
+\
+· Java 1.4.2的 Unicode 使用的是Unicode Version 3.0.0,1.5.0 使用的是Unicode Version 4.0.0。这个改变影响到很多方面，例如字符的定义(例如，在Version 3.0.0中 ，\ uFFFF 之后是没有代码点的),以及属性和 Unicode区块的定义。\
+\
+· 增强了通过 '\p{…} 和 ' P{…3 引用区块的方式(参加 Java 关于 character. UnicodeBlock 的文档，得到区块列表及其正式名称)。\
+\
+\
+\
+\
+\
+注 9 : 递 归 结 构 ( ? 1 )未在文档中说明，在 Java 1.4.2中是非正式提供的，在1 . 5 . 5中已经不再包\
+\
+含 。PCRE 也是如此，但是Java 没有在文档中说明，我们在这里用脚注来说明。\
+\
+\
+\
+\
+\
+Java 1.4.2中的规则是“去掉官方代码块名字中的空格，和开头的In” 。 这样，区块引 用就类似\p{InHangulJamo} 和\p(InArabicPresentationForms-A}。\
+\
+1.5.0添加了两种新的区块命名。可以在官方块名称之前直接添加 'In', 所以名字可 以为\p{InHangul·Jamo )和\p{InArabic·Presentation·Forms-A) 。 也可以给Java的 区块标识符添加前缀‘In' ( 是官方名称，将空格和连字符替换为下画线) \p{InHangu1 _Jamo}和 \ p{InArabic_ Presentation_Forms_A}。\
+\
+\
+\
+· Java 1.4.2 存在一个古怪的bug, Arabic Presentation Forms-B和 Latin Extended-B\
+\
+结尾的“B” 必须写作“Bound”, 也就是说\p{InArabicPresentationForms-Bound} 和\p{InLatinExtended-Bound)。\
+\
+· Java 1.5.0中 Character 类的 issomeing 方法支持正则表达式(369)。\
+\
+\
+\
+\
+\
+1.5.0和1.6之间的差异\
+\
+Differences Between 1.5.0 and 1.6\
+\
+\
+\
+写作本书时已经发布的1.6和1.5.0在正则表达式的问题上只有两个细微的差别：\
+\
+\
+\
+· Java 1.6提供了之前没有的对Pi 和Pf 的 Unicode分类的支持。\
+\
+· Q…\EJ 结构的bug已经修正了，所以在字符组中可以正常工作。\
+\
+\
+\
+\
+\
+第\
+\
+.NET\
+\\
+\

@@ -1,0 +1,49 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 52/52
+---
+HTML
+
+常见的情况是，真实世界的HTML 有各种各样的问题，这样的检测几乎没有实用价值，例 如孤立元素或者失配的tag, 以及独立出现的‘<'和‘>’字符。不过，即使是正确配对的 HTML也有些特殊情况我们必须处理，注释和<script> tag。
+
+HTML 注释规范与XML注释一样：<!--.*?--> j, 使用模式修饰符s。
+
+<script >部分是重要的，因为它可能包含'<'和‘>',所以必须容许<script …> 和</script> 之间出现任何字符。我们可以这样处理：< script\b[^>]*>.*?</script>j 。 有趣的是， 不包含禁止出现的‘<'和‘>’的字符的script 序列会被第1个多选分支捕获，因为它走的 也是“匹配的一组tag” 的套路。如果<script> 不包含任何其他字符，第1个多选分支会失 败，这些文本留给新增的多选分支。
+
+这里是HTML版本的PHP 程序：
+
+(?:<(\w++)[^>]*+(?<!/)>(?1)</\2>
+
+I [^<>]++
+
+I<\w[^>]*+/>
+
+I<!--.*?-->
+
+<script\b[^>]*>.*?</script> )*+
+
+)$
+
+}isx';
+
+if(preg_match($html_regex,Shtml_string)) echo" block structure seems
+
+else
+
+echo "block structure seems
+
+#匹配一对tag
+
+# 非tag 文本 #自封闭tag
+
+#注释
+
+# script 内容
+
+valid\n";
+
+invalid\n";
+
+索引
+\

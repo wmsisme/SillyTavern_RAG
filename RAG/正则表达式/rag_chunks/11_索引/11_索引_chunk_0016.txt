@@ -1,0 +1,49 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 16/69
+---
+character class(cont'd)
+negated
+must match character 11- 12
+and newline 119
+Tcl 112
+positive assertion 119
+of POSIX bracket expression 127 range 9,119
+as separate language 10
+set operations 125-127
+subtraction 406
+subtraction(set)126
+subtraction(simple)125 character equivalent 128
+character-class subtraction .NET 406 CharBuffer 373,376,387
+charnames pragma 290
+CharSequence 365,373,382,397
+CheckNaughtiness 358
+\p{Cherokee } 122
+Chinese text processing 29
+chr 420
+chunk limit Java 396
+Perl 323
+PHP 466
+CJKV Informatlon Processtng 29
+class xvii
+initial class discrimination 245-248,252,
+257-259,332,361 (see also character class)
+Clck, CHff xxiv client VM 236
+clock clicks 239
+\p{Close_ Punctuation } 123
+closures 339
+\p{Cn } 123,125-126,369,408 Java 369
+\p{Co) 123
+code example
+Java 81,209,217,235,371,375,
+378-379,381-384,389 .NET 219
+code point
+beyond U+FPPP 109
+introduced 107
+multiple 108
+unassigned in block 124
+coerce 294-295
+cold VM 236
+collated data 455
+collating sequences 128

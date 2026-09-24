@@ -1,0 +1,60 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 32/69
+---
+Japanese
+正規表現は筒单だよ!5
+text processing 29
+“japhy”246
+(see also java. uti1. regex) after-match data 138
+anchoring bounds 388
+benchmarking 235-236
+BLTN 236
+bugs 365,368-369,387,392,399,403
+code example 81,209,217,235,371, 375,378-379,381-384,389
+CSV parsing example 401
+description 365
+dot modes 111,370
+doubled-word example 81
+JTT 236
+line anchors 130,370,388
+line terminators 370
+match modes 368
+match pointer 374,383,398,400 matching comments 272-276
+method chaining 389
+method index 366
+Mustang 401
+object model 371-372
+\p{}125
+
+Java(cont'd)
+regex flavor 366-370
+region 384-389
+search and replace 378-383
+∑ 110
+split 395-396
+strings 102
+transparent bounds 387
+Unicode 369
+URL example 209
+version covered 365
+version history 365,368-369,392,401 VM 236
+word boundaries 134
+java properties 369
+\pljavaJavaIdentifi erStart) 369
+j ava.lang.Character 369
+j ava. util. regex (see Java)
+java. util. Scanner 390
+Jeffs example 61-64
+JfriedlsRegexLibrary 434-435
+
+JIT
+Java 236
+.NET 410
+JRE 236
+
+\ p( Katakana) 122,124
+keeping in sync 210-211
+Keisler, H. J.85
+Kleene,Stephen 85

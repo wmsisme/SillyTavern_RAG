@@ -1,0 +1,36 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 24/94
+---
+匹配模式(即使不设置)是不可更改的
+
+qr/…/ 支持292页介绍的核心修饰符。regex 对象一旦构建完成，对应的匹配模式就不能更 改了，即使regex 对象所在的m/…/有自己的修饰符也是如此。下面的代码就不正确：
+
+my SWordRegex = qr/ \b \w+\b/; # 这里忘了添加修饰符/ x
+
+if($text =~m/^($WordRegex)/x){
+
+print "found word at start of text:$1\n";
+
+这里希望用/x 修饰$WordRegex的匹配模式，但是这并不管用，因为在SWordRegex生成时 修饰符(即使不设置)被锁定在qr /…/中 。所以，修饰符必须在恰当的时候使用。
+
+下面的代码则没有问题：
+
+my SWordRegex =qr/\b \w+\b/x; # 没问题!
+
+if($text =~m/^($WordRegex)/){
+
+print "found word at start of text:$1\n";
+
+现在来比较开始的代码和下面的代码：
+
+my SWordRegex = '\b \w+\b'; # 普通字符串
+
+if($text =~m/^($WordRegex)/x){
+
+print"found word at start of text:$1\n";
+
+这段代码没问题，尽管$WordRegex生成时没有任何修饰符。因为$WordRegex是普通变量， 保存普通的字符串，用作 m/…/ 的插值。因为各方面的原因，用字符串构建正则表达式比 regex 对象要麻烦得多，比如在这个例子中，必须记住$WordRegex必须和/x 一起使用才行。
+
+我们也可以只使用字符串解决这个问题，只需要在表达式中设定模式修饰范围 (135):

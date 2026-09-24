@@ -1,0 +1,30 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 59/94
+---
+在条件判断中使用内嵌代码
+
+为了让正则引擎根据测试结果改变行为，我们把测试代码作为(?if then I else) 中 的if 部 分(140)。如果我们希望测试结果为真时正则表达式停下来，就把必然失败的( ? ! 作 为 then 部分。(这里不需要 else 部分，所以没有出现)。下面是封装了条件判断的 regex 对 象：
+
+my $BailIfAnyMatch =qr /(?(?{defined longet match})(?!))/;
+
+if 部分以下画线标注，then 部分以粗体标注。下面是它的应用实例，其中结合了前一页定义 的$ RecordPossibleMatch:
+
+"800-998-9938"=~m{$BailIfAnyMatch \d+$RecordPossibleMatch }x;
+
+得到‘800',它 符 合POSIX标准——“所有最左位置开始的匹配中最长的匹配”。
+
+在内嵌代码结构中使用local函数 Using local in an Embedded-Code Construct
+
+local 在内嵌代码结构中有特殊的意义。理解它需要充分掌握动态作用域(295)的概念和 第4章讲解表达式主导的NFA引擎工作原理时所做的“面包渣比喻”(158)。下面这段专
+
+门设计(我们会看到，它有缺陷)的程序没有太多复杂的东西，但有助于理解local 的意义。 它检查一行文本是否只包含\w+1和' s+J, 以及有多少'\w+J 是 \d+\bj:
+
+my $Count =0;
+
+Stext =~m{
+
+)x; (?>\d+ (?(SCount++1)\b 1\w+I\s+)*$
+
+如果用它来匹配字符串‘123 ·abc·73·9271·xyz’,$Count 的值是3。不过，如果匹配字符

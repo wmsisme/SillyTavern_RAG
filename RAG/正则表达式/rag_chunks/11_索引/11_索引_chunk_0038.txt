@@ -1,0 +1,20 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 38/69
+---
+Match Bmpty 433
+match modes Java 368
+Match(.NET)Success 96
+Match object (.NET)417 Capture 437
+creating 421,429 Groups 429
+Index 429
+Length 429
+NextMatch 429
+Result 429
+Success 427
+Synchronized 430
+
+match pointer Java 374,383,398,400 Match(Regex object method)421
+“match rejected by optimizer”363 match results Java 376
+MatchCollection 422

@@ -1,0 +1,28 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 38/51
+---
+注7: 本书写作过程中，Sun 告诉我在“5.0u9”, 也 就 是Java 5.0 Update 9中修正了此bug (你可 能还记得，365页的脚注提到过本书针对的 Java 1.5 update 7)。在 Java 1.6 beta中 ，这个 bug 也不存在。
+
+Mat cher reset( Charsecuence text)
+
+这个方法与 reset() 差不多，但还会把目标文本改为新的 String (或者任何实现 CharSequence的对象)。
+
+如果你希望对多个文本应用同样的正则表达式(例如，对所读入的文件的每一行),使 用reset 方法比多次创建新的Matcher 更有效率。
+
+这个方法返回Matcher 本身，所以可以用在方法链中(389)。
+
+Patten pattern()
+
+Matcher 的 pattern 方法返回与此Matcher 关联的 Pattern 对象。如果希望观察所使 用的正则表达式，请使用 m.patter n() .pattern(), 它会调用 Pattern 对象(名字 相同，但对象不同)的pattern 方法(394)。
+
+Matche r usePattern (Pattern p)
+
+从Java 1.5开始添加，这个方法会用给定的Pattern 对象替换当前与Matcher 关联的 Pattern 对象。这个方法不会重置Matcher, 所以能够在文本的“当前位置”开始使用 不同的pattern。第399页有此方法实际应用的例子和讨论。
+
+这个方法返回Matcher 本身，所以可以用在方法链中(389)。
+
+String toString ()
+
+从Java 1.5中添加，这个方法返回包含Matcher 基本信息的字符串，调试时这很有用。 字符串的内容可能会变化，在Java 1.6 beta中是这样：

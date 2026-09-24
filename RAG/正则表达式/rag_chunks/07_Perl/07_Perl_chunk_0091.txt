@@ -1,0 +1,34 @@
+---
+章节: 第7章：Perl
+章节ID: 07_Perl
+切片序号: 91/94
+---
+Regex Debugging Information
+
+Perl 提供了数量众多的优化措施，期望能够尽可能快地找到匹配；第6章的“常见优化措 施”(5204)介绍了基础的措施，但还有许多其他的措施。大多数优化只能应用于专门的 情况，所以特定正则表达式只能从其中的某一些(甚至是没有)获益。
+
+Perl 的调试模式 (debugging mode) 能提供优化的信息。在正则表达式第一次编译时，Perl 会选择这个正则表达式所使用的优化措施，而调试模式会显示其中的一部分。调试模式同 样可以告诉我们引擎是如何应用表达式的。仔细分析这些调试信息不属于本书的范围，但 我会在这里给出简要介绍。
+
+在程序中可以通过 use re'd ebug'; 来显示调试信息，用 no re 'debug'; 来关闭(上文
+
+曾出现过编译指示use re, 根据不同的参数，启用或禁用插值变量中的内嵌代码口337)。
+
+如果希望在整个脚本中启用此功能，可以使用命令行参数-Mre=debug。这很适合检查单个 的正则表达式的编译方法。下面是一个例子(只保留了相关的行):
+
+①%perl -cw -Mre=debug -e 'm/^Subject :(.*)/'
+
+②Compiling REx'^Subject:(.*)'
+
+③rarest char j at 3 1:BOL(2)
+
+2:EXACT <Subject:>(6)
+
++****
+
+⑥ 12:END(0)
+
+6 anchored 'Subject:'at 0(checking anchored)anchored(BOL)minlen 9
+
+⑤Omitting $'$&$'support.
+
+在0处从shell 提示符启动perl,使用命令行参数-c ( 意思是检查脚本，而不是确切执行它), -w ( 如果Perl 对代码存有疑问，就会发出警报),以及-Mre=debug 启用调试。-e 表示下面 的参数‘m/^Subject:·(.*)/’ 是一段Perl代码，需要运行或者检查。

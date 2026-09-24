@@ -1,0 +1,24 @@
+---
+章节: 第10章：PHP
+章节ID: 10_PHP
+切片序号: 23/52
+---
+注 3 : 显 然 ，Web 开发中懒惰的程序员随处可见，所以我兄弟所做的“不要输入连字符和空格” 的纪念堂很不幸地证明了这一 点。参 考http://www.unixwiz net/ndos- shame.html。
+
+单字符串，单替换规则的preg_ replace
+
+前面三个元素 (pattern, replacement 和 subject) 都是既可以为字符串，也可以为字符串数 组。通常这三者都是普通的字符串，preg_ replace 首先生成 subject 的副本，在其中找到 pattern的第1次匹配，将匹配的文本替换为replacement, 然后重复这一过程，直到搜索到 字符串的末尾。
+
+在replacement字符串中，'$o’ 表示匹配的所有文本，'$1’表示第1组捕获型括号匹配的 文本，'$2’表示第2组，依次类推。请注意，美元符加数字的字符序列并不会引用变量， 虽然它们在其他某些语言中有这种功能，但是 preg_replace 能识别简单的序列，并进行 特殊处理。你可以使用一对花括号来包围数字，比如‘$(0}’和‘${1}',这样就不会引起 混淆。
+
+这个简单的例子把HTML的 bold tag 转换为全部大写：
+
+Shtml =preg_replace('/\b[A-Z]{2,}\b/','<b>$0</b>',Shtml);
+
+如果使用了模式修饰符e (它只能出现在preg_replace 中),replacement 字符串会作为PHP 代码，每次匹配时执行，结果作为replacement 字符串。下面这个扩展的例子把 bold tag 里 的单词变为小写：
+
+Shtml =preg_replace('/\b[A-Z]〔2,}\b/e',
+
+'strtolower("<b>$0</b>")',
+
+Shtml);

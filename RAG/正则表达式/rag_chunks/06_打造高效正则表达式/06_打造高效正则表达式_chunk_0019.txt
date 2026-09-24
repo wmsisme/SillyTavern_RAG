@@ -1,0 +1,42 @@
+---
+章节: 第6章：打造高效正则表达式
+章节ID: 06_打造高效正则表达式
+切片序号: 19/74
+---
+Benchmarking with Ruby
+
+下面是 Ruby的测试代码：
+
+Ti mesToDo=1000
+
+testString=""
+
+for i in 1..1000
+
+testString +="abababdedfg" end
+
+Regex1 =Regexp::new("^(alblcldlelflg)+$");
+
+Regex2 =Regexp::new("^[a-g]+$");
+
+startTime =Time.new.to_f
+
+for i in 1..TimesToDo
+
+Regex1.match(testString) end
+
+print"Alternation takes 8.3f seconds\n"8(Time.new.to_f-startTime); startTime =Time.new. to_f
+
+for i in 1..TimesToDo
+
+Regex2.match(testString) end
+
+print" Character class takes 8.3f seconds\n"8(Time.new.to_f -startTime);
+
+在我的机器上，结果如下：
+
+Alternation takes 16.311 seconds
+
+Character class takes 3.479 seconds
+
+Python 测试

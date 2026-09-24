@@ -1,0 +1,40 @@
+---
+章节: 第6章：打造高效正则表达式
+章节ID: 06_打造高效正则表达式
+切片序号: 11/74
+---
+在我的机器上运行这个Perl程序，结果是：
+
+Alternation takes 0.000 seconds.
+
+Character class takes 0.000 seconds.
+
+我们只能知道，这段程序所需的时间比计算机能够测量的最短时间还要短。所以，如 果程序运行的时间太短，就运行两次、十次，甚至一千万次，来保证“足够多”的工 作。这里的“足够多”取决于系统时钟的精度，大多数系统能够精确到1/100s, 这样， 即使程序只需要0.5s, 也能取得有意义的结果。
+
+· 进行“准确的”处理。进行1000万次快速操作需要在负责计时的代码块中升级1000 万次计数器。如果可能，最好的办法是增加真正的处理部分的比例，而不增加额外的 开销。在Perl的例子中，正则表达式应用的文本相当短：如果应用到长得多的字符串， 在每次循环中所作的“真正的”处理也会多一些。
+
+考虑到这些因素，我们可以得出下面的程序：
+
+use Time ::Hi Res ' time';		# 这 样time() 的返回值更加精确
+
+$TimesToDo=1000;		# 设定重复次数
+
+$TestString ="abababdedfg"x	1000;	# 生成长字符串
+
+$Count =$TimesToDo;
+
+$StartTime =time();
+
+while($Count-->0){
+
+STestString =~m/^(a|blcldlelfIg)+$/; }
+
+SEndTime =time();
+
+printf("Alternation takes 8.3f seconds.\n",$EndTime -$StartTime);
+
+SCount =$TimesToDo;
+
+$StartTime =time();
+
+while($Count-->0){

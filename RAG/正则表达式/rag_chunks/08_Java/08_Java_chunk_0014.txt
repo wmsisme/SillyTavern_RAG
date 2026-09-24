@@ -1,0 +1,72 @@
+---
+章节: 第8章：Java
+章节ID: 08_Java
+切片序号: 14/51
+---
+Applying the Regex
+
+把matcher的正则表达式应用到目标文本时，主要会用到Matcher 的这些方法：
+
+hoolean find()
+
+此方法在目标字符串的当前检索范围(384)中应用Matcher的正则表达式，返回的 Boolean 值表示是否能找到匹配。如果多次调用，则每次都在上次的匹配位置之后尝试 新的匹配。没有给定参数的find 只使用当前的检索范围(384)。
+
+下面是简单示例：
+
+St.ring regex :"w+";/7 w+
+
+St.ting text ="Mastering Regular”Expressions";
+
+Matcher m=Pattern.compile(regex) .matcher(text);
+
+if(m . find())
+
+System.out. println("match ["+ m.group()+"]");
+
+结果是：
+
+match [Mastring]
+
+如果这样写：
+
+while(m.find())
+
+System .out. print1n("match ["+ m.group()+"]");
+
+结果就是：
+
+match [Mastering]
+
+match [Regular]
+
+match[Expressions]
+
+boolean find( int offset)
+
+如果指定了整型参数，匹配尝试会从距离目标字符串开头offset个字符的位置开始。如 果offset 为负数或超出了目标字符串的长度，会抛出 IndexoutofBoundsExcep tion 异 常。
+
+这种形式的find 不会受当前检索范围的影响，而会把它设置为整个“目标字符串”(它 会在内部调用reset 方法392)。
+
+第400页的补充内容(作为第399页问题的答案)给出了恰当的例子。
+
+2) matches ()
+
+此方法返回的Boolean值表示matcher的正则表达式能否完全匹配目标字符串中当前检 索范围的那段文本。也就是说，如果匹配成功，匹配的文本必须从检索范围的开头开 始，到检索范围的结尾结束(默认情况就是整个目标字符串)。如果检索范围设置为默 认的“所有文本”,matches 比使用'A(?:…)\zj 要简单。
+
+不过，如果当前检索范围不等于默认情况(384),使用matches 可以在不受anchoring- bounds标志位(388)影响的情况下检查整个检索范围中的文本。
+
+举例来说，如果使用 CharBuffer 来保存程序中用户输入的文本，而检索范围设定为 用户用鼠标选定的部分。如果用户点击选区的部分，可以用m.usePattern (urlPattern). matches() 来检查选定部分是否为URL ( 如果是，则进行相应的处理)。
+
+String 对象也支持matches 方法：
+
+"1234".matches("\\d+");//true
+
+"123!".matches("\\d+");//false
+
+7: lookingAt ()
+
+此方法返回的 Boolean 值表示 Matches 的正则表达式能否在当前目标字符串的当前检 索范围中找到匹配。它类似于matches 方法，但不要求检索范围中的整段文本都能匹
+
+配。
+
+查询匹配结果

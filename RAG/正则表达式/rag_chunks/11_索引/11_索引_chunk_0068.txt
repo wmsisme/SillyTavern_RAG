@@ -1,0 +1,40 @@
+---
+章节: 索引
+章节ID: 11_索引
+切片序号: 68/69
+---
+Value
+Group object method 430
+Match object method 427
+variable names example 24
+variables
+after match
+pre-match copy 355
+binding 339
+fully qualified 295
+interpolation 344
+naughty 356
+tied 299
+VB.NET xvii
+code example 204,219
+comments 99
+regex approach 96-97
+strings 103
+(see also .NET)
+verbatim strings 103
+Version 7 regex 183
+Version 8 regex 183
+version covered Java 365
+.NET 405
+Perl 283
+PHP 440
+otbers 91
+version history Java 365,368-369,392, 401
+vertical tab 109,370 Perl \s 288
+vt after-match data 138
+Vietnamese text processing 29
+virtual machine 236
+
+Visual Basic xvii
+(see also VB.NET)
+(see also .NET)

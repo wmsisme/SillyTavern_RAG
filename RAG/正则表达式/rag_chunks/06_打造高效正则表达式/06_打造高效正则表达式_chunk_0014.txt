@@ -1,0 +1,62 @@
+---
+章节: 第6章：打造高效正则表达式
+章节ID: 06_打造高效正则表达式
+切片序号: 14/74
+---
+Benchmarking with PHP
+
+下面是PHP的测试，使用preg引擎：
+
+STimesToDo =1000;
+
+/*准备测试字符串*/
+
+STestString ="";
+
+for($i =0;$i<1000;$i++)
+
+STestString .="abababdedfg";
+
+/*开始第一 轮测试*/
+
+$start =gettimeofday();
+
+for($i=0;$i<$TimesToDo;$i++)
+
+preg_match( '/^(alblclelflg)+ $/',$TestString);
+
+$final =gettimeofday();
+
+$sec =($final['sec']+$final['usec']/1000000)-
+
+($start['sec']+$start['usec']/1000000);
+
+printf("Alternation takes 8.3f seconds\n", $sec);
+
+/*开始第二轮测试*/
+
+$start = gettimeofday();
+
+for($i =0;$i<$TimesToDo;$i++)
+
+preg_match('/^[a-g]+$/',$TestString); $final =gettimeofday();
+
+Ssec =($final['sec']+$final['usec']/1000000)-
+
+($start['sec']+$start['usec']/1000000);
+
+printf("Character class takes 8.3f seconds\n",$sec);
+
+在我的机器上，结果是：
+
+Alternation takes 27.404 seconds
+
+Character class takes 0.288 seconds
+
+如果在测试中遇到PHP 错误“not being safe to rely on the system's timezone settings”,请添加 下面的代码：
+
+if(phpversion()>=5)
+
+date_default_timezone_set("GMT");
+
+Java测试

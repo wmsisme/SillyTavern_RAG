@@ -1,0 +1,60 @@
+---
+章节: 第5章：正则表达式实用技巧
+章节ID: 05_正则表达式实用技巧
+切片序号: 38/40
+---
+CSV Processing in Java
+
+这里有一个使用Sun的java.uti1.regex解析CSV的例子。这段程序着眼于简洁的、
+
+更有效的版本 — — 第8章(401)将会介绍。
+
+import java.util.regex.*;
+
+String regex =//把双引号字段存入group(1)、非引号字段存入group(2)
+
+"\\G(?:^I,)	\n"+
+
+"(?:	\n"+
+
+" #要么是双引号字段...	\n"+
+
+" \" #字段起始双引号	\n"+
+
+" ((?:[^\"]++1\"\”)*+)	\n"+
+
+" " #字段结束双引号	\n"+
+
+” |#...要么是...	\n"+
+
+" #非引号非逗号文本...	\n"+
+
+" ([^\",]*)	\n"+
+
+")	\n";
+
+//创建使用上面正则表达式的matcher,暂时不指定需要应用的文本
+
+Matcher mMain =Pattern.compile(regex,Pattern.COMMENTS).matcher("");
+
+//为 · "」创建一个matcher,暂时不指定需要应用的文本 Matcher mQuote =Pattern.compile("\"\"").matcher("");
+
+1/上面都是准备工作，下面的代码逐行处理文本 mMain.reset(line);//下面处理line中的CSV文本 while(mMain.find())
+
+{
+
+String field;
+
+if(mMain.start(2)>=0)
+
+field =mMain.group(2); //非引号字段，直接使用
+
+else
+
+11引号字段，替换其中的成对双引号
+
+field =mQuote.reset(mMain.group(1)).replaceAll("\""); /1处理字段...
+
+System.out.println("Field["+field +"]"); }
+
+218 第 5 章 ： 正 则 表 达 式 实 用 技 巧
