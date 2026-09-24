@@ -27,7 +27,19 @@ TRANSLATION_CACHE_PATH = RAG_DIR / "translation_cache.json"
 REGEX_CHUNKS_DIR = RAG_DIR / "正则表达式" / "rag_chunks"
 REGEX_README_PATH = RAG_DIR / "README.md"
 
-EMBEDDING_MODEL_NAME = "BAAI/bge-large-zh-v1.5"
+# 向量模型：优先用项目内已下载的副本（RAG/bge-large-zh）。
+# 原来写死成 HF 仓库名 "BAAI/bge-large-zh-v1.5"，但本机 HF 缓存里没有该仓库，
+# 而加载时用的是 local_files_only=True → 必然抛 LocalEntryNotFoundError，
+# 而且脚本已经先把集合删了，会留下一个空库。
+# backend/config.py 早已修过同一个坑，这里是补上脚本侧的漏网。
+_LOCAL_EMBEDDING_DIR = RAG_DIR / "bge-large-zh"
+EMBEDDING_MODEL_NAME = os.environ.get(
+    "EMBEDDING_MODEL_NAME",
+    str(_LOCAL_EMBEDDING_DIR)
+    if (_LOCAL_EMBEDDING_DIR / "config.json").exists()
+    else "BAAI/bge-large-zh-v1.5",
+)
+log_local_model = (_LOCAL_EMBEDDING_DIR / "config.json").exists()
 
 # 密钥只从 .env / 环境变量读取，源码里不留明文（.env 已在 .gitignore 中）。
 try:
@@ -39,6 +51,7 @@ except ImportError:
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
 if not DEEPSEEK_API_KEY:
     print("[警告] 未找到 DEEPSEEK_API_KEY —— 请在项目根目录 .env 中填写（模板见 .env.example），"
           "或设为环境变量。翻译功能将不可用。")
@@ -76,6 +89,7 @@ def rebuild_index():
     if not isinstance(cache, dict):
         cache = {"__commit__": "", "translations": {}}
     translations = cache.get("translations", cache if "__commit__" not in cache else cache.get("translations", {}))
+    prev_commit = cache.get("__commit__", "")
 
     log(f"翻译缓存: {len(translations)} 条")
 
@@ -121,11 +135,11 @@ def rebuild_index():
         try:
             prompt = f"把下面的英文技术文档翻译成中文。要求：准确翻译技术术语，保留Markdown格式、代码块、表格结构。\n\n{content}"
             resp = client.chat.completions.create(
-                model="deepseek-v4-flash",
+                model=DEEPSEEK_MODEL,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1, max_tokens=8192,
             )
-            zh = resp.choices[0].message.content.strip()
+            zh = (resp.choices[0].message.content or "").strip()
             if zh and len(zh) > 10:
                 translations[cache_key] = zh
                 meta["language"] = "zh"
@@ -133,18 +147,36 @@ def rebuild_index():
                 translated_docs.append(Document(page_content=zh, metadata=meta))
                 new_count += 1
             else:
+                # 空响应（推理模型会把预算烧在 reasoning 上，HTTP 200 但 content 为空）
+                # 必须记下来。旧代码只标记 language=en 就过去了，无法事后排查。
+                log(f"  翻译返回空内容: {mod}（finish_reason={resp.choices[0].finish_reason}，"
+                    f"模型={DEEPSEEK_MODEL}）")
                 meta["language"] = "en"
+                meta["source"] = "translated_official_docs"
                 translated_docs.append(Document(page_content=content, metadata=meta))
         except Exception as e:
             log(f"  翻译失败: {mod} - {str(e)[:60]}")
             meta["language"] = "en"
+            meta["source"] = "translated_official_docs"
             translated_docs.append(Document(page_content=content, metadata=meta))
         time.sleep(0.3)
 
-    with open(TRANSLATION_CACHE_PATH, "w", encoding="utf-8") as f:
-        json.dump({"__commit__": "rebuild", "translations": translations}, f, ensure_ascii=False, indent=2)
+    # __commit__ 必须写当前文档仓库的真实 commit。
+    # 旧代码写死 "rebuild"，导致下次增量更新发现 commit 不匹配 → 全部重译（白烧额度）。
+    try:
+        import subprocess as _sp
+        _commit = _sp.run(["git", "rev-parse", "HEAD"], cwd=str(DOCS_SOURCE_DIR),
+                          capture_output=True, text=True, timeout=15).stdout.strip()
+    except Exception:
+        _commit = ""
+    if not _commit:
+        _commit = prev_commit
 
-    log(f"翻译完成: 缓存 {cached_count} | 新翻译 {new_count}")
+    with open(TRANSLATION_CACHE_PATH, "w", encoding="utf-8") as f:
+        json.dump({"__commit__": _commit, "translations": translations}, f,
+                  ensure_ascii=False, indent=2)
+
+    log(f"翻译完成: 缓存 {cached_count} | 新翻译 {new_count} | __commit__={_commit[:8] or '未知'}")
 
     log("文档切片...")
     st_chunks = []

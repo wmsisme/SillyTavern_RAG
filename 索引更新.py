@@ -196,6 +196,7 @@ except ImportError:
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
 if not DEEPSEEK_API_KEY:
     logger.warning("未找到 DEEPSEEK_API_KEY —— 请在项目根目录 .env 中填写（模板见 .env.example），"
                    "或设为环境变量。翻译功能将不可用。")
@@ -245,7 +246,7 @@ def _translate_via_deepseek(text: str) -> str:
     client = _get_client()
     prompt = f"把下面的英文技术文档翻译成中文。要求：准确翻译技术术语，保留Markdown格式、代码块、表格结构，不要添加任何解释。\n\n{text}"
     resp = client.chat.completions.create(
-        model="deepseek-v4-flash",
+        model=DEEPSEEK_MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.1,
         max_tokens=8192,

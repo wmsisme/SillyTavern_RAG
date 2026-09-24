@@ -38,6 +38,8 @@ class UpdateRunResponse(BaseModel):
     message: str
     new_vectors: int = 0
     deleted_vectors: int = 0
+    # 本次以英文原文入库（翻译失败）的文档，前端可据此提示用户
+    translate_failures: List[str] = []
 
 
 class HealthResponse(BaseModel):

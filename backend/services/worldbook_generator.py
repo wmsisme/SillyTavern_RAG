@@ -2,7 +2,7 @@ import json
 import re
 from openai import OpenAI
 
-from backend.config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL
+from backend.config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL
 
 _client = None
 
@@ -47,7 +47,7 @@ def generate_from_description(user_input: str) -> dict:
 
     try:
         resp = client.chat.completions.create(
-            model="deepseek-v4-flash",
+            model=DEEPSEEK_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=4096,
@@ -92,7 +92,7 @@ def suggest_entries(worldbook_info: str, existing_keys: list = None) -> list:
 
     try:
         resp = client.chat.completions.create(
-            model="deepseek-v4-flash",
+            model=DEEPSEEK_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.5,
             max_tokens=2048,

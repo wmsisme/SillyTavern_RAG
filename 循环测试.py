@@ -59,6 +59,7 @@ except ImportError:
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
 if not DEEPSEEK_API_KEY:
     print("[警告] 未找到 DEEPSEEK_API_KEY —— 请在项目根目录 .env 中填写（模板见 .env.example），"
           "或设为环境变量。翻译/出题/评分功能将不可用。")
@@ -97,7 +98,7 @@ def translate_en_to_zh(text: str) -> str:
         "表格结构，不要添加任何解释。正则表达式和代码示例保持不变。\n\n" + text
     )
     resp = client.chat.completions.create(
-        model="deepseek-v4-flash",
+        model=DEEPSEEK_MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.1,
         max_tokens=8192,
@@ -369,7 +370,7 @@ def generate_new_question_by_llm(module: str, existing_examples: str = "") -> Op
     try:
         client = _get_deepseek_client()
         resp = client.chat.completions.create(
-            model="deepseek-v4-flash",
+            model=DEEPSEEK_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=2048,
@@ -846,7 +847,7 @@ def generate_rag_answer(question: str, docs: List[str], metas: List[Dict] = None
     try:
         client = _get_deepseek_client()
         resp = client.chat.completions.create(
-            model="deepseek-v4-flash",
+            model=DEEPSEEK_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
             max_tokens=2048,

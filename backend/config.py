@@ -57,6 +57,19 @@ if not DEEPSEEK_API_KEY:
     )
 DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
 
+# 默认模型：必须用非推理模型。
+# 教训（2026-09-24）：原来全项目写的是 deepseek-v4-flash，那是**推理模型**，
+# 会把整个 max_tokens 预算烧在隐藏的 reasoning_content 上（实测一篇文档产出
+# 27903 字思维链），content 直接返回空串、finish_reason=length。
+# 更坑的是它返回 HTTP 200 而不是报错，于是翻译代码的 except 根本不触发，
+# 悄悄把英文原文当成"译文"写进了缓存 —— 16 篇新增文档因此一直是英文。
+# 实测对照（同一篇 14803 字符的文档）：
+#   deepseek-chat      11.6s / 6262 tokens / finish=stop  / 6127 字译文  ← 采用
+#   deepseek-v4-flash  29.2s / 11541 tokens / finish=length / 空
+#   deepseek-v4-flash(max_tokens=16384) 43.8s / 16244 tokens / 6381 字（贵且慢）
+#   deepseek-v4-pro   104.5s / 11594 tokens / finish=length / 空
+DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
+
 UPSTREAM_URL = "https://github.com/SillyTavern/SillyTavern-Docs.git"
 UPSTREAM_BRANCH = "main"
 

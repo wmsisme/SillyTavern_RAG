@@ -4,7 +4,7 @@ from typing import Optional
 
 from openai import OpenAI
 
-from backend.config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL
+from backend.config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL
 from backend.schemas.character_card import CharacterCardCreate
 
 _client = None
@@ -59,7 +59,7 @@ def generate_from_description(user_input: str) -> dict:
 
     try:
         resp = client.chat.completions.create(
-            model="deepseek-v4-flash",
+            model=DEEPSEEK_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=4096,
@@ -111,7 +111,7 @@ def suggest_tags(character_info: str) -> list:
 
     try:
         resp = client.chat.completions.create(
-            model="deepseek-v4-flash",
+            model=DEEPSEEK_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.3,
             max_tokens=256,
@@ -140,7 +140,7 @@ def generate_status_bar(character_info: str, is_r18: bool) -> str:
 
     try:
         resp = client.chat.completions.create(
-            model="deepseek-v4-flash",
+            model=DEEPSEEK_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.5,
             max_tokens=512,
@@ -170,7 +170,7 @@ def generate_greeting(character_info: str, is_r18: bool = False) -> str:
 
     try:
         resp = client.chat.completions.create(
-            model="deepseek-v4-flash",
+            model=DEEPSEEK_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=256,

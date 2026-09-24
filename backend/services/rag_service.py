@@ -1,6 +1,7 @@
 import os
 import hashlib
 import re
+import subprocess
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
@@ -19,7 +20,7 @@ from openai import OpenAI
 
 from backend.config import (
     CHROMA_DIR, COLLECTION_NAME, EMBEDDING_MODEL_NAME,
-    RERANKER_MODEL_NAME, DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL,
+    RERANKER_MODEL_NAME, DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL,
     DOCS_REPO_DIR, TRANSLATION_CACHE_PATH, REGEX_README_PATH,
     REGEX_CHUNKS_DIR, VECTOR_CACHE_PATH, VECTOR_CACHE_META_PATH,
 )
@@ -405,7 +406,7 @@ def ask(query: str, max_doc_chars: int = 8000) -> dict:
     try:
         client = _get_deepseek()
         resp = client.chat.completions.create(
-            model="deepseek-v4-flash",
+            model=DEEPSEEK_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
             max_tokens=2048,
@@ -466,7 +467,7 @@ def ask_stream(query: str, max_doc_chars: int = 8000):
     try:
         client = _get_deepseek()
         stream = client.chat.completions.create(
-            model="deepseek-v4-flash",
+            model=DEEPSEEK_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
             max_tokens=2048,
@@ -528,11 +529,13 @@ def _rebuild_index_inline(chromadb_client):
     if not isinstance(cache, dict):
         cache = {"__commit__": "", "translations": {}}
     translations = cache.get("translations", cache if "__commit__" not in cache else cache.get("translations", {}))
+    prev_commit = cache.get("__commit__", "")
 
     ds_client = _get_deepseek()
     translated_docs = []
     cached_count = 0
     new_count = 0
+    failed = []
 
     for i, (content, meta) in enumerate(st_docs_raw):
         cache_key = hashlib.md5(content.encode()).hexdigest()
@@ -547,11 +550,11 @@ def _rebuild_index_inline(chromadb_client):
         try:
             prompt = f"把下面的英文技术文档翻译成中文。要求：准确翻译技术术语，保留Markdown格式、代码块、表格结构。\n\n{content}"
             resp = ds_client.chat.completions.create(
-                model="deepseek-v4-flash",
+                model=DEEPSEEK_MODEL,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1, max_tokens=8192,
             )
-            zh = resp.choices[0].message.content.strip()
+            zh = (resp.choices[0].message.content or "").strip()
             if zh and len(zh) > 10:
                 translations[cache_key] = zh
                 meta["language"] = "zh"
@@ -559,19 +562,43 @@ def _rebuild_index_inline(chromadb_client):
                 translated_docs.append(_Document(page_content=zh, metadata=meta))
                 new_count += 1
             else:
+                # 空响应要留痕：推理模型（deepseek-v4-flash 之类）会把整个 max_tokens
+                # 预算烧在隐藏的 reasoning_content 上，HTTP 200 但 content 为空。
+                print(f"  翻译返回空内容: {meta['module']} "
+                      f"(finish_reason={resp.choices[0].finish_reason}，模型={DEEPSEEK_MODEL})")
+                failed.append(meta["module"])
                 meta["language"] = "en"
+                meta["source"] = "translated_official_docs"
                 translated_docs.append(_Document(page_content=content, metadata=meta))
         except Exception as e:
             print(f"  翻译失败: {meta['module']} - {str(e)[:60]}")
+            failed.append(meta["module"])
             meta["language"] = "en"
+            meta["source"] = "translated_official_docs"
             translated_docs.append(_Document(page_content=content, metadata=meta))
         _time.sleep(0.3)
 
+    # __commit__ 必须写文档仓库的真实 commit。
+    # 旧代码写死 "inline"，于是缓存 commit 永远对不上 → 每次更新都判定“需重译”+
+    # 下次重建又全量重译，白烧额度。
+    commit = ""
+    try:
+        r = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True,
+                           timeout=15, cwd=str(DOCS_REPO_DIR))
+        if r.returncode == 0:
+            commit = r.stdout.strip()
+    except Exception:
+        pass
+    if not commit:
+        commit = prev_commit
+
     TRANSLATION_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(TRANSLATION_CACHE_PATH, "w", encoding="utf-8") as f:
-        _json.dump({"__commit__": "inline", "translations": translations}, f, ensure_ascii=False, indent=2)
+        _json.dump({"__commit__": commit, "translations": translations}, f, ensure_ascii=False, indent=2)
 
-    print(f"  翻译完成: 缓存 {cached_count} | 新翻译 {new_count}")
+    print(f"  翻译完成: 缓存 {cached_count} | 新翻译 {new_count} | "
+          f"__commit__={commit[:8] or '未知'}"
+          + (f" | 翻译失败 {len(failed)} 篇（本次以英文入库，下次会重试）" if failed else ""))
 
     st_chunks = []
     for doc in translated_docs:
