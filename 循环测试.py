@@ -78,6 +78,68 @@ def log(msg): print(f"[{now_str()}] {msg}")
 
 
 # ═══════════════════════════════════════════════════════════════
+# Token 计量：所有 DeepSeek 调用都走 llm_create()，顺带累计 usage
+# （DeepSeek 的 OpenAI 兼容接口每次都返回 usage.prompt/completion_tokens）
+# ═══════════════════════════════════════════════════════════════
+
+_USAGE = {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0,
+          "total_tokens": 0, "by_stage": {}}
+
+
+def _record_usage(stage: str, resp):
+    u = getattr(resp, "usage", None)
+    if u is None:
+        return
+    p = int(getattr(u, "prompt_tokens", 0) or 0)
+    c = int(getattr(u, "completion_tokens", 0) or 0)
+    t = int(getattr(u, "total_tokens", 0) or 0) or (p + c)
+    _USAGE["calls"] += 1
+    _USAGE["prompt_tokens"] += p
+    _USAGE["completion_tokens"] += c
+    _USAGE["total_tokens"] += t
+    s = _USAGE["by_stage"].setdefault(
+        stage, {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0})
+    s["calls"] += 1
+    s["prompt_tokens"] += p
+    s["completion_tokens"] += c
+    s["total_tokens"] += t
+
+
+def llm_create(stage: str, **kwargs):
+    """统一的 LLM 入口：调 DeepSeek 并记账。stage 用于区分「出题/答案生成/翻译」。"""
+    resp = _get_deepseek_client().chat.completions.create(**kwargs)
+    _record_usage(stage, resp)
+    return resp
+
+
+def usage_snapshot() -> dict:
+    return json.loads(json.dumps(_USAGE))
+
+
+def usage_delta(before: dict) -> dict:
+    """与某个快照之间的增量 —— 用来统计「一轮」花了多少。"""
+    out = {
+        "calls": _USAGE["calls"] - before.get("calls", 0),
+        "prompt_tokens": _USAGE["prompt_tokens"] - before.get("prompt_tokens", 0),
+        "completion_tokens": _USAGE["completion_tokens"] - before.get("completion_tokens", 0),
+        "total_tokens": _USAGE["total_tokens"] - before.get("total_tokens", 0),
+        "by_stage": {},
+    }
+    for stage, s in _USAGE["by_stage"].items():
+        b = (before.get("by_stage") or {}).get(stage, {})
+        out["by_stage"][stage] = {f: s[f] - b.get(f, 0)
+                                  for f in ("calls", "prompt_tokens", "completion_tokens", "total_tokens")}
+    return out
+
+
+def fmt_usage(u: dict) -> str:
+    stages = "、".join(f"{k} {v['total_tokens']}" for k, v in (u.get("by_stage") or {}).items())
+    return (f"共 {u.get('total_tokens', 0)} tokens"
+            f"（输入 {u.get('prompt_tokens', 0)} / 输出 {u.get('completion_tokens', 0)}，"
+            f"{u.get('calls', 0)} 次调用）" + (f"；分项：{stages}" if stages else ""))
+
+
+# ═══════════════════════════════════════════════════════════════
 # DeepSeek 翻译模块
 # ═══════════════════════════════════════════════════════════════
 
@@ -92,12 +154,12 @@ def _get_deepseek_client():
 
 
 def translate_en_to_zh(text: str) -> str:
-    client = _get_deepseek_client()
     prompt = (
         "把下面的英文技术文档翻译成中文。要求：准确翻译技术术语，保留Markdown格式、代码块、"
         "表格结构，不要添加任何解释。正则表达式和代码示例保持不变。\n\n" + text
     )
-    resp = client.chat.completions.create(
+    resp = llm_create(
+        "翻译",
         model=DEEPSEEK_MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.1,
@@ -136,10 +198,21 @@ def _load_translation_cache() -> dict:
     return {}
 
 
-def _save_translation_cache(cache: dict):
+def _save_translation_cache(cache: dict, commit: str = None):
+    """commit=None → 只落盘译文、**不推进 __commit__**（逐篇续传时用）。
+
+    原来这里每写一篇译文就把 __commit__ 推到当前 HEAD，于是哪怕后面有文档
+    翻译失败（以英文原文入库），缓存也已经被标记成"当前版本已索引"，
+    check_update 从此认为"已是最新"，失败的那几篇永远不会被重试。
+    """
     TRANSLATION_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    current_commit = _get_st_docs_commit()
-    payload = {"__commit__": current_commit, "translations": cache}
+    if commit is None:
+        try:
+            with open(TRANSLATION_CACHE_PATH, "r", encoding="utf-8") as f:
+                commit = (json.load(f) or {}).get("__commit__", "") or ""
+        except Exception:
+            commit = ""
+    payload = {"__commit__": commit, "translations": cache}
     with open(TRANSLATION_CACHE_PATH, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
 
@@ -186,6 +259,11 @@ def translate_st_docs(st_docs_raw: List[tuple]) -> List[Document]:
             failed += 1
         time.sleep(0.3)
     log(f"翻译完成: 缓存命中 {cached} | 新翻译 {new_translated} | 失败 {failed}")
+    if failed:
+        log(f"⚠ 有 {failed} 篇翻译失败，保留原 __commit__ 不推进（下次仍会重试）")
+        _save_translation_cache(cache)
+    else:
+        _save_translation_cache(cache, commit=_get_st_docs_commit())
     return translated
 
 
@@ -225,14 +303,30 @@ def connect_chromadb():
 
 
 def load_models():
-    embed_model_name = "BAAI/bge-large-zh-v1.5"
+    # 优先用项目内已下载的副本（RAG/bge-large-zh）。
+    # 原来写死 HF 仓库名 "BAAI/bge-large-zh-v1.5"，本机 HF 缓存里没有该仓库，
+    # 而下面用 local_files_only=True 加载 → 必然抛 LocalEntryNotFoundError。
+    # 重建索引.py / backend/config.py 早已修过同一个坑，这里是补上本脚本的漏网。
+    _local_embed = RAG_DIR / "bge-large-zh"
+    embed_model_name = os.environ.get(
+        "EMBEDDING_MODEL_NAME",
+        str(_local_embed) if (_local_embed / "config.json").exists() else "BAAI/bge-large-zh-v1.5",
+    )
+    log(f"加载向量模型: {embed_model_name}")
     embed_device = "cuda:0" if torch.cuda.is_available() else "cpu"
     tokenizer = AutoTokenizer.from_pretrained(embed_model_name, local_files_only=True)
     model = AutoModel.from_pretrained(embed_model_name, local_files_only=True).to(embed_device)
     model.eval()
     embedder = (tokenizer, model, embed_device)
-    log("加载 reranker: BAAI/bge-reranker-v2-m3 ...")
-    reranker = FlagReranker("BAAI/bge-reranker-v2-m3", use_fp16=True)
+    # reranker 同样本地优先：下载到 RAG/bge-reranker-v2-m3 后就不再联网
+    local_reranker = RAG_DIR / "bge-reranker-v2-m3"
+    reranker_name = os.environ.get(
+        "RERANKER_MODEL_NAME",
+        str(local_reranker) if (local_reranker / "config.json").exists()
+        else "BAAI/bge-reranker-v2-m3",
+    )
+    log(f"加载 reranker: {reranker_name} ...")
+    reranker = FlagReranker(reranker_name, use_fp16=True)
     return embedder, reranker
 
 
@@ -368,8 +462,8 @@ def generate_new_question_by_llm(module: str, existing_examples: str = "") -> Op
         prompt += f"\n\n避免与以下已有题目重复：\n{existing_examples[:1500]}"
 
     try:
-        client = _get_deepseek_client()
-        resp = client.chat.completions.create(
+        resp = llm_create(
+            "出题",
             model=DEEPSEEK_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
@@ -845,8 +939,8 @@ def generate_rag_answer(question: str, docs: List[str], metas: List[Dict] = None
         "回答:"
     )
     try:
-        client = _get_deepseek_client()
-        resp = client.chat.completions.create(
+        resp = llm_create(
+            "答案生成",
             model=DEEPSEEK_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
@@ -1314,6 +1408,31 @@ def save_report(history, last_results, total_rounds, full_bank_lookup, reach_tar
     lines.append("")
 
     lines.append("─" * 70)
+    lines.append("  Token 消耗（按轮统计，DeepSeek usage 实测值）")
+    lines.append("─" * 70)
+    tot = {"total_tokens": 0, "prompt_tokens": 0, "completion_tokens": 0, "calls": 0}
+    recorded_rounds = 0
+    for h in history:
+        t = h.get("tokens")
+        if not t:
+            lines.append(f"  第{h['round']}轮: (未记录)")
+            continue
+        recorded_rounds += 1
+        for k in tot:
+            tot[k] += t.get(k, 0)
+        lines.append(f"  第{h['round']}轮: {t.get('total_tokens', 0):>7} tokens "
+                     f"(输入 {t.get('prompt_tokens', 0):>7} / 输出 {t.get('completion_tokens', 0):>6}, "
+                     f"{t.get('calls', 0):>3} 次调用)")
+        for stage, s in (t.get("by_stage") or {}).items():
+            lines.append(f"           └ {stage}: {s['total_tokens']} tokens ({s['calls']} 次)")
+    if recorded_rounds:
+        lines.append(f"  合计: {tot['total_tokens']} tokens "
+                     f"(输入 {tot['prompt_tokens']} / 输出 {tot['completion_tokens']}, "
+                     f"{tot['calls']} 次调用) | 平均每轮 "
+                     f"{round(tot['total_tokens'] / recorded_rounds)} tokens")
+    lines.append("")
+
+    lines.append("─" * 70)
     lines.append("  最后一轮详细评分")
     lines.append("─" * 70)
     header2 = f"  {'题号':<5} {'总分':>5} {'忠实度':>7} {'答案相关':>8} {'上下文':>7} {'答案准确':>7}  {'失分原因'}"
@@ -1570,6 +1689,7 @@ def run_orchestrator():
         else:
             log(f"  【第 {round_num}/{MAX_ROUNDS} 轮】 全面摸底")
         log("=" * 70)
+        round_usage_before = usage_snapshot()
 
         log(f"\n  >>> Step 1: Silly Tavern问题专家 — 生成{QUESTIONS_PER_ROUND}道测试问题")
         questions_raw = sample_questions_balanced(full_bank, QUESTIONS_PER_ROUND, all_used_ids, target_module)
@@ -1652,6 +1772,10 @@ def run_orchestrator():
 
         failures = [r for r in round_results if r["total_score"] < PASS_SINGLE_MIN]
 
+        # 本轮的 token 账：从轮首快照算增量，写进日志与报告
+        round_tokens = usage_delta(round_usage_before)
+        log(f"  💰 本轮 token: {fmt_usage(round_tokens)}")
+
         if target_module and avg >= PASS_AVG_TARGET and low_count == 0:
             log("")
             log(f"  ✅ 模块[{target_module}]达标！均分{avg}≥{PASS_AVG_TARGET}，无单题<{PASS_SINGLE_MIN}")
@@ -1666,6 +1790,7 @@ def run_orchestrator():
             history.append({"round": round_num, "avg": avg, "low_count": low_count,
                             "pass_count": pass_count, "n_questions": len(questions),
                             "terminated": "达标",
+                            "tokens": round_tokens,
                             "target_module": target_module, "fixed_modules": sorted(fixed_modules)})
             save_report(history, round_results, round_num, full_bank_lookup, reach_target=True,
                         extra_info=f"已修复模块: {sorted(fixed_modules)}")
@@ -1686,6 +1811,7 @@ def run_orchestrator():
             history.append({"round": round_num, "avg": avg, "low_count": low_count,
                             "pass_count": pass_count, "n_questions": len(questions),
                             "terminated": "回退中止",
+                            "tokens": round_tokens,
                             "target_module": target_module, "fixed_modules": sorted(fixed_modules)})
             save_report(history, round_results, round_num, full_bank_lookup, reach_target=False,
                         extra_info=f"连续3轮下降已中止。已修复: {sorted(fixed_modules)}")
@@ -1711,7 +1837,8 @@ def run_orchestrator():
             history.append({"round": round_num, "avg": avg, "low_count": low_count,
                             "pass_count": pass_count, "n_questions": len(questions),
                             "target_module": target_module, "fixed_modules": sorted(fixed_modules),
-                            "missing_modules": [], "supplement_chunks": 0, "written": 0})
+                            "missing_modules": [], "supplement_chunks": 0, "written": 0,
+                            "tokens": round_tokens})
             continue
 
         log(f"\n  ❌ 未达标: {len(failures)}题低于{PASS_SINGLE_MIN}分，触发优化流程")
@@ -1737,7 +1864,8 @@ def run_orchestrator():
                         "pass_count": pass_count, "n_questions": len(questions),
                         "missing_modules": analysis["missing_modules"],
                         "supplement_chunks": len(supplement_chunks), "written": written,
-                        "target_module": target_module, "fixed_modules": sorted(fixed_modules)})
+                        "target_module": target_module, "fixed_modules": sorted(fixed_modules),
+                        "tokens": round_tokens})
         log(f"\n  >>> 第{round_num}轮优化完成，知识库已更新，进入下一轮...")
 
     log("")

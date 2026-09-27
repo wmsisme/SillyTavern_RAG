@@ -29,12 +29,14 @@ async def rag_ask(req: AskRequest):
 async def rag_ask_stream(req: AskRequest):
     def generate():
         try:
-            yield json.dumps({"type": "sources", "data": []}, ensure_ascii=False) + "\n"
-            for token in rag_service.ask_stream(req.query):
-                yield json.dumps({"type": "token", "data": token}, ensure_ascii=False) + "\n"
+            # sources 由 rag_service 真实产出（原先是这里固定发空数组，导致前端
+            # 「参考来源」面板永远是死代码）；生成失败也会作为 error 事件发出。
+            for event in rag_service.ask_stream_events(req.query):
+                yield json.dumps(event, ensure_ascii=False) + "\n"
             yield json.dumps({"type": "done"}, ensure_ascii=False) + "\n"
         except Exception as e:
             yield json.dumps({"type": "error", "data": str(e)}, ensure_ascii=False) + "\n"
+            yield json.dumps({"type": "done"}, ensure_ascii=False) + "\n"
 
     return StreamingResponse(
         generate(),

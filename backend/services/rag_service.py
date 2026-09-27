@@ -132,6 +132,53 @@ def _restore_from_cache(client) -> bool:
         return False
 
 
+def _repair_hnsw_pickles() -> int:
+    """删掉各 segment 目录里的 index_metadata.pickle，让 chromadb 从 WAL 重建 HNSW。
+
+    根因（2026-09-26 实测定位，纠正旧结论「索引不落盘」）：
+    上一次进程写下的 `<segment>/index_metadata.pickle` 会被**下一次新进程**读取失败，
+    报错 "Error sending backfill request to compactor: Error constructing hnsw segment
+    reader: Error loading hnsw index"。删掉它之后，chromadb 会从 chroma.sqlite3 的 WAL
+    重建索引 —— 1810 条实测约 1.4 秒即可被新进程查询。
+    对照实验（同一份库拷贝到临时目录）：
+      · 保留全部子目录      → 必失败
+      · 只留 chroma.sqlite3 → 正常（count=1810、query 成功）
+      · 只删这一个 pickle   → 正常
+    返回删除的文件数。
+    """
+    n = 0
+    try:
+        for p in CHROMA_DIR.rglob("index_metadata.pickle"):
+            try:
+                p.unlink()
+                n += 1
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return n
+
+
+def _try_heal_hnsw_index():
+    """自愈：清掉坏 pickle 后重开集合。成功返回 collection，否则 None。"""
+    global _g_client
+    try:
+        n = _repair_hnsw_pickles()
+        if not n:
+            return None
+        print(f"检测到 {n} 个可能损坏的 HNSW 索引元数据，清除后尝试从 WAL 重建...")
+        _g_client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+        col = _g_client.get_collection(COLLECTION_NAME)
+        if col.count() == 0:
+            return None
+        col.query(query_embeddings=[[0.0] * 1024], n_results=1)
+        print(f"ChromaDB 索引已自愈（不需要向量缓存）: {col.count()} 条记录")
+        return col
+    except Exception as e:
+        print(f"自愈未成功（{type(e).__name__}: {str(e)[:100]}），继续走兜底路径")
+        return None
+
+
 def _get_collection():
     global _collection, _g_client
     if _collection is None:
@@ -148,6 +195,12 @@ def _get_collection():
             needs_rebuild = True
 
         if needs_rebuild:
+            # 第一优先：自愈（~1.4s，远快于灌缓存 12s / 重新向量化 104s）
+            healed = _try_heal_hnsw_index()
+            if healed is not None:
+                _collection = healed
+                return _collection
+
             print("ChromaDB 索引不可用，优先尝试向量缓存...")
             try:
                 _g_client.delete_collection(COLLECTION_NAME)
@@ -313,7 +366,14 @@ def _expand_chunk_context(metas: List[Dict], expand_radius: int = 2) -> List[str
     return [expanded[k] for k in sorted(expanded.keys())]
 
 
-def _retrieve_raw(query: str) -> Tuple[List[str], List[Dict], List[float]]:
+def _retrieve_raw(query: str) -> Tuple[List[str], List[Dict], List[float], List[float]]:
+    """检索 → (docs, metas, rerank_scores, similarities)。
+
+    第 4 个返回值是本函数新增的**真实相似度**：ChromaDB 的 distances 本来就被查出来
+    却一直被丢掉，导致对外只能拿 rank（40/39/38…）冒充分数。with `hnsw:space=cosine`
+    时 distance = 1 - 余弦相似度，所以 similarity = 1 - distance。
+    关键词命中的块没有相似度可言，记 0.0（**不编造**），而不是沿用 rank。
+    """
     collection = _get_collection()
     embedder = _get_embedder()
     reranker = _get_reranker()
@@ -324,17 +384,21 @@ def _retrieve_raw(query: str) -> Tuple[List[str], List[Dict], List[float]]:
                           include=["documents", "metadatas", "distances"])
     vec_docs = raw["documents"][0]
     vec_metas = raw["metadatas"][0]
+    vec_dist = (raw.get("distances") or [[]])[0]
 
     seen_hashes = set()
     docs = []
     metas = []
+    sims = []
 
-    for d, m in zip(vec_docs, vec_metas):
+    for idx, (d, m) in enumerate(zip(vec_docs, vec_metas)):
         h = hashlib.md5(d.encode()).hexdigest()
         if h not in seen_hashes:
             seen_hashes.add(h)
             docs.append(d)
             metas.append(m)
+            dist = vec_dist[idx] if idx < len(vec_dist) else None
+            sims.append(round(1.0 - float(dist), 4) if dist is not None else 0.0)
 
     bm25_results = _bm25_search(query, TOP_K_RETRIEVAL)
     for bm25_doc, _bm25_score in bm25_results:
@@ -344,9 +408,10 @@ def _retrieve_raw(query: str) -> Tuple[List[str], List[Dict], List[float]]:
             docs.append(bm25_doc)
             original_meta = _hash_to_meta.get(h, {"source": "bm25_match", "language": "zh"})
             metas.append(original_meta)
+            sims.append(0.0)
 
     if len(docs) <= TOP_K_FINAL:
-        return docs, metas, [1.0] * len(docs)
+        return docs, metas, [1.0] * len(docs), sims
 
     pairs = [(query, d[:1500]) for d in docs]
     if reranker and reranker is not False:
@@ -356,17 +421,38 @@ def _retrieve_raw(query: str) -> Tuple[List[str], List[Dict], List[float]]:
             scores = list(range(len(docs), 0, -1))
     else:
         scores = list(range(len(docs), 0, -1))
-    scored = sorted(zip(docs, metas, scores), key=lambda x: -x[2])
+    scored = sorted(zip(docs, metas, scores, sims), key=lambda x: -x[2])
 
     return (
         [s[0] for s in scored[:TOP_K_FINAL]],
         [s[1] for s in scored[:TOP_K_FINAL]],
         [float(s[2]) for s in scored[:TOP_K_FINAL]],
+        [float(s[3]) for s in scored[:TOP_K_FINAL]],
     )
 
 
-def ask(query: str, max_doc_chars: int = 8000) -> dict:
-    docs, metas, scores = _retrieve_raw(query)
+def _build_sources(docs: List[str], metas: List[Dict], sims: List[float]) -> List[Dict]:
+    """把命中块整理成前端「参考来源」面板要的 SearchResult 形状。
+
+    HomePage 的 sources 渲染会用到 content / source / score（score 显示为"相关度 xx%"），
+    所以非流式路径也一并带上，保证两条路径的 sources 形状一致。
+    """
+    sources = []
+    for i, m in enumerate(metas):
+        content = docs[i] if i < len(docs) else ""
+        sources.append({
+            "source": m.get("source", "unknown"),
+            "module": m.get("module", m.get("source_file", "")),
+            "language": m.get("language", "unknown"),
+            "content": content[:500],
+            "score": round(float(sims[i]), 4) if i < len(sims) else 0.0,
+        })
+    return sources
+
+
+def _prepare(query: str, max_doc_chars: int = 8000) -> Tuple[str, List[Dict]]:
+    """检索 → 上下文扩展 → 截断合并 → 拼 prompt。ask / 流式共用这一份装配逻辑。"""
+    docs, metas, scores, sims = _retrieve_raw(query)
 
     all_docs = list(docs)
     if metas:
@@ -402,6 +488,11 @@ def ask(query: str, max_doc_chars: int = 8000) -> dict:
         f"检索文档:\n{docs_text}\n\n"
         "回答:"
     )
+    return prompt, _build_sources(docs, metas, sims)
+
+
+def ask(query: str, max_doc_chars: int = 8000) -> dict:
+    prompt, sources = _prepare(query, max_doc_chars)
 
     try:
         client = _get_deepseek()
@@ -415,54 +506,12 @@ def ask(query: str, max_doc_chars: int = 8000) -> dict:
     except Exception as e:
         answer = f"[生成失败: {str(e)[:80]}]"
 
-    sources = []
-    for m in metas:
-        sources.append({
-            "source": m.get("source", "unknown"),
-            "module": m.get("module", m.get("source_file", "")),
-            "language": m.get("language", "unknown"),
-        })
-
     return {"answer": answer, "sources": sources}
 
 
 def ask_stream(query: str, max_doc_chars: int = 8000):
-    docs, metas, scores = _retrieve_raw(query)
-
-    all_docs = list(docs)
-    if metas:
-        try:
-            ctx_docs = _expand_chunk_context(metas, expand_radius=2)
-            seen = {hashlib.md5(d.encode()).hexdigest() for d in all_docs}
-            for cd in ctx_docs:
-                h = hashlib.md5(cd.encode()).hexdigest()
-                if h not in seen:
-                    seen.add(h)
-                    all_docs.append(cd)
-        except Exception:
-            pass
-
-    merged = []
-    total_chars = 0
-    for d in all_docs:
-        chunk_len = len(d)
-        if total_chars + chunk_len > max_doc_chars:
-            remaining = max_doc_chars - total_chars
-            if remaining > 200:
-                merged.append(d[:remaining])
-            break
-        merged.append(d)
-        total_chars += chunk_len
-
-    docs_text = "\n---\n".join(merged)
-
-    prompt = (
-        "根据以下检索到的SillyTavern知识库文档，简练回答用户问题。"
-        "严格只使用文档中已有的信息，不要编造。如果文档信息不足以回答问题，请明确说明。\n\n"
-        f"问题: {query}\n\n"
-        f"检索文档:\n{docs_text}\n\n"
-        "回答:"
-    )
+    """只吐 token 的旧接口（保留兼容）。要来源请用 ask_stream_events。"""
+    prompt, _sources = _prepare(query, max_doc_chars)
 
     try:
         client = _get_deepseek()
@@ -479,6 +528,34 @@ def ask_stream(query: str, max_doc_chars: int = 8000):
                 yield chunk.choices[0].delta.content
     except Exception as e:
         yield f"[生成失败: {str(e)[:80]}]"
+
+
+def ask_stream_events(query: str, max_doc_chars: int = 8000):
+    """给 /api/rag/ask/stream 用的事件流：先发**真实** sources，再逐 token。
+
+    原先 api 层固定先发一个空的 sources（data: []），前端「参考来源」面板因此
+    一直是死代码；而 _retrieve_raw 其实早就拿到了 metas。现在在这里真实产出，
+    并把生成失败做成 error 事件（前端已识别 type=="error"）。
+    """
+    prompt, sources = _prepare(query, max_doc_chars)
+
+    yield {"type": "sources", "data": sources}
+
+    try:
+        client = _get_deepseek()
+        stream = client.chat.completions.create(
+            model=DEEPSEEK_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1,
+            max_tokens=2048,
+            stream=True,
+        )
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield {"type": "token", "data": delta}
+    except Exception as e:
+        yield {"type": "error", "data": f"[生成失败: {str(e)[:80]}]"}
 
 
 def reload_index():
@@ -589,16 +666,26 @@ def _rebuild_index_inline(chromadb_client):
             commit = r.stdout.strip()
     except Exception:
         pass
-    if not commit:
+    if failed:
+        # 有翻译失败 = 这几篇这次是以**英文原文**入库的（metadata language="en"）。
+        # 此时绝不能推进 __commit__：check_update / run_update 都拿它当"已索引版本"的
+        # 权威基准，一旦推进就会判定"已是最新"，这几篇英文原文永远不会被重试。
+        # 译文本身照常落盘（成功的那些不白干），失败篇目没进缓存 → 下次重建会重译。
+        commit = prev_commit
+    elif not commit:
         commit = prev_commit
 
     TRANSLATION_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(TRANSLATION_CACHE_PATH, "w", encoding="utf-8") as f:
         _json.dump({"__commit__": commit, "translations": translations}, f, ensure_ascii=False, indent=2)
 
+    fail_note = ""
+    if failed:
+        shown = "、".join(failed[:5]) + ("…" if len(failed) > 5 else "")
+        fail_note = (f" | ⚠ 翻译失败 {len(failed)} 篇（本次以英文原文入库、"
+                     f"__commit__ 未推进，下次重建会重试）：{shown}")
     print(f"  翻译完成: 缓存 {cached_count} | 新翻译 {new_count} | "
-          f"__commit__={commit[:8] or '未知'}"
-          + (f" | 翻译失败 {len(failed)} 篇（本次以英文入库，下次会重试）" if failed else ""))
+          f"__commit__={commit[:8] or '未知'}{fail_note}")
 
     st_chunks = []
     for doc in translated_docs:

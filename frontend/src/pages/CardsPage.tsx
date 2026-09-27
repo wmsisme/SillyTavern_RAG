@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Typography, Table, Button, Input, Select, Switch, Space, Tag,
-  Card, message, Row, Col, Image, Tooltip, Popconfirm,
+  App, Card, Row, Col, Image, Tooltip, Popconfirm,
 } from 'antd'
 import {
   PlusOutlined, UserOutlined, SearchOutlined,
@@ -32,6 +32,8 @@ interface CardItem {
 }
 
 export default function CardsPage() {
+  // 用 App.useApp() 取 message：静态 message.xxx 不消费 ConfigProvider 上下文
+  const { message } = App.useApp()
   const navigate = useNavigate()
   const [data, setData] = useState<CardItem[]>([])
   const [total, setTotal] = useState(0)

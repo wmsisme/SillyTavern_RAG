@@ -40,6 +40,9 @@ RAG/logs/
 
 # ==================== 大模型文件 ====================
 RAG/bge-large-zh/
+# reranker（bge-reranker-v2-m3，约 2.3GB）——索引更新.py 会执行 `git add .`，
+# 不加这条会把整个模型推上公开仓库
+RAG/bge-reranker-v2-m3/
 
 # ==================== 上游克隆仓库 ====================
 RAG/SillyTavern-Docs/

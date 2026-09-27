@@ -1,7 +1,7 @@
 import json
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, cast, String
 
 from backend.models.character_card import CharacterCard
 from backend.schemas.character_card import (
@@ -88,25 +88,29 @@ def list_cards(
     if is_r18 is not None:
         query = query.filter(CharacterCard.is_r18 == is_r18)
 
+    if tags:
+        # 标签筛选必须在**分页之前**下推到 SQL：
+        # 原来是对已经取出来的一页做内存过滤，于是 total 退化成「本页命中数」，
+        # 前端翻到第 2 页会看到空白（实际数据在后面几页）。
+        # 语义与原来保持一致：命中任意一个标签即算匹配。
+        # 注意：tags 是 JSON 列，SQLAlchemy 在 SQLite 上按 json.dumps 默认参数落库，
+        # 中文标签会存成 \uXXXX 转义形态（实测 '["\\u7a00\\u6709\\u6807\\u7b7e"]'），
+        # 所以匹配串必须同样转义后再 LIKE，直接拿中文去匹配永远命中不到。
+        conds = []
+        for t in tags:
+            if not t:
+                continue
+            needle = json.dumps(t, ensure_ascii=True)[1:-1]
+            conds.append(cast(CharacterCard.tags, String).like(f'%"{needle}"%'))
+        if conds:
+            query = query.filter(or_(*conds))
+
     total = query.count()
 
     offset = (page - 1) * page_size
     items = query.order_by(CharacterCard.updated_at.desc()).offset(offset).limit(page_size).all()
 
     item_responses = [CharacterCardResponse.model_validate(item) for item in items]
-
-    if tags:
-        filtered = []
-        for item in item_responses:
-            item_tags = item.tags or []
-            if any(t in item_tags for t in tags):
-                filtered.append(item)
-        return CharacterCardListResponse(
-            total=len(filtered),
-            page=page,
-            page_size=page_size,
-            items=filtered,
-        )
 
     return CharacterCardListResponse(
         total=total,

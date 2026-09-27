@@ -44,6 +44,7 @@ export default function HomePage() {
       })
 
       const reader = response.body?.getReader()
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
       if (!reader) throw new Error('No reader')
 
       const decoder = new TextDecoder()
@@ -65,6 +66,10 @@ export default function HomePage() {
               setAnswer(prev => prev + data.data)
             } else if (data.type === 'sources') {
               setSources(data.data || [])
+            } else if (data.type === 'error') {
+              // 后端生成失败时会发 error 事件；原先这里不认，界面只剩一片空白
+              setAnswer(prev => prev + `\n\n**生成失败**：${data.data}`)
+              setStreaming(false)
             } else if (data.type === 'done') {
               setStreaming(false)
             }

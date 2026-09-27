@@ -1,6 +1,7 @@
+import json
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, cast, String
 
 from backend.models.world_book import WorldBook
 from backend.schemas.world_book import (
@@ -75,24 +76,23 @@ def list_worldbooks(
             )
         )
 
+    if tags:
+        # 同 card_service：标签筛选下推到分页之前，否则 total 与翻页语义都是错的；
+        # 且中文标签在库里是 \uXXXX 转义形态，匹配串要先转义。
+        conds = []
+        for t in tags:
+            if not t:
+                continue
+            needle = json.dumps(t, ensure_ascii=True)[1:-1]
+            conds.append(cast(WorldBook.tags, String).like(f'%"{needle}"%'))
+        if conds:
+            query = query.filter(or_(*conds))
+
     total = query.count()
     offset = (page - 1) * page_size
     items = query.order_by(WorldBook.updated_at.desc()).offset(offset).limit(page_size).all()
 
     item_responses = [WorldBookResponse.model_validate(item) for item in items]
-
-    if tags:
-        filtered = []
-        for item in item_responses:
-            item_tags = item.tags or []
-            if any(t in item_tags for t in tags):
-                filtered.append(item)
-        return WorldBookListResponse(
-            total=len(filtered),
-            page=page,
-            page_size=page_size,
-            items=filtered,
-        )
 
     return WorldBookListResponse(
         total=total,

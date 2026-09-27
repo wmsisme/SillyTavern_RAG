@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Button, Result } from 'antd'
 import MainLayout from './layouts/MainLayout'
 import HomePage from './pages/HomePage'
 import CardsPage from './pages/CardsPage'
@@ -7,6 +8,19 @@ import WorldBooksPage from './pages/WorldBooksPage'
 import WorldBookEditPage from './pages/WorldBookEditPage'
 import ToolboxPage from './pages/ToolboxPage'
 import ToolDetailPage from './pages/ToolDetailPage'
+
+// 原先没有兜底路由：访问未知地址会渲染一个只有顶栏的空壳，看不出哪里错了
+function NotFound() {
+  const navigate = useNavigate()
+  return (
+    <Result
+      status="404"
+      title="页面不存在"
+      subTitle="你访问的地址没有对应页面"
+      extra={<Button type="primary" onClick={() => navigate('/')}>回首页</Button>}
+    />
+  )
+}
 
 function App() {
   return (
@@ -21,6 +35,7 @@ function App() {
         <Route path="/worldbooks/new" element={<WorldBookEditPage />} />
         <Route path="/toolbox" element={<ToolboxPage />} />
         <Route path="/toolbox/:toolId" element={<ToolDetailPage />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   )

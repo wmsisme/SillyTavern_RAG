@@ -110,6 +110,19 @@ def _retry_git(cmd: List[str], cwd: Path = None) -> subprocess.CompletedProcess:
     raise last_error
 
 
+def _git_ok(cmd: List[str], cwd: Path = None) -> subprocess.CompletedProcess:
+    """跑 git 并**检查退出码**。
+
+    `_retry_git`/`_run_git` 都不看 returncode（只捕获超时之类的异常），
+    所以 `git fetch` 失败会被当成成功、静默用旧引用比较。这里补上。
+    """
+    r = _retry_git(cmd, cwd)
+    if r.returncode != 0:
+        msg = (r.stderr or r.stdout or "").strip().splitlines()
+        raise RuntimeError((msg[-1] if msg else f"git 退出码 {r.returncode}")[:200])
+    return r
+
+
 def get_local_commit() -> str:
     try:
         r = _run_git(["git", "rev-parse", "HEAD"])
@@ -118,6 +131,23 @@ def get_local_commit() -> str:
     except Exception:
         pass
     return ""
+
+
+def _get_translation_hashes() -> set:
+    """翻译缓存的**键集合** = 已经进过索引的文件内容指纹（md5 of 英文原文）。
+
+    用来回答「工作区里这个未提交改动，是不是其实已经索引过了」。
+    不引入新状态，只复用翻译缓存本来就有的键 —— 所有写入方（run_update /
+    内联重建 / 重建索引.py / 索引更新.py）都会往里写键，天然一致。
+    """
+    try:
+        if TRANSLATION_CACHE_PATH.exists():
+            with open(TRANSLATION_CACHE_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f) or {}
+            return set((data.get("translations") or {}).keys())
+    except Exception:
+        pass
+    return set()
 
 
 def _get_indexed_commit() -> str:
@@ -172,14 +202,21 @@ def _do_check_update() -> dict:
     if "upstream" not in remotes:
         _run_git(["git", "remote", "add", "upstream", UPSTREAM_URL], cwd)
 
+    # 关键修正（2026-09-26）：**每次检查都要 fetch**。
+    # 原来只在 refs/remotes/upstream/main 不存在时才 fetch，于是引用一旦建立，
+    # 之后永远拿本地那份旧引用做比较 —— 上游发了新文档也检测不到，
+    # run_update 也只是 merge 那个旧引用，实际等于「自动更新」永久失灵。
+    fetch_error = ""
+    try:
+        _git_ok(["git", "fetch", "upstream"], cwd)
+    except Exception as e:
+        fetch_error = str(e)[:120]
+        _logger.warning("fetch upstream 失败（改用本地已知引用 + 本地漂移判断）: %s", fetch_error)
+
     upstream = _run_git(["git", "rev-parse", f"upstream/{UPSTREAM_BRANCH}"], cwd).stdout.strip()
     if not upstream:
-        try:
-            _retry_git(["git", "fetch", "upstream"], cwd)
-            upstream = _run_git(["git", "rev-parse", f"upstream/{UPSTREAM_BRANCH}"], cwd).stdout.strip()
-        except Exception:
-            return {"has_update": False, "changed_files": [], "current_commit": local[:16],
-                    "upstream_commit": "", "message": "无法获取上游更新", "indexed_commit": indexed[:16]}
+        return {"has_update": False, "changed_files": [], "current_commit": local[:16],
+                "upstream_commit": "", "message": "无法获取上游更新", "indexed_commit": indexed[:16]}
 
     # 索引状态：没有记录时（例如刚重建过但缓存没写 commit）退回用本地 HEAD 判断上游
     baseline = indexed or local
@@ -206,9 +243,29 @@ def _do_check_update() -> dict:
             changed_files.extend(f for f in files_local if f not in changed_files)
             reasons.append(f"本地有 {len(files_local)} 个文件变更")
 
-    # ③ 工作区未提交的改动：run_update 索引的是工作区文件，这些同样需要重新索引
+    # ③ 工作区未提交的改动：run_update 索引的是工作区文件，这些同样需要重新索引。
+    #    但要排除「内容其实已经索引过」的脏文件 —— 否则点「立即更新」跑完一轮后，
+    #    文件依然是未提交状态，检测会继续报"有更新"，界面上红点永远消不掉（实测踩到）。
+    indexed_hashes = _get_translation_hashes()
     r = _run_git(["git", "status", "--porcelain", "--", "*.md"], cwd)
-    dirty = [ln[3:].strip() for ln in r.stdout.strip().split("\n") if ln.strip()]
+    dirty = []
+    for ln in r.stdout.splitlines():
+        if not ln.strip():
+            continue
+        # porcelain 是 "XY <path>"（2 列状态 + 1 个空格）。**不能**对整体 stdout 做
+        # strip()：那会吃掉首行的前导空格，ln[3:] 就把路径截掉一个字
+        # （实测 "Usage/worldinfo.md" → "sage/worldinfo.md"）。
+        path = ln[3:].strip().strip('"')
+        if not path:
+            continue
+        try:
+            content = (DOCS_REPO_DIR / path).read_text(encoding="utf-8")
+        except Exception:
+            dirty.append(path)
+            continue
+        if hashlib.md5(content.encode()).hexdigest() in indexed_hashes:
+            continue
+        dirty.append(path)
     if dirty:
         has_update = True
         changed_files.extend(f for f in dirty if f not in changed_files)
@@ -220,7 +277,9 @@ def _do_check_update() -> dict:
         "current_commit": local[:16],
         "upstream_commit": (upstream or "")[:16],
         "indexed_commit": baseline[:16],
-        "message": "；".join(reasons) if has_update else "已是最新版本",
+        "message": ("；".join(reasons) if has_update
+                    else "已是最新版本" + (f"（注意：fetch 上游失败，仅按本地已知引用判断：{fetch_error}）"
+                                          if fetch_error else "")),
     }
 
 
@@ -351,10 +410,20 @@ def run_update() -> dict:
 
         # __commit__ 记为**索引完成时**的 HEAD：这是「已索引版本」的权威标记，
         # check_update / run_update 都拿它当基准判断是否有漂移。
+        # 但**有翻译失败时不能推进**：失败的那几篇这次是以英文原文入库的，
+        # 一旦推进，check_update 就会判定"已是最新"，它们永远不会被重试。
+        # 译文照常落盘（成功的那些不白干），失败篇目没进缓存 → 下次更新会重译。
         indexed_now = get_local_commit()
+        prev_indexed = (cache or {}).get("__commit__", "") or ""
+        if _translate_failures:
+            commit_to_write = prev_indexed
+            _logger.warning("有 %d 篇翻译失败，__commit__ 保持为 %s（不推进），下次更新会重译",
+                            len(_translate_failures), prev_indexed[:8] or "空")
+        else:
+            commit_to_write = indexed_now or prev_indexed
         if TRANSLATION_CACHE_PATH.parent.exists() or TRANSLATION_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True):
             with open(TRANSLATION_CACHE_PATH, "w", encoding="utf-8") as f:
-                json.dump({"__commit__": indexed_now, "translations": translations}, f, ensure_ascii=False, indent=2)
+                json.dump({"__commit__": commit_to_write, "translations": translations}, f, ensure_ascii=False, indent=2)
 
         _UPDATE_STATUS["progress"] = f"共 {len(all_chunks)} 个切片，开始向量化..."
 
@@ -371,7 +440,8 @@ def run_update() -> dict:
                 chroma_client.delete_collection(COLLECTION_NAME)
             except Exception:
                 pass
-            collection = chroma_client.create_collection(name=COLLECTION_NAME)
+            collection = chroma_client.create_collection(
+                name=COLLECTION_NAME, metadata={"hnsw:space": "cosine"})
 
         # 先删掉这批文档的旧切片，再写新的 —— 否则每次更新都是"纯追加"：
         # 本次要重新向量化全部 md_files，不做删除就会把整个文档集复制一份
@@ -425,8 +495,9 @@ def run_update() -> dict:
                    f"清除旧切片 {deleted_count} 条、写入 {new_count} 条向量")
         if _translate_failures:
             # 不能让翻译失败悄悄过去：这些文档这次是以英文原文入库的，
-            # 且没进缓存，下次更新会重试。
-            summary += f"；其中 {len(_translate_failures)} 篇翻译失败、本次以英文原文入库（下次更新会自动重试）"
+            # 且没进缓存，下次更新会重试（__commit__ 也没推进，所以检测得到）。
+            summary += (f"；其中 {len(_translate_failures)} 篇翻译失败、本次以英文原文入库"
+                        f"（__commit__ 未推进，下次更新会自动重试）")
             _logger.warning("翻译失败的文档：%s", "、".join(_translate_failures))
         _UPDATE_STATUS = {"running": False, "progress": "更新完成", "message": summary}
         return {

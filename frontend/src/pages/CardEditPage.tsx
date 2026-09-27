@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Typography, Form, Input, Button, Select, Switch, Card, Space,
-  Tabs, message, Spin, Row, Col, Divider, Tag, InputNumber,
+  App, Tabs, Spin, Row, Col, Divider, Tag, InputNumber,
 } from 'antd'
 import {
   SaveOutlined, RobotOutlined, ArrowLeftOutlined,
@@ -22,6 +22,7 @@ const TAG_OPTIONS = [
 ]
 
 export default function CardEditPage() {
+  const { message } = App.useApp()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [form] = Form.useForm()

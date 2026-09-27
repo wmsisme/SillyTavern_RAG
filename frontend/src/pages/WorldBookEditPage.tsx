@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Typography, Form, Input, Button, Select, Card, Space,
-  Tabs, message, Spin, Row, Col, Divider, InputNumber,
+  App, Tabs, Spin, Row, Col, Divider, InputNumber,
   List, Popconfirm, Tag,
 } from 'antd'
 import {
@@ -25,6 +25,7 @@ interface WorldBookEntry {
 }
 
 export default function WorldBookEditPage() {
+  const { message } = App.useApp()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [form] = Form.useForm()

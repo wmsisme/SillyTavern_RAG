@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Typography, Card, Button, Input, Select, Space, Tag,
-  message, Row, Col, List, Tooltip, Popconfirm,
+  App, Row, Col, List, Tooltip, Popconfirm,
 } from 'antd'
 import {
   PlusOutlined, BookOutlined, SearchOutlined,
@@ -24,6 +24,7 @@ interface WorldBookItem {
 }
 
 export default function WorldBooksPage() {
+  const { message } = App.useApp()
   const navigate = useNavigate()
   const [data, setData] = useState<WorldBookItem[]>([])
   const [total, setTotal] = useState(0)

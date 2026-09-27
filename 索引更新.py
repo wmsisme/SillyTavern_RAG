@@ -52,7 +52,18 @@ USER_REPO_DIR = Path(r"d:\code_item\酒馆rag")
 UPSTREAM_URL = "https://github.com/SillyTavern/SillyTavern-Docs.git"
 UPSTREAM_BRANCH = "main"
 
-EMBEDDING_MODEL_NAME = "BAAI/bge-large-zh-v1.5"
+# 向量模型：优先用项目内已下载的副本（RAG/bge-large-zh）。
+# 原来写死成 HF 仓库名 "BAAI/bge-large-zh-v1.5"，但本机 HF 缓存里没有该仓库
+# （实测 ~/.cache/huggingface/hub 下只有 version.txt），而加载时用的是
+# local_files_only=True → 必然抛 LocalEntryNotFoundError，脚本一跑就崩。
+# 重建索引.py / backend/config.py 早已改成"本地优先"，这里是补上本脚本的漏网。
+_LOCAL_EMBEDDING_DIR = BASE_DIR / "bge-large-zh"
+EMBEDDING_MODEL_NAME = os.environ.get(
+    "EMBEDDING_MODEL_NAME",
+    str(_LOCAL_EMBEDDING_DIR)
+    if (_LOCAL_EMBEDDING_DIR / "config.json").exists()
+    else "BAAI/bge-large-zh-v1.5",
+)
 EMBEDDING_DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 HEADERS_TO_SPLIT_ON = [
@@ -212,15 +223,35 @@ def _get_client():
     return _client
 
 
+def _normalize_cache(data: dict) -> dict:
+    """统一 commit 键名。
+
+    本脚本早期写的是 "commit_hash"，而 重建索引.py / backend/rag_service.py /
+    update_service.py 三处都用 "__commit__" —— 两边互不认对方的缓存，会导致
+    跨脚本跑时判定"commit 不符"而**全量重译**（白烧 DeepSeek 额度）。
+    这里读入时统一迁移成 __commit__，写出时只写 __commit__。
+    """
+    if not isinstance(data, dict):
+        return {"__commit__": "", "translations": {}}
+    if "commit_hash" in data:
+        if not data.get("__commit__"):
+            data["__commit__"] = data["commit_hash"]
+        data.pop("commit_hash", None)
+    data.setdefault("__commit__", "")
+    if not isinstance(data.get("translations"), dict):
+        data["translations"] = {}
+    return data
+
+
 def _load_translation_cache() -> dict:
     if TRANSLATION_CACHE_PATH.exists():
         try:
             with open(TRANSLATION_CACHE_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            return data
+            return _normalize_cache(data)
         except Exception:
             pass
-    return {"commit_hash": "", "translations": {}}
+    return {"__commit__": "", "translations": {}}
 
 
 def _save_translation_cache(cache: dict):
@@ -261,7 +292,7 @@ def translate_loaded_documents(documents: List[Document], force_retranslate: boo
     current_commit = get_docs_commit_hash()
     cache = _load_translation_cache()
 
-    cached_commit = cache.get("commit_hash", "")
+    cached_commit = cache.get("__commit__", "")
     translations_cache = cache.get("translations", {})
 
     if current_commit and cached_commit == current_commit and not force_retranslate:
@@ -301,7 +332,8 @@ def translate_loaded_documents(documents: List[Document], force_retranslate: boo
             zh_content = _translate_via_deepseek(content)
             if zh_content and len(zh_content) > 10:
                 translations_cache[content_hash] = zh_content
-                cache["commit_hash"] = current_commit
+                # 逐篇落盘只为「中断可续传」，**不推进 __commit__**：
+                # commit 只在整批零失败时才推进（见函数末尾）。
                 cache["translations"] = translations_cache
                 _save_translation_cache(cache)
                 doc.metadata["language"] = "zh"
@@ -319,10 +351,18 @@ def translate_loaded_documents(documents: List[Document], force_retranslate: boo
 
         time.sleep(0.5)
 
-    if current_commit:
-        cache["commit_hash"] = current_commit
-        cache["translations"] = translations_cache
-        _save_translation_cache(cache)
+    if failed_count:
+        # 有文档翻译失败（本次以英文原文入库）：**不推进 __commit__**。
+        # 否则 check_update 会认为"已是最新"，这几篇永远不会被重试。
+        cache["__commit__"] = cached_commit
+        logger.warning(
+            f"有 {failed_count} 篇翻译失败，保留原 commit 标记 "
+            f"({cached_commit[:8] or '空'})，下次运行仍会重试"
+        )
+    elif current_commit:
+        cache["__commit__"] = current_commit
+    cache["translations"] = translations_cache
+    _save_translation_cache(cache)
 
     logger.info(
         f"翻译完成 (DeepSeek): "

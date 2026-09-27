@@ -101,14 +101,22 @@ cd frontend; npm run dev                                          # 前端 http:
 
 - **向量库**：ChromaDB（持久化在 `RAG/chroma_db/`），集合 `sillytavern_docs`。
 - **向量模型**：`bge-large-zh-v1.5`，本地路径由 `EMBEDDING_MODEL_NAME` 决定，默认取 `RAG/bge-large-zh`，可用 `.env` 覆盖。
-- **翻译缓存**：`RAG/translation_cache.json`，键为英文原文 MD5，`__commit__` 记录对应的 SillyTavern-Docs commit。commit 不匹配时脚本会重译全部文档（消耗 API 额度）。
-- **向量缓存**：`RAG/vector_cache.npz` + `RAG/vector_cache_meta.json`——整库的 ids / documents / metadatas / embeddings（约 9.4MB）。因为本机 ChromaDB 索引无法跨进程复用，启动时若判定索引不可用，会**优先用它把 1798 条灌回去（约 12 秒）**，而不是重新向量化（约 104 秒）。
-  - 它由完整重建自动生成；`/api/update/run` 更新文档后会**自动清除**，下次启动重新构建。
-  - 想强制走完整重建：删掉这两个文件即可。
+- **重排序模型**：`bge-reranker-v2-m3`（约 2.2GB），放在 `RAG/bge-reranker-v2-m3`（已 gitignore）。下载：
+  ```powershell
+  python -c "from huggingface_hub import snapshot_download; snapshot_download('BAAI/bge-reranker-v2-m3', local_dir=r'RAG/bge-reranker-v2-m3', allow_patterns=['*.json','*.txt','model.safetensors','sentencepiece*'], ignore_patterns=['*.bin','onnx/*'])"
+  ```
+  目前只有 `循环测试.py` 用它；Web 侧检索仍是纯向量（见已知问题 2）。
+- **翻译缓存**：`RAG/translation_cache.json`，键为英文原文 MD5，`__commit__` 记录**上次完整索引成功**的 SillyTavern-Docs commit。
+  - `__commit__` **只在零翻译失败时才推进**：有失败就保留旧值，这样 `check_update` 仍会报「有更新」、失败篇目下次会重试，同时译文照常落盘。**不要**改成写 `incomplete` 之类的哨兵值 —— `check_update` 会把基准直接喂给 `git diff --name-only <baseline>`，非法 ref 只会让 stdout 为空、静默判定「无更新」。
+- **向量缓存**：`RAG/vector_cache.npz` + `RAG/vector_cache_meta.json`——整库的 ids / documents / embeddings。**现在只是兜底**：索引能正常打开时根本不走它（见已知问题 8）。它由完整重建生成，`/api/update/run` 后会清除。想强制走完整重建：删掉这两个文件即可。
 
 ### 什么时候需要重建索引
 
-索引不可用时（见「已知问题」第 8 条——本机环境下该判定几乎每次启动都会命中），`_get_collection()` 会**自动清库重建**，启动日志会打印"ChromaDB 索引不可用，正在内联重建..."。重建过程只做向量化，翻译走缓存，通常不产生额外 API 费用。
+正常情况下**不需要**：索引可以直接跨进程打开（根因修复见已知问题 8）。真出问题时 `_get_collection()` 按三级降级自愈：
+
+1. **清掉坏索引元数据让 ChromaDB 从 WAL 重建**（约 1.4 秒，最优先）；
+2. 从向量缓存灌回（约 12 秒，不加载 BGE、不耗 API 额度）；
+3. 全量重新向量化（约 104 秒，翻译走缓存）。
 
 手动重建：
 
@@ -121,17 +129,27 @@ python 重建索引.py     # 注意：会先删除整个集合
 ## 五、已知问题与注意事项
 
 1. **`索引更新.py` 会执行 `git add .` 并 push 到 `origin`**（[索引更新.py](索引更新.py) `git_commit_and_push`）。运行前请确认没有敏感文件处于未忽略状态；`.gitignore` 已拦截 `.env`、`backend/data.db`、`RAG/backup/`、`RAG/chroma_db/`（新增文件）。
-2. **`backend/services/rag_service.py` 的检索是精简版**：`_get_reranker()` 直接返回 `False`、`_bm25_search()` 返回空列表，实际只有纯向量 Top-5。带 BM25 + bge-reranker 的完整实现在 `循环测试.py` 的 `rag_retrieve_v6`。**注意**：`search()` 返回的 `score` 因此不是相似度，而是名次（40/39/38…），别拿它当质量指标。
-3. ~~前端"参考来源"面板不会显示~~ → 仍未修：`/api/rag/ask/stream` 固定发送空的 `sources`（[backend/api/rag.py](backend/api/rag.py)）。
+2. **`backend/services/rag_service.py` 的检索仍是精简版**：`_get_reranker()` 直接返回 `False`、`_bm25_search()` 返回空列表，实际只有纯向量 Top-5。带 BM25 + bge-reranker 的完整实现在 `循环测试.py` 的 `rag_retrieve_v6`（reranker 模型已下好，随时可接）。
+   - `/api/rag/search` 返回的 `score` **是名次**（40/39/38…），别拿它当质量指标；
+   - 但前端首页走的 `/api/rag/ask*` 已经带**真实余弦相似度**（`1 - distance`，见 2026-09-27 维护记录）。
+3. ~~前端"参考来源"面板不会显示~~ → **已修**（2026-09-27）：`rag_service.ask_stream_events()` 产出真实 sources（含 content / module / 相似度），前端同时补上了 `response.ok` 检查与 `error` 事件识别。
 4. ~~元数据分离器对 PNG 会 500~~ → **已修**（2026-09-24）：改为在 api 层转 base64，前端新增图片预览与下载。
-5. **标签筛选在分页之后进行**（[backend/services/card_service.py](backend/services/card_service.py)、[worldbook_service.py](backend/services/worldbook_service.py)），`total` 与分页语义不准确。
+5. ~~标签筛选在分页之后进行~~ → **已修**（2026-09-27）：筛选下推到 SQL 后再 count/分页，`total` 与翻页语义正确。注意 tags 是 JSON 列、中文标签在库里是 `\uXXXX` 转义形态，匹配串要先 `json.dumps` 转义。
 6. ~~前端尚未接入 `/api/update/*`~~ → **已接入**（2026-09-24）：顶栏「文档更新」按钮 + 启动自动检查弹窗。
 7. `元数据校验.py` 对每类 source 只抽样 10 条，且看不到 `source` 为文档相对路径的记录。
-8. **每次启动后端都会重建索引（约 12 秒）**：本机环境下 ChromaDB 的向量索引**无法被另一个进程加载**，跨进程访问报 `Error loading hnsw index`（0.5.23 下是 `Cannot open header file`，两个版本均复现），于是 `_get_collection()` 每次启动都判定索引不可用。现在优先走向量缓存恢复（约 12 秒，不加载 BGE 模型、不消耗 API 额度），而非重新向量化（约 104 秒）。排查过程中已排除的因素见维护记录。
+8. ~~每次启动后端都会重建索引（约 12 秒）~~ → **已修**（2026-09-27，根因查明）。
+   真凶不是"索引不落盘"，而是 segment 目录里的 **`index_metadata.pickle`**：上一次进程写下的它会让**下一次新进程**读取集合时报
+   `InternalError: Error sending backfill request to compactor: ... Error loading hnsw index`。
+   去掉它之后 ChromaDB 会从 `chroma.sqlite3` 的 WAL 重建索引，1810 条实测 **1.4 秒**即可被新进程查询。
+   对照实验（同一份库拷到临时目录，排除路径因素）：保留全部子目录 → 必失败；只留 `chroma.sqlite3` → 正常；**仅删这一个 pickle → 正常**。
+   现已在 `_get_collection()` 里做成自愈（`_repair_hnsw_pickles()` / `_try_heal_hnsw_index()`）。
+   **附带好处**：索引能持久化了 → `循环测试.py` 写进去的 `qa_presupplement` / `supplement` 块不再被启动重建抹掉。
 9. DeepSeek Key 失效时表现为 `/api/rag/ask` 返回 401：更新项目根 `.env` 里的 `DEEPSEEK_API_KEY` 即可（检索功能不受影响）。
 10. 升级 ChromaDB 大版本后官方建议执行一次 `chromadb utils vacuum` 整理数据库（可选，非必须）。
 11. **LLM 必须用非推理模型**：全项目默认 `deepseek-chat`（`.env` 里可用 `DEEPSEEK_MODEL` 覆盖）。**不要**改成 `deepseek-v4-flash` / `deepseek-v4-pro` 这类推理模型——它们会把整个 `max_tokens` 预算烧在隐藏的 `reasoning_content` 上，**返回 HTTP 200 但 `content` 为空串**，异常捕获根本不会触发。2026-09-24 正是这个原因导致 16 篇文档"翻译成功"却入库英文原文。
-12. **`RAG/chroma_db/chroma.sqlite3` 在仓库里会随每次更新增大**（当前约 24MB）。它是二进制库文件，diff 无意义；如果嫌仓库变重，可以 `git rm --cached` 后只保留 `.gitignore` 规则，改为靠重建脚本本地生成。
+12. **`RAG/chroma_db/chroma.sqlite3` 在仓库里会随每次更新增大**（已到 42MB）。它是二进制库文件，diff 无意义；如果嫌仓库变重，可以 `git rm --cached` 后只保留 `.gitignore` 规则，改为靠重建脚本本地生成。
+13. **`/api/rag/ask*` 的两条路径现在共用一份装配逻辑**（`_prepare()`），改 prompt / 上下文扩展时不用再改两处。
+14. **卡片图片（`image_path`）整条链路还没实现**：列表页有 `<Image src={image_path}>` + 默认图标兜底，但后端没有图片上传/存储/静态服务，编辑页也没有上传入口 —— 所以实际永远显示默认图标。
 
 ---
 
@@ -220,3 +238,46 @@ python 重建索引.py     # 注意：会先删除整个集合
 - 提交前清除三处写死的 DeepSeek key（`循环测试.py` / `索引更新.py` / `重建索引.py`，与 `.env` 在用的不是同一个）。已核实该 key 从未进入任何提交、也从未推到远端。三个脚本改为只读环境变量并各自加载 `.env`。
 - `.gitignore` 补充拦截 `RAG/vector_cache.npz`、`RAG/vector_cache_meta.json`（可再生的索引产物，约 9MB）与 `*.tsbuildinfo`。
 - 远端 `wmsisme/SillyTavern_RAG` 上曾有一个本地不知道的提交 `01c3ec5 docs: 添加项目 README`（GitHub 网页编辑器加的），其内容描述的是**已删除的 `main_rag_pipeline.py` 旧管线**，属过时文档，已用本 README 覆盖。
+
+### 2026-09-27 — 索引根因修复 + 自动更新修通 + 循环测试跑通 + 前端修复
+
+**① 索引跨进程问题：根因查明并修复（推翻上文的"索引不落盘"推断）**
+
+- 真凶是 segment 目录里的 `index_metadata.pickle`（86KB）。它由**上一个进程**写下，**新进程**读它就会报
+  `InternalError: Error executing plan: Error sending backfill request to compactor: Error constructing hnsw segment reader: Error creating hnsw segment reader: Error loading hnsw index`。
+- 对照实验（整库拷到临时目录，排除"路径/被监视"因素）：
+  | 实验 | 结果 |
+  | --- | --- |
+  | 保留全部子目录 | ❌ 失败 |
+  | 拷到别的路径（内容相同） | ❌ 失败 → 与路径无关 |
+  | 只留 `chroma.sqlite3`、丢掉全部子目录 | ✅ `count=1810`、query 成功 |
+  | **仅删那一个 pickle** | ✅ 成功 |
+  | 不删（对照） | ❌ 失败 |
+- 结论：**索引并不是没落盘**，而是那个 pickle 让 HNSW segment reader 构造失败；去掉后 ChromaDB 从 SQLite WAL 重建，1810 条 **1.4 秒**即可用。
+- 落点：`backend/services/rag_service.py` 新增 `_repair_hnsw_pickles()` 与 `_try_heal_hnsw_index()`，作为 `_get_collection()` 的**第一优先**自愈；向量缓存（12s）与全量重向量化（104s）降为二、三级兜底。启动日志从"ChromaDB 索引不可用，优先尝试向量缓存..."变成干净的"ChromaDB 索引就绪: N 条记录"。
+- **副作用红利**：索引能持久化后，`循环测试.py` 写入的 `qa_presupplement` / `supplement` 块不再在下次启动被抹掉（这正是设计文档里第 3、4 层知识，此前一直是缺的）。
+
+**② 后端「自动更新」：修掉三个 bug 后才真正可用**
+
+- **fetch 从不刷新**：`_do_check_update` 原来只在 `refs/remotes/upstream/main` **不存在**时才 `git fetch`，引用一旦建立就永远拿旧引用比较 —— 上游发了新文档也检测不到，`run_update` 也只是 merge 那个旧引用。**等于"自动更新"永久失灵**。现在每次检查都 fetch，并新增 `_git_ok()` 检查退出码（原来 `git fetch` 失败被当成功、静默用旧引用）。
+- **`changed_files` 路径截断**：对整个 `git status --porcelain` 输出做 `.strip()` 会吃掉首行前导空格，`ln[3:]` 于是把路径截掉一个字（实测 `Usage/worldinfo.md` → `sage/worldinfo.md`）。改为逐行解析。
+- **更新后不收敛**：脏文件即使内容已经索引过也仍被报成漂移，于是点完「立即更新」红点消不掉。现在用翻译缓存的键集合（= 已索引过的内容指纹）过滤掉"已索引的脏文件"。
+- 实测（真实造了一次文档内容变更）：`check` 报 `has_update=true` → `run_update` 79.9s、处理 90 篇、删除旧切片 1116 / 写入 1116、`translate_failures=[]`；翻译缓存 107 → **108 条**（只重译了改动的那 1 篇，不是全量）；复检 `has_update=false`，收敛。
+- `run_update` 建集合补上 `metadata={"hnsw:space": "cosine"}`，与 `_get_collection()` 保持一致。
+
+**③ 循环测试跑通 + token 计量**
+
+- 给 `循环测试.py` 加了 token 计量：所有 DeepSeek 调用统一走 `llm_create(stage, ...)`，按 `stage`（翻译 / 出题 / 答案生成）记账，每轮与总计写进日志和报告。
+- 下载 `bge-reranker-v2-m3` 到 `RAG/bge-reranker-v2-m3`（2.19GB，已 gitignore），`load_models()` 同时支持本地目录优先 + `RERANKER_MODEL_NAME` 覆盖。
+- 实测 5 轮（约 4.5 分钟）：均分 7.8 / 7.6 / 7.3 / 8.0 / 7.4，未达 9.0 目标；知识库 1810 → 1945（123 条 QA 预补全 + 12 条补充块），题库 123 → 147 题。
+- **token 账单（实测 usage，不是估算）**：第 1 轮 15,882 / 第 2 轮 19,262 / 第 3 轮 21,052 / 第 4 轮 25,074 / 第 5 轮 29,087；**合计 110,357**（输入 96,561 / 输出 13,796，74 次调用），**平均每轮 22,071**。翻译走缓存、QA 预补全与四维评分（reranker）都不吃 token —— 真正消耗只有「答案生成」和「出题」。
+- 注意：QA 预补全会把题库的标准答案写进知识库，所以「忠实度」常年 9.9–10.0，循环测试有**部分自我打分**的成分。
+
+**④ 前端修复 + 前后端连接核查**
+
+- 逐接口走 Vite 代理真实调用了一遍（更新检测 / 流式问答 / 角色卡 CRUD + 搜索筛选 / 世界书 CRUD / 5 个工具 / 删除），全部可用。
+- `ToolDetailPage`：**切换工具不重置 `direction`/`operation`** → 会把上一个工具的参数值发给新工具（后端回"不支持的转换方向"）。加 `useEffect` 按 `toolId` 重置；并补 `resp.ok` 检查与 `detail` 错误识别（原来 HTTP 报错会被显示成"处理完成"）。
+- `HomePage`：补 `response.ok` 检查 + 识别后端的 `error` 事件（原来生成失败时界面只剩空白）。
+- `main.tsx` 加 `ConfigProvider locale={zhCN}`（antd 内置文案中文化）；`App.tsx` 加 404 兜底路由（原来未知地址渲染成只有顶栏的空壳）。
+- 5 个页面把静态 `message.xxx` 换成 `App.useApp()`（静态方法不消费 ConfigProvider 上下文）。
+- **标签筛选下推到 SQL**（`card_service` / `worldbook_service`）：原来对"已取出的一页"做内存过滤，`total` 退化成"本页命中数"，翻到第 2 页会空白。注意 tags 是 JSON 列且中文标签落库为 `\uXXXX` 转义，匹配串要先 `json.dumps(t, ensure_ascii=True)` 再 `LIKE`。实测：命中项全在第 2 页时 `total` 与 `items` 均正确，多标签（逗号分隔）OR 语义、与 `search`/`is_r18` 的交叉筛选均正确。

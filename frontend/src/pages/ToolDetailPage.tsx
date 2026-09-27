@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  Typography, Card, Upload, Button, Select, Space, message,
+  Typography, Card, Upload, Button, Select, Space, App,
   Row, Col, Divider, Input, Alert, Result,
 } from 'antd'
 import {
@@ -64,6 +64,7 @@ const TOOL_CONFIGS: Record<string, {
 }
 
 export default function ToolDetailPage() {
+  const { message } = App.useApp()
   const { toolId } = useParams<{ toolId: string }>()
   const navigate = useNavigate()
   const config = toolId ? TOOL_CONFIGS[toolId] : null
@@ -75,6 +76,20 @@ export default function ToolDetailPage() {
   const [charMapping, setCharMapping] = useState('{}')
   const [previewText, setPreviewText] = useState('')
   const [imageUrl, setImageUrl] = useState('')
+
+  // 切换工具时必须重置这些状态：路由参数变了但组件实例是复用的，
+  // 否则会把上一个工具的 direction/operation 带到新工具上
+  // （实测 /toolbox/worldbook-converter → /toolbox/chinese-converter 会发出
+  //  对方不支持的参数值，后端直接回「不支持的转换方向」）。
+  useEffect(() => {
+    const first = TOOL_CONFIGS[toolId || '']?.operations?.[0]?.value || ''
+    setDirection(first)
+    setOperation(first)
+    setFile(null)
+    setResult(null)
+    setPreviewText('')
+    setImageUrl('')
+  }, [toolId])
 
   if (!config) {
     return (
@@ -104,7 +119,17 @@ export default function ToolDetailPage() {
 
     try {
       const resp = await fetch(apiPath, { method: 'POST', body: formData })
-      const data = await resp.json()
+      const data: any = await resp.json().catch(() => ({}))
+
+      // 后端出错时返回的是 HTTP 4xx/5xx + {detail}，原来既不检查 resp.ok 也不认 detail，
+      // 于是「处理失败」会被显示成「处理完成」。这里统一处理。
+      if (!resp.ok) {
+        const msg = data?.detail || data?.error || `HTTP ${resp.status}`
+        setResult({ error: msg })
+        message.error('处理失败: ' + msg)
+        return
+      }
+
       setResult(data)
 
       if (data.converted_text) {
@@ -122,7 +147,9 @@ export default function ToolDetailPage() {
         setImageUrl(`data:${data.image_mime || 'image/png'};base64,${data.image_base64}`)
       }
 
-      if (!data.error) {
+      if (data.error) {
+        message.error(data.error)
+      } else {
         message.success(data.message || '处理完成')
       }
     } catch (e: any) {
