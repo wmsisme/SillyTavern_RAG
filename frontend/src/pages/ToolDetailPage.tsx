@@ -13,6 +13,22 @@ import {
 const { Title, Paragraph, Text } = Typography
 const { TextArea } = Input
 
+/** 上传大小上限：后端会把整个文件读进内存再处理，超大文件会直接把服务打满 */
+const MAX_UPLOAD_MB = 32
+const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
+
+/** 前端侧类型校验：Upload 的 accept 只在文件选择框里生效，拖拽/改后缀都能绕过 */
+function fileAcceptOk(f: File, accept: string): boolean {
+  if (!accept) return true
+  const name = (f.name || '').toLowerCase()
+  const type = (f.type || '').toLowerCase()
+  return accept.split(',').map(s => s.trim().toLowerCase()).filter(Boolean).some(p => {
+    if (p.startsWith('.')) return name.endsWith(p)
+    if (p.endsWith('/*')) return type.startsWith(p.slice(0, -1))
+    return type === p
+  })
+}
+
 const TOOL_CONFIGS: Record<string, {
   title: string; icon: React.ReactNode; desc: string;
   acceptedFiles: string; operations?: { label: string; value: string }[];
@@ -191,14 +207,30 @@ export default function ToolDetailPage() {
         <Row gutter={[16, 16]}>
           <Col xs={24} md={8}>
             <Upload
-              beforeUpload={(f) => { setFile(f); return false }}
+              beforeUpload={(f) => {
+                const file = f as File
+                if (!fileAcceptOk(file, config.acceptedFiles)) {
+                  message.error(`文件类型不支持，该工具只接受：${config.acceptedFiles}`)
+                  return Upload.LIST_IGNORE
+                }
+                if (file.size > MAX_UPLOAD_BYTES) {
+                  message.error(`文件太大（${(file.size / 1024 / 1024).toFixed(1)} MB），上限 ${MAX_UPLOAD_MB} MB`)
+                  return Upload.LIST_IGNORE
+                }
+                setFile(file)
+                return false
+              }}
               maxCount={1}
               accept={config.acceptedFiles}
               onRemove={() => { setFile(null); setResult(null); setPreviewText(''); setImageUrl('') }}
             >
               <Button icon={<UploadOutlined />} block>选择文件</Button>
             </Upload>
-            {file && <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>{file.name}</Text>}
+            {file && (
+              <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
+                {file.name}（{(file.size / 1024).toFixed(0)} KB）
+              </Text>
+            )}
           </Col>
 
           {toolId === 'jsonl-novel-converter' && (

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Typography, Form, Input, Button, Select, Switch, Card, Space,
-  App, Tabs, Spin, Row, Col, Divider, Tag, InputNumber, Upload,
+  App, Tabs, Spin, Row, Col, Divider, Tag, InputNumber, Upload, Alert,
 } from 'antd'
 import {
   SaveOutlined, RobotOutlined, ArrowLeftOutlined,
@@ -21,11 +21,37 @@ const TAG_OPTIONS = [
   "异世界", "穿越", "游戏", "运动", "音乐", "美食", "推理",
 ]
 
+/** 表单初值：同时供 Form.initialValues 与「开关联动」的本地 state 使用，
+ *  避免两处各写一份默认值以后改一处忘一处。 */
+const CARD_INITIAL_VALUES = {
+  name: '', age: '', gender: '', species: '', occupation: '',
+  tags: [] as string[], is_r18: false, has_status_bar: false,
+  status_bar_content: '', status_bar_content_r18: '',
+  custom_css: '', first_message: '', description: '',
+  appearance: '', personality: '', background: '',
+}
+
 export default function CardEditPage() {
   const { message } = App.useApp()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [form] = Form.useForm()
+  // 状态栏内容与 R18 字段要跟着开关联动：关掉 R18 却还看见「状态栏内容（R18）」
+  // 编辑框会让人以为写错地方了。
+  // ⚠ 这里**不能**用 Form.useWatch：那两个开关在「标签与分类」页签里，页签没激活时
+  // 它们没有挂载，useWatch 对未注册字段返回 undefined；本机 antd 5.20 的 useWatch
+  // 还不支持 preserve 参数（tsc: Expected 1-2 arguments, but got 3）。
+  // 所以用「本地 state + onValuesChange / 载入时回填」显式同步，稳且不挑版本。
+  const [toggles, setToggles] = useState({
+    is_r18: !!CARD_INITIAL_VALUES.is_r18,
+    has_status_bar: !!CARD_INITIAL_VALUES.has_status_bar,
+  })
+  const isR18 = toggles.is_r18
+  const hasStatusBar = toggles.has_status_bar
+  const syncToggles = (values: any) => setToggles({
+    is_r18: !!values?.is_r18,
+    has_status_bar: !!values?.has_status_bar,
+  })
   const isNew = !id || id === 'new'
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -43,6 +69,7 @@ export default function CardEditPage() {
         .then((data: any) => {
           form.setFieldsValue(data)
           setImagePath(data.image_path || '')
+          syncToggles(data)
         })
         .catch(() => message.error('加载角色卡失败'))
         .finally(() => setLoading(false))
@@ -249,13 +276,8 @@ export default function CardEditPage() {
           form={form}
           layout="vertical"
           onFinish={handleSave}
-          initialValues={{
-            name: '', age: '', gender: '', species: '', occupation: '',
-            tags: [], is_r18: false, has_status_bar: false,
-            status_bar_content: '', status_bar_content_r18: '',
-            custom_css: '', first_message: '', description: '',
-            appearance: '', personality: '', background: '',
-          }}
+          onValuesChange={(_changed, all) => syncToggles(all)}
+          initialValues={CARD_INITIAL_VALUES}
         >
           <Tabs
             items={[
@@ -387,25 +409,43 @@ export default function CardEditPage() {
                     <Form.Item label="开场白" name="first_message">
                       <TextArea rows={3} placeholder="角色第一次对用户说的话" />
                     </Form.Item>
-                    <Form.Item>
-                      <Space>
-                        <Button icon={<RobotOutlined />} loading={generatingBar} onClick={handleGenerateStatusBar}>
-                          AI 生成状态栏内容
-                        </Button>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          按当前「R18 内容」开关写入对应字段，并自动开启状态栏
-                        </Text>
-                      </Space>
-                    </Form.Item>
-                    <Form.Item label="状态栏内容（全年龄）" name="status_bar_content">
-                      <TextArea rows={3} placeholder='[{"label":"心情","value":"愉悦"},{"label":"好感度","value":"50"}]' />
-                    </Form.Item>
-                    <Form.Item label="状态栏内容（R18）" name="status_bar_content_r18">
-                      <TextArea rows={3} placeholder='[{"label":"兴奋度","value":"30"},{"label":"服从度","value":"20"}]' />
-                    </Form.Item>
-                    <Form.Item label="自定义 CSS" name="custom_css">
-                      <TextArea rows={6} placeholder="自定义 CSS 样式代码" style={{ fontFamily: 'monospace' }} />
-                    </Form.Item>
+
+                    {!hasStatusBar && (
+                      <Alert
+                        type="info"
+                        showIcon
+                        style={{ marginBottom: 16 }}
+                        message="状态栏未开启"
+                        description="到「标签与分类」里打开「状态栏」开关，才会出现状态栏内容与自定义 CSS。"
+                      />
+                    )}
+
+                    {hasStatusBar && (
+                      <>
+                        <Form.Item>
+                          <Space>
+                            <Button icon={<RobotOutlined />} loading={generatingBar} onClick={handleGenerateStatusBar}>
+                              AI 生成状态栏内容
+                            </Button>
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              按当前「R18 内容」开关写入{isR18 ? ' R18 ' : '全年龄'}字段
+                            </Text>
+                          </Space>
+                        </Form.Item>
+                        {isR18 ? (
+                          <Form.Item label="状态栏内容（R18）" name="status_bar_content_r18">
+                            <TextArea rows={3} placeholder='[{"label":"兴奋度","value":"30"},{"label":"服从度","value":"20"}]' />
+                          </Form.Item>
+                        ) : (
+                          <Form.Item label="状态栏内容（全年龄）" name="status_bar_content">
+                            <TextArea rows={3} placeholder='[{"label":"心情","value":"愉悦"},{"label":"好感度","value":"50"}]' />
+                          </Form.Item>
+                        )}
+                        <Form.Item label="自定义 CSS" name="custom_css">
+                          <TextArea rows={6} placeholder="自定义 CSS 样式代码" style={{ fontFamily: 'monospace' }} />
+                        </Form.Item>
+                      </>
+                    )}
                   </>
                 ),
               },

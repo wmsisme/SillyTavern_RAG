@@ -36,6 +36,8 @@
 │  ├─ chroma_db/            ChromaDB 持久化目录（集合 sillytavern_docs）
 │  ├─ SillyTavern-Docs/     上游英文文档（独立 git 仓库，可 pull 更新）
 │  ├─ bge-large-zh/         本地向量模型 bge-large-zh-v1.5（1024 维）
+│  ├─ bge-reranker-v2-m3/   本地精排模型（约 2.2GB，Web 检索与循环测试共用）
+│  ├─ vector_cache.npz      整库向量快照（兜底恢复用，可删）
 │  ├─ 正则表达式/rag_chunks/ 《精通正则表达式》切片
 │  ├─ README.md             learn-regex 正则语法教程
 │  ├─ translation_cache.json 文档翻译缓存（含 __commit__）
@@ -152,7 +154,7 @@ python 重建索引.py     # 注意：会先删除整个集合
 4. ~~元数据分离器对 PNG 会 500~~ → **已修**（2026-09-24）：改为在 api 层转 base64，前端新增图片预览与下载。
 5. ~~标签筛选在分页之后进行~~ → **已修**（2026-09-27）：筛选下推到 SQL 后再 count/分页，`total` 与翻页语义正确。注意 tags 是 JSON 列、中文标签在库里是 `\uXXXX` 转义形态，匹配串要先 `json.dumps` 转义。
 6. ~~前端尚未接入 `/api/update/*`~~ → **已接入**（2026-09-24）：顶栏「文档更新」按钮 + 启动自动检查弹窗。
-7. `元数据校验.py` 对每类 source 只抽样 10 条，且看不到 `source` 为文档相对路径的记录。
+7. ~~`元数据校验.py` 对每类 source 只抽样 10 条~~ → **已修**（2026-09-27）：改为**全量分页校验**，并先打印全库 source 分布、标出「计划外」的取值（原来 `source` 是文档相对路径之类的记录永远看不见）。实测 1945 条全通过：1116 官方文档中译 + 675 mastering-regex + 135 supplement + 19 learn-regex。
 8. ~~每次启动后端都会重建索引（约 12 秒）~~ → **已修**（2026-09-27，根因查明）。
    真凶不是"索引不落盘"，而是 segment 目录里的 **`index_metadata.pickle`**：上一次进程写下的它会让**下一次新进程**读取集合时报
    `InternalError: Error sending backfill request to compactor: ... Error loading hnsw index`。
@@ -337,3 +339,37 @@ Python 层没有任何 traceback。子进程隔离对照后定位到原生崩溃
 
 **降级验证**：把 `RERANKER_MODEL_NAME` 指向不存在的模型 → 打印明确告警并退回
 「向量+BM25 不精排」，检索照常返回、进程不崩（实测退出码 0）。
+
+### 2026-09-27（续 2）— 收尾：仓库瘦身 + 前端健壮性 + R18 字段联动
+
+**仓库瘦身**
+
+- `RAG/docs/`（91 个文件 / 790KB，上游英文文档的重复副本，全项目零引用）**已删除** —— 真正读的是 `RAG/SillyTavern-Docs`。删除前全仓 grep 复核过引用为 0。
+- `RAG/chroma_db/chroma.sqlite3`（45MB）解除跟踪（见已知问题 12）。
+
+**前端健壮性**
+
+- `services/api.ts` 重写：加 **AbortController 超时**（默认 60s，AI/更新类接口用 `LONG_TIMEOUT`）；
+  错误信息统一解析（`{detail}` / `{error}` / `{message}` / HTML 都能取出可读文案）；
+  204 与空响应体不再让 `response.json()` 抛 `SyntaxError`。
+- `UpdateNotice`：更新中的弹窗原来是死锁的（`closable=false` 且无取消），现在
+  ① 显示已等待秒数，② 加「不再等待（后端继续执行）」按钮（只是不再等，后端更新照跑完），
+  ③ `/update/run` 用放宽超时（默认 60s 会把 80s 的正常更新误判成失败），
+  ④ 超时后先查 `/update/status`，仍在跑就提示"后端仍在继续"，而不是笼统报失败。
+- `ToolDetailPage`：上传加**大小（32MB）与类型双重校验** —— `accept` 只在文件选择框里生效，
+  拖拽/改后缀能绕过；顺手显示文件大小。
+- `元数据校验.py`：全量校验（见已知问题 7）。
+
+**角色卡编辑页：R18 与状态栏字段联动**（达铭反馈："R18 关着还能看到状态栏内容（R18）编辑框"）
+
+- 现在按开关联动：`状态栏` 关闭 → 只显示一条提示，不出现状态栏内容与自定义 CSS；
+  `状态栏` 开启 + `R18` 关闭 → **只出现「状态栏内容（全年龄）」**；
+  `状态栏` 开启 + `R18` 开启 → **只出现「状态栏内容（R18）」**。
+  `Form.Item` 默认 `preserve`，隐藏不会丢已填内容。
+- 踩坑：一开始用 `Form.useWatch` 读开关值 —— 这两个开关在**未激活的页签**里（没挂载），
+  `useWatch` 对未注册字段返回 `undefined`；而本机 antd 5.20 的 `useWatch` 还不支持
+  `preserve` 参数（`tsc: Expected 1-2 arguments, but got 3`）。最终改为
+  「本地 state + `onValuesChange` + 载入时回填」，并把表单初值抽成 `CARD_INITIAL_VALUES`
+  让两处共用，避免以后改默认值只改一处。
+- 验证方式：无头渲染 + 逐场景断言（关/关、开/关、开/开三种组合下字段的出现与否），
+  验证用的临时改动（默认页签、初值）事后已全部还原。
