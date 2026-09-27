@@ -40,6 +40,9 @@ class UpdateRunResponse(BaseModel):
     deleted_vectors: int = 0
     # 本次以英文原文入库（翻译失败）的文档，前端可据此提示用户
     translate_failures: List[str] = []
+    # 本次更新的实际代价（墙钟秒数 + DeepSeek usage 实测 token）
+    elapsed_s: float = 0
+    usage: dict = {}
 
 
 class HealthResponse(BaseModel):

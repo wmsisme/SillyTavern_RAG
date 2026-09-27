@@ -30,6 +30,37 @@ _translate_failures: List[str] = []
 
 _logger = logging.getLogger("rag_update")
 
+# ── 本次更新的用量账（时间 + token）─────────────────────────────
+# DeepSeek 的 OpenAI 兼容接口每次都返回 usage，之前没记，所以"一次更新花了多少 token"
+# 只能估。现在统一记账，随结果一起回报（前端完成弹窗会直接显示）。
+_USAGE = {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+
+
+def _reset_usage():
+    _USAGE.update({"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0})
+
+
+def _record_usage(resp):
+    """记一次调用的 token。**失败/空返回也要记** —— 它也真的烧了 token。"""
+    u = getattr(resp, "usage", None)
+    if u is None:
+        return
+    p = int(getattr(u, "prompt_tokens", 0) or 0)
+    c = int(getattr(u, "completion_tokens", 0) or 0)
+    t = int(getattr(u, "total_tokens", 0) or 0) or (p + c)
+    _USAGE["calls"] += 1
+    _USAGE["prompt_tokens"] += p
+    _USAGE["completion_tokens"] += c
+    _USAGE["total_tokens"] += t
+
+
+def _usage_text() -> str:
+    if not _USAGE["calls"]:
+        return "未产生翻译调用（全部命中缓存）"
+    return (f"翻译 {_USAGE['total_tokens']} tokens"
+            f"（输入 {_USAGE['prompt_tokens']} / 输出 {_USAGE['completion_tokens']}，"
+            f"{_USAGE['calls']} 次调用）")
+
 
 def _call_llm_for_translation(client, content: str) -> str:
     """调一次翻译；返回空串表示失败（由调用方决定怎么处理）。
@@ -48,6 +79,7 @@ def _call_llm_for_translation(client, content: str) -> str:
         temperature=0.1,
         max_tokens=8192,
     )
+    _record_usage(resp)
     choice = resp.choices[0]
     text = (choice.message.content or "").strip()
 
@@ -289,6 +321,8 @@ def run_update() -> dict:
         return {"status": "busy", "message": "更新正在执行中，请稍后再试"}
 
     _translate_failures.clear()
+    _reset_usage()
+    _t_start = time.monotonic()
     try:
         _UPDATE_STATUS = {"running": True, "progress": "开始更新...", "message": ""}
 
@@ -300,9 +334,12 @@ def run_update() -> dict:
         # 而不是只比 merge 前后的 HEAD（那样本地提交/未提交改动永远检测不到）。
         drift = _do_check_update()
         if not drift.get("has_update"):
+            elapsed = time.monotonic() - _t_start
             _UPDATE_STATUS = {"running": False, "progress": "已完成", "message": "无需更新"}
-            return {"status": "ok", "message": "已是最新版本，无需更新",
-                    "new_vectors": 0, "deleted_vectors": 0, "translate_failures": []}
+            return {"status": "ok",
+                    "message": f"已是最新版本，无需更新（耗时 {elapsed:.1f}s，{_usage_text()}）",
+                    "new_vectors": 0, "deleted_vectors": 0, "translate_failures": [],
+                    "elapsed_s": round(elapsed, 1), "usage": dict(_USAGE)}
 
         # 上游有新东西才 merge（本地无变更时 merge 是空操作）
         try:
@@ -491,14 +528,17 @@ def run_update() -> dict:
 
         reload_index()
 
+        elapsed = time.monotonic() - _t_start
         summary = (f"更新完成，共处理 {len(md_files)} 个文档，"
-                   f"清除旧切片 {deleted_count} 条、写入 {new_count} 条向量")
+                   f"清除旧切片 {deleted_count} 条、写入 {new_count} 条向量；"
+                   f"耗时 {elapsed:.1f}s，{_usage_text()}")
         if _translate_failures:
             # 不能让翻译失败悄悄过去：这些文档这次是以英文原文入库的，
             # 且没进缓存，下次更新会重试（__commit__ 也没推进，所以检测得到）。
             summary += (f"；其中 {len(_translate_failures)} 篇翻译失败、本次以英文原文入库"
                         f"（__commit__ 未推进，下次更新会自动重试）")
             _logger.warning("翻译失败的文档：%s", "、".join(_translate_failures))
+        _logger.info("本次更新用量：耗时 %.1fs，%s", elapsed, _usage_text())
         _UPDATE_STATUS = {"running": False, "progress": "更新完成", "message": summary}
         return {
             "status": "ok",
@@ -506,10 +546,15 @@ def run_update() -> dict:
             "new_vectors": new_count,
             "deleted_vectors": deleted_count,
             "translate_failures": list(_translate_failures),
+            "elapsed_s": round(elapsed, 1),
+            "usage": dict(_USAGE),
         }
 
     except Exception as e:
+        elapsed = time.monotonic() - _t_start
         _UPDATE_STATUS = {"running": False, "progress": "更新失败", "message": str(e)}
-        return {"status": "error", "message": str(e)}
+        return {"status": "error",
+                "message": f"{e}（已耗时 {elapsed:.1f}s，{_usage_text()}）",
+                "elapsed_s": round(elapsed, 1), "usage": dict(_USAGE)}
     finally:
         _UPDATE_LOCK.release()
