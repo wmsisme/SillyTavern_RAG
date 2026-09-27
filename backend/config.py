@@ -42,7 +42,15 @@ EMBEDDING_MODEL_NAME = os.environ.get(
     if (_LOCAL_EMBEDDING_DIR / "config.json").exists()
     else "BAAI/bge-large-zh-v1.5",
 )
-RERANKER_MODEL_NAME = os.environ.get("RERANKER_MODEL_NAME", "BAAI/bge-reranker-v2-m3")
+# 重排序模型：同样本地优先（RAG/bge-reranker-v2-m3，约 2.2GB）。
+# 原来只留 HF 仓库名，而 rag_service 根本没加载它 —— 这次接上精排后要有真实路径。
+_LOCAL_RERANKER_DIR = RAG_DIR / "bge-reranker-v2-m3"
+RERANKER_MODEL_NAME = os.environ.get(
+    "RERANKER_MODEL_NAME",
+    str(_LOCAL_RERANKER_DIR)
+    if (_LOCAL_RERANKER_DIR / "config.json").exists()
+    else "BAAI/bge-reranker-v2-m3",
+)
 
 # ---- 密钥：只从环境变量 / .env 读，源码里不再写明文 ----
 # .env 已在 .gitignore 中，不会被 索引更新.py 的 `git add .` 推到公开仓库。

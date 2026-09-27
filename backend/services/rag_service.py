@@ -49,7 +49,59 @@ def _get_embedder():
 
 
 def _get_reranker():
-    return False
+    """加载 bge-reranker-v2-m3 用于精排（懒加载；失败则降级为不精排）。
+
+    ⚠ **不要改用 FlagEmbedding.FlagReranker**：实测本机上「先 import chromadb、
+    再 import FlagEmbedding」会以 0xC0000005（访问违例）**原生崩溃** —— 进程直接消失，
+    Python 层 except 抓不到，uvicorn 表现为请求 500 且服务已死。
+    对照实验（子进程隔离，看退出码）：
+      · 只 import FlagEmbedding                → 正常（退出码 0）
+      · 先 chromadb 再 import FlagEmbedding     → 崩（3221225477 = 0xC0000005）
+      · 先 FlagEmbedding 再 chromadb            → 正常，但依赖导入顺序，太脆
+    所以这里直接用 transformers 加载同一个模型，评分数学与 FlagReranker 一致。
+    """
+    global _reranker
+    if _reranker is None:
+        try:
+            from transformers import AutoModelForSequenceClassification
+            tokenizer = AutoTokenizer.from_pretrained(RERANKER_MODEL_NAME, local_files_only=True)
+            dtype = torch.float16 if str(EMBED_DEVICE).startswith("cuda") else torch.float32
+            model = AutoModelForSequenceClassification.from_pretrained(
+                RERANKER_MODEL_NAME, local_files_only=True, torch_dtype=dtype,
+            ).to(EMBED_DEVICE)
+            model.eval()
+            _reranker = (tokenizer, model, EMBED_DEVICE)
+            print(f"[rag] reranker 已加载: {RERANKER_MODEL_NAME} ({EMBED_DEVICE})")
+        except Exception as e:
+            print(f"[rag] reranker 加载失败，降级为 向量+BM25 融合（不精排）: "
+                  f"{type(e).__name__}: {str(e)[:120]}")
+            _reranker = False
+    return _reranker
+
+
+def _rerank_scores(query: str, docs: List[str], batch: int = 16) -> Optional[List[float]]:
+    """对候选块打分（query, passage 交叉编码）。没 reranker 或失败时返回 None。
+
+    max_length 取 512，与 FlagReranker 的默认 passage_max_length 一致，
+    这样 Web 侧的精排口径与 循环测试.py 的 rag_retrieve_v6 对齐。
+    """
+    rr = _get_reranker()
+    if not rr or rr is False:
+        return None
+    tokenizer, model, device = rr
+    out: List[float] = []
+    try:
+        with torch.no_grad():
+            for i in range(0, len(docs), batch):
+                part = docs[i:i + batch]
+                inputs = tokenizer([query] * len(part), [d[:1500] for d in part],
+                                   padding=True, truncation=True, max_length=512,
+                                   return_tensors="pt").to(device)
+                out.extend(model(**inputs).logits.view(-1).float().cpu().tolist())
+        return out
+    except Exception as e:
+        print(f"[rag] 精排打分失败，退化为向量相似度: {type(e).__name__}: {str(e)[:120]}")
+        return None
 
 
 _g_client = None
@@ -244,73 +296,67 @@ def _encode_query(query: str) -> List[float]:
 
 
 def _build_bm25():
+    """在全库文档上建 BM25 索引（jieba 分词），供关键词召回。
+
+    原来是空壳（直接把 _bm25 置 False、_corpus 置空），于是"混合检索"只剩向量一路 ——
+    中文问题的关键词经常匹配不上向量召回，实测「世界书的递归扫描」一问纯向量 Top-5
+    完全没命中 worldinfo 里的递归段落（相似度仅 0.69~0.71）。
+    """
     global _bm25, _corpus, _hash_to_meta
     if _bm25 is not None:
         return
-    _bm25 = False
-    _corpus = []
-    _hash_to_meta = {}
+    try:
+        from rank_bm25 import BM25Okapi
+        collection = _get_collection()
+        all_data = collection.get(limit=99999, include=["documents", "metadatas"])
+        docs = all_data.get("documents") or []
+        metas = all_data.get("metadatas") or []
+        _corpus = docs
+        _hash_to_meta = {hashlib.md5(d.encode()).hexdigest(): m for d, m in zip(docs, metas)}
+        tokenized = [list(jieba.cut(d)) for d in docs]
+        _bm25 = BM25Okapi(tokenized)
+        print(f"[rag] BM25 索引已构建: {len(docs)} 篇")
+    except Exception as e:
+        print(f"[rag] BM25 构建失败，退化为纯向量: {type(e).__name__}: {str(e)[:120]}")
+        _bm25 = False
+        _corpus = []
+        _hash_to_meta = {}
 
 
 def _bm25_search(query: str, top_k: int) -> List[Tuple[str, float]]:
-    return []
+    if not _bm25 or not _corpus:
+        return []
+    try:
+        scores = _bm25.get_scores(list(jieba.cut(query)))
+        idx = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
+        return [(_corpus[i], float(scores[i])) for i in idx if scores[i] > 0]
+    except Exception:
+        return []
+
+
+def _sigmoid(x: float) -> float:
+    try:
+        return 1.0 / (1.0 + np.exp(-float(x)))
+    except Exception:
+        return 0.0
 
 
 def search(query: str, top_k: int = TOP_K_FINAL) -> List[dict]:
-    collection = _get_collection()
-    embedder = _get_embedder()
-    reranker = _get_reranker()
-    _build_bm25()
+    """向量 + BM25 召回 → reranker 精排，返回带真实相关度的结果。
 
-    qe = _encode_query(query)
-    raw = collection.query(query_embeddings=[qe], n_results=TOP_K_RETRIEVAL,
-                          include=["documents", "metadatas", "distances"])
-    vec_docs = raw["documents"][0]
-    vec_metas = raw["metadatas"][0]
-
-    seen_hashes = set()
-    docs = []
-    metas = []
-
-    for d, m in zip(vec_docs, vec_metas):
-        h = hashlib.md5(d.encode()).hexdigest()
-        if h not in seen_hashes:
-            seen_hashes.add(h)
-            docs.append(d)
-            metas.append(m)
-
-    bm25_results = _bm25_search(query, TOP_K_RETRIEVAL)
-    for bm25_doc, _bm25_score in bm25_results:
-        h = hashlib.md5(bm25_doc.encode()).hexdigest()
-        if h not in seen_hashes:
-            seen_hashes.add(h)
-            docs.append(bm25_doc)
-            original_meta = _hash_to_meta.get(h, {"source": "bm25_match", "language": "zh"})
-            metas.append(original_meta)
-
-    if len(docs) <= top_k:
-        results = []
-        for d, m in zip(docs, metas):
-            results.append({"content": d[:500], "source": m.get("source", "unknown"), "score": 1.0})
-        return results
-
-    pairs = [(query, d[:1500]) for d in docs]
-    if reranker and reranker is not False:
-        try:
-            scores = reranker.compute_score(pairs)
-        except Exception:
-            scores = list(range(len(docs), 0, -1))
-    else:
-        scores = list(range(len(docs), 0, -1))
-    scored = sorted(zip(docs, metas, scores), key=lambda x: -x[2])
+    原来这里自带一份检索实现，且在没有 reranker 时把**名次**（40/39/38…）
+    当成 score 返回 —— 拿它当质量指标会被误导。现在统一走 _retrieve_raw。
+    """
+    top_k = max(1, min(int(top_k or TOP_K_FINAL), TOP_K_RETRIEVAL))
+    docs, metas, scores, _sims = _retrieve_raw(query, top_k_final=top_k)
 
     results = []
-    for d, m, s in scored[:top_k]:
+    for i, (d, m) in enumerate(zip(docs, metas)):
         results.append({
             "content": d[:500],
             "source": m.get("source", "unknown"),
             "module": m.get("module", m.get("source_file", "")),
-            "score": round(float(s), 3),
+            "score": round(float(scores[i]), 4) if i < len(scores) else 0.0,
         })
     return results
 
@@ -366,17 +412,20 @@ def _expand_chunk_context(metas: List[Dict], expand_radius: int = 2) -> List[str
     return [expanded[k] for k in sorted(expanded.keys())]
 
 
-def _retrieve_raw(query: str) -> Tuple[List[str], List[Dict], List[float], List[float]]:
-    """检索 → (docs, metas, rerank_scores, similarities)。
+def _retrieve_raw(query: str, top_k_final: int = TOP_K_FINAL
+                  ) -> Tuple[List[str], List[Dict], List[float], List[float]]:
+    """检索 → (docs, metas, 对外相关度, 向量相似度)。
 
-    第 4 个返回值是本函数新增的**真实相似度**：ChromaDB 的 distances 本来就被查出来
-    却一直被丢掉，导致对外只能拿 rank（40/39/38…）冒充分数。with `hnsw:space=cosine`
-    时 distance = 1 - 余弦相似度，所以 similarity = 1 - distance。
-    关键词命中的块没有相似度可言，记 0.0（**不编造**），而不是沿用 rank。
+    流程与 循环测试.py 的 rag_retrieve_v6 对齐：
+      向量 Top-40  ─┐
+                    ├─ 按 md5 去重合并 → bge-reranker 精排 → Top-{top_k_final}
+      BM25 Top-40  ─┘
+    第 3 个返回值是给前端显示/给接口返回的"相关度"，口径见 _apply_score_mode
+    （有 reranker 时 = sigmoid(精排分)，决定顺序的就是它；降级时 = 向量余弦相似度）。
+    第 4 个是向量余弦相似度（1 - distance），BM25 单独召回的块记 0（不编造）。
     """
     collection = _get_collection()
-    embedder = _get_embedder()
-    reranker = _get_reranker()
+    _get_embedder()
     _build_bm25()
 
     qe = _encode_query(query)
@@ -410,32 +459,37 @@ def _retrieve_raw(query: str) -> Tuple[List[str], List[Dict], List[float], List[
             metas.append(original_meta)
             sims.append(0.0)
 
-    if len(docs) <= TOP_K_FINAL:
-        return docs, metas, [1.0] * len(docs), sims
+    if len(docs) <= top_k_final:
+        # 候选本来就少，没必要精排；相关度直接用向量相似度
+        return docs, metas, [round(float(s), 4) for s in sims], sims
 
-    pairs = [(query, d[:1500]) for d in docs]
-    if reranker and reranker is not False:
-        try:
-            scores = reranker.compute_score(pairs)
-        except Exception:
-            scores = list(range(len(docs), 0, -1))
-    else:
-        scores = list(range(len(docs), 0, -1))
-    scored = sorted(zip(docs, metas, scores, sims), key=lambda x: -x[2])
+    rerank_scores = _rerank_scores(query, docs)
 
+    if rerank_scores is None:
+        # 降级路径：按向量相似度排（BM25 单独召回的块没有相似度，自然排后面）
+        scored = sorted(zip(docs, metas, sims), key=lambda x: -x[2])[:top_k_final]
+        return (
+            [s[0] for s in scored],
+            [s[1] for s in scored],
+            [round(float(s[2]), 4) for s in scored],
+            [float(s[2]) for s in scored],
+        )
+
+    scored = sorted(zip(docs, metas, rerank_scores, sims), key=lambda x: -x[2])[:top_k_final]
     return (
-        [s[0] for s in scored[:TOP_K_FINAL]],
-        [s[1] for s in scored[:TOP_K_FINAL]],
-        [float(s[2]) for s in scored[:TOP_K_FINAL]],
-        [float(s[3]) for s in scored[:TOP_K_FINAL]],
+        [s[0] for s in scored],
+        [s[1] for s in scored],
+        [round(_sigmoid(s[2]), 4) for s in scored],
+        [float(s[3]) for s in scored],
     )
 
 
-def _build_sources(docs: List[str], metas: List[Dict], sims: List[float]) -> List[Dict]:
+def _build_sources(docs: List[str], metas: List[Dict], scores: List[float]) -> List[Dict]:
     """把命中块整理成前端「参考来源」面板要的 SearchResult 形状。
 
     HomePage 的 sources 渲染会用到 content / source / score（score 显示为"相关度 xx%"），
     所以非流式路径也一并带上，保证两条路径的 sources 形状一致。
+    `scores` 是 `_retrieve_raw` 算好的对外相关度（有 reranker 时即 sigmoid(精排分)）。
     """
     sources = []
     for i, m in enumerate(metas):
@@ -445,14 +499,14 @@ def _build_sources(docs: List[str], metas: List[Dict], sims: List[float]) -> Lis
             "module": m.get("module", m.get("source_file", "")),
             "language": m.get("language", "unknown"),
             "content": content[:500],
-            "score": round(float(sims[i]), 4) if i < len(sims) else 0.0,
+            "score": round(float(scores[i]), 4) if i < len(scores) else 0.0,
         })
     return sources
 
 
 def _prepare(query: str, max_doc_chars: int = 8000) -> Tuple[str, List[Dict]]:
-    """检索 → 上下文扩展 → 截断合并 → 拼 prompt。ask / 流式共用这一份装配逻辑。"""
-    docs, metas, scores, sims = _retrieve_raw(query)
+    """检索（向量+BM25+精排）→ 上下文扩展 → 截断合并 → 拼 prompt。ask / 流式共用。"""
+    docs, metas, scores, _sims = _retrieve_raw(query)
 
     all_docs = list(docs)
     if metas:
@@ -488,7 +542,7 @@ def _prepare(query: str, max_doc_chars: int = 8000) -> Tuple[str, List[Dict]]:
         f"检索文档:\n{docs_text}\n\n"
         "回答:"
     )
-    return prompt, _build_sources(docs, metas, sims)
+    return prompt, _build_sources(docs, metas, scores)
 
 
 def ask(query: str, max_doc_chars: int = 8000) -> dict:

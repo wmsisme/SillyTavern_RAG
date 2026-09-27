@@ -60,6 +60,20 @@
 - Node.js 18+（前端构建）
 - 首次使用需已存在 `RAG/bge-large-zh/`（向量模型，约 1.3GB）
 
+### 首次克隆要自备什么（仓库里没有的东西）
+
+`.gitignore` 挡掉了全部大件与用户数据，所以新克隆下来是这样：
+
+| 缺什么 | 怎么补 | 说明 |
+| --- | --- | --- |
+| `RAG/bge-large-zh/`（1.3GB） | 自行下载 `BAAI/bge-large-zh-v1.5` 放进去 | 向量模型，必需 |
+| `RAG/bge-reranker-v2-m3/`（2.2GB） | 用「四、数据与索引」里的 `snapshot_download` 命令 | 精排模型；没有就自动降级为不精排 |
+| `RAG/SillyTavern-Docs/` | `git clone https://github.com/SillyTavern/SillyTavern-Docs.git` 到该路径 | 上游英文文档，更新功能靠它 |
+| `RAG/translation_cache.json` | 首次建索引时自动生成，**但要重新调用 API 翻译 90 篇** | ⚠ 这是唯一有 API 成本的步骤 |
+| `RAG/chroma_db/` | 启动后端会自动重建（或跑 `重建索引.py`） | 向量库早已不再入库 |
+| `backend/static/` | 上传角色卡图片时自动建 | 用户数据 |
+| `.env` | `copy .env.example .env` 后填 Key | 见下一节 |
+
 ### 安装依赖
 
 ```powershell
@@ -105,7 +119,7 @@ cd frontend; npm run dev                                          # 前端 http:
   ```powershell
   python -c "from huggingface_hub import snapshot_download; snapshot_download('BAAI/bge-reranker-v2-m3', local_dir=r'RAG/bge-reranker-v2-m3', allow_patterns=['*.json','*.txt','model.safetensors','sentencepiece*'], ignore_patterns=['*.bin','onnx/*'])"
   ```
-  目前只有 `循环测试.py` 用它；Web 侧检索仍是纯向量（见已知问题 2）。
+  目前 Web 侧检索也已经用它做精排（见已知问题 2），`循环测试.py` 与后端两边共享同一个本地目录。
 - **翻译缓存**：`RAG/translation_cache.json`，键为英文原文 MD5，`__commit__` 记录**上次完整索引成功**的 SillyTavern-Docs commit。
   - `__commit__` **只在零翻译失败时才推进**：有失败就保留旧值，这样 `check_update` 仍会报「有更新」、失败篇目下次会重试，同时译文照常落盘。**不要**改成写 `incomplete` 之类的哨兵值 —— `check_update` 会把基准直接喂给 `git diff --name-only <baseline>`，非法 ref 只会让 stdout 为空、静默判定「无更新」。
 - **向量缓存**：`RAG/vector_cache.npz` + `RAG/vector_cache_meta.json`——整库的 ids / documents / embeddings。**现在只是兜底**：索引能正常打开时根本不走它（见已知问题 8）。它由完整重建生成，`/api/update/run` 后会清除。想强制走完整重建：删掉这两个文件即可。
@@ -129,9 +143,11 @@ python 重建索引.py     # 注意：会先删除整个集合
 ## 五、已知问题与注意事项
 
 1. **`索引更新.py` 会执行 `git add .` 并 push 到 `origin`**（[索引更新.py](索引更新.py) `git_commit_and_push`）。运行前请确认没有敏感文件处于未忽略状态；`.gitignore` 已拦截 `.env`、`backend/data.db`、`RAG/backup/`、`RAG/chroma_db/`（新增文件）。
-2. **`backend/services/rag_service.py` 的检索仍是精简版**：`_get_reranker()` 直接返回 `False`、`_bm25_search()` 返回空列表，实际只有纯向量 Top-5。带 BM25 + bge-reranker 的完整实现在 `循环测试.py` 的 `rag_retrieve_v6`（reranker 模型已下好，随时可接）。
-   - `/api/rag/search` 返回的 `score` **是名次**（40/39/38…），别拿它当质量指标；
-   - 但前端首页走的 `/api/rag/ask*` 已经带**真实余弦相似度**（`1 - distance`，见 2026-09-27 维护记录）。
+2. ~~`backend/services/rag_service.py` 的检索是精简版~~ → **已修**（2026-09-27）：Web 侧检索现在与 `循环测试.py` 的 `rag_retrieve_v6` 同口径 —— 向量 Top-40 ∪ BM25 Top-40（jieba 分词，按 md5 去重）→ `bge-reranker-v2-m3` 精排 → Top-5。
+   - `score` 口径统一为 **sigmoid(精排原始分)** —— 它是决定最终排序的那个量，所以面板上的「相关度」与实际顺序一致，不会再出现名次假分（40/39/38…）；reranker 不可用时退回向量余弦相似度（`1 - distance`）。
+   - 实测：问「世界书的递归扫描是怎么工作的？」从"文档里没有相关信息"变成 **364 字正确答案**；其中 `Usage/worldinfo.md` 的递归扫描段是**只被 BM25 召回**（向量相似度 0.0000、原本完全漏掉）再经精排提到第 3 位的。
+   - 代价：首次问答要懒加载两个模型（约 13s），之后同一问题约 **2s**；显存约 2.4GB。
+   - ⚠ **不要改用 `FlagEmbedding.FlagReranker`**：本机「先 `import chromadb`、再 `import FlagEmbedding`」会以 **0xC0000005 访问违例原生崩溃**（进程直接消失，Python 层抓不到，uvicorn 表现为请求 500 但服务已死）。现用 `transformers` 直接加载同一个模型，评分数学一致 —— 详见 `rag_service._get_reranker()` 注释与维护记录。
 3. ~~前端"参考来源"面板不会显示~~ → **已修**（2026-09-27）：`rag_service.ask_stream_events()` 产出真实 sources（含 content / module / 相似度），前端同时补上了 `response.ok` 检查与 `error` 事件识别。
 4. ~~元数据分离器对 PNG 会 500~~ → **已修**（2026-09-24）：改为在 api 层转 base64，前端新增图片预览与下载。
 5. ~~标签筛选在分页之后进行~~ → **已修**（2026-09-27）：筛选下推到 SQL 后再 count/分页，`total` 与翻页语义正确。注意 tags 是 JSON 列、中文标签在库里是 `\uXXXX` 转义形态，匹配串要先 `json.dumps` 转义。
@@ -147,7 +163,7 @@ python 重建索引.py     # 注意：会先删除整个集合
 9. DeepSeek Key 失效时表现为 `/api/rag/ask` 返回 401：更新项目根 `.env` 里的 `DEEPSEEK_API_KEY` 即可（检索功能不受影响）。
 10. 升级 ChromaDB 大版本后官方建议执行一次 `chromadb utils vacuum` 整理数据库（可选，非必须）。
 11. **LLM 必须用非推理模型**：全项目默认 `deepseek-chat`（`.env` 里可用 `DEEPSEEK_MODEL` 覆盖）。**不要**改成 `deepseek-v4-flash` / `deepseek-v4-pro` 这类推理模型——它们会把整个 `max_tokens` 预算烧在隐藏的 `reasoning_content` 上，**返回 HTTP 200 但 `content` 为空串**，异常捕获根本不会触发。2026-09-24 正是这个原因导致 16 篇文档"翻译成功"却入库英文原文。
-12. **`RAG/chroma_db/chroma.sqlite3` 在仓库里会随每次更新增大**（已到 42MB）。它是二进制库文件，diff 无意义；如果嫌仓库变重，可以 `git rm --cached` 后只保留 `.gitignore` 规则，改为靠重建脚本本地生成。
+12. ~~`RAG/chroma_db/chroma.sqlite3` 在仓库里会随每次更新增大~~ → **已处理**（2026-09-27）：`git rm --cached` 解除跟踪（**本地文件保留**），`.gitignore` 里的 `RAG/chroma_db/` 接管，`索引更新.py` 的 `git add .` 不会再把它加回来。索引改为纯本地生成 —— 自愈（1.4s）、向量缓存（12s）、全量重建（104s）三条路径都能重建出来。
 13. **`/api/rag/ask*` 的两条路径现在共用一份装配逻辑**（`_prepare()`），改 prompt / 上下文扩展时不用再改两处。
 14. **卡片图片（`image_path`）整条链路还没实现**：列表页有 `<Image src={image_path}>` + 默认图标兜底，但后端没有图片上传/存储/静态服务，编辑页也没有上传入口 —— 所以实际永远显示默认图标。
 
@@ -281,3 +297,43 @@ python 重建索引.py     # 注意：会先删除整个集合
 - `main.tsx` 加 `ConfigProvider locale={zhCN}`（antd 内置文案中文化）；`App.tsx` 加 404 兜底路由（原来未知地址渲染成只有顶栏的空壳）。
 - 5 个页面把静态 `message.xxx` 换成 `App.useApp()`（静态方法不消费 ConfigProvider 上下文）。
 - **标签筛选下推到 SQL**（`card_service` / `worldbook_service`）：原来对"已取出的一页"做内存过滤，`total` 退化成"本页命中数"，翻到第 2 页会空白。注意 tags 是 JSON 列且中文标签落库为 `\uXXXX` 转义，匹配串要先 `json.dumps(t, ensure_ascii=True)` 再 `LIKE`。实测：命中项全在第 2 页时 `total` 与 `items` 均正确，多标签（逗号分隔）OR 语义、与 `search`/`is_r18` 的交叉筛选均正确。
+
+### 2026-09-27（续）— Web 检索层彻底升级：向量 + BM25 + 精排
+
+**背景**：`rag_service` 的"混合检索"一直是空壳 —— `_get_reranker()` 直接 `return False`、
+`_build_bm25()` 把 `_bm25` 置 False 后什么都不建、`_bm25_search()` 恒返回 `[]`，
+实际只有纯向量 Top-5，`score` 还是名次（40/39/38…）。
+
+**改动**：
+
+- `_build_bm25()`：真正在全库上建 `BM25Okapi`（jieba 分词），并维护 `hash → metadata` 映射（1945 篇约 3 秒，懒加载）。
+- `_bm25_search()`：真正的关键词召回。
+- `_get_reranker()`：加载 `bge-reranker-v2-m3` 精排（懒加载、失败优雅降级）。
+- `_retrieve_raw(query, top_k_final=TOP_K_FINAL)`：向量 ∪ BM25 → 精排 → Top-N，统一返回
+  `(docs, metas, 对外相关度, 向量相似度)`；`search()` 与 `ask*` 全部改走它，删掉了重复实现与名次假分。
+- `score` 口径：有 reranker 时 = `sigmoid(精排原始分)`；降级时 = 向量余弦相似度。
+
+**踩坑（重要）**：第一版用 `FlagEmbedding.FlagReranker`，结果**后端进程直接消失**（请求 500 后服务已死），
+Python 层没有任何 traceback。子进程隔离对照后定位到原生崩溃：
+
+| 变体 | 结果 |
+| --- | --- |
+| 只 `import FlagEmbedding` | ✅ 退出码 0 |
+| **先 `import chromadb` 再 `import FlagEmbedding`** | ❌ 退出码 **3221225477（0xC0000005 访问违例）** |
+| 先 `import FlagEmbedding` 再 `import chromadb` | ✅ 正常（但依赖导入顺序，太脆） |
+| `transformers` 直接加载同一模型（chromadb 已先导入） | ✅ 正常 |
+
+最终采用 `transformers` 方案（`AutoModelForSequenceClassification` + `float16`），
+评分数学与 FlagReranker 一致（`max_length=512`，与其 `passage_max_length` 默认值对齐）。
+
+**效果实测**：
+
+| 项 | 修前（纯向量） | 修后（向量+BM25+精排） |
+| --- | --- | --- |
+| 「世界书的递归扫描」 | 答"文档里没有相关信息"，来源是目录页+文档开头，相似度 0.69~0.71 | **364 字正确答案**，来源相关度 0.979 / 0.901 / 0.890… |
+| `Usage/worldinfo.md` 递归扫描段 | 完全没被召回 | **仅被 BM25 召回**（向量相似度 0.0000）→ 精排提到第 3 位 |
+| `/api/rag/search` 的 score | 名次 40/39/38 | 真实相关度 0.9836 / 0.9725 / 0.9683 |
+| 单次问答耗时 | 约 1~2s | 首次 13.4s（含两个模型懒加载），之后约 **2.1s** |
+
+**降级验证**：把 `RERANKER_MODEL_NAME` 指向不存在的模型 → 打印明确告警并退回
+「向量+BM25 不精排」，检索照常返回、进程不崩（实测退出码 0）。
