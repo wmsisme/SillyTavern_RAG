@@ -1,9 +1,12 @@
+import hashlib
 import json
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
 
+from backend.config import CARD_IMAGE_DIR
 from backend.models.database import get_db
+from backend.models.character_card import CharacterCard
 from backend.schemas.character_card import (
     CharacterCardCreate, CharacterCardUpdate,
     CharacterCardResponse, CharacterCardListResponse,
@@ -11,6 +14,32 @@ from backend.schemas.character_card import (
 from backend.services import card_service, card_generator
 
 router = APIRouter()
+
+# 角色卡图片：png/jpg/webp/gif，单张上限 8MB
+ALLOWED_IMAGE_TYPES = {
+    "image/png": ".png",
+    "image/jpeg": ".jpg",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+}
+MAX_IMAGE_BYTES = 8 * 1024 * 1024
+
+
+def _remove_image_file(image_path: Optional[str]):
+    """删掉 backend/static 下的旧图片。
+
+    只处理本服务写出去的 `/static/...` 相对路径，并确认目标确实落在
+    card_images 目录内，避免把别处的文件误删。
+    """
+    if not image_path or not image_path.startswith("/static/"):
+        return
+    try:
+        base = CARD_IMAGE_DIR.resolve()
+        target = (base.parent / image_path[len("/static/"):]).resolve()
+        if target.is_file() and base in target.parents:
+            target.unlink()
+    except Exception:
+        pass
 
 
 @router.get("/cards", response_model=CharacterCardListResponse)
@@ -51,10 +80,61 @@ def update_card(card_id: int, card: CharacterCardUpdate, db: Session = Depends(g
 
 @router.delete("/cards/{card_id}")
 def delete_card(card_id: int, db: Session = Depends(get_db)):
+    # 先取出图片路径，删卡时把图片文件一起清掉，免得 static 目录越堆越多
+    card = db.query(CharacterCard).filter(CharacterCard.id == card_id).first()
+    if card:
+        _remove_image_file(card.image_path)
     success = card_service.delete_card(db, card_id)
     if not success:
         raise HTTPException(status_code=404, detail="角色卡未找到")
     return {"status": "ok", "message": "角色卡已删除"}
+
+
+@router.post("/cards/{card_id}/image", response_model=CharacterCardResponse)
+async def upload_card_image(card_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """上传/替换角色卡图片。
+
+    图片存到 backend/static/card_images/（用户数据，已 gitignore），
+    库里只记相对 URL，由 main.py 把 /static 挂出去。
+    """
+    ext = ALLOWED_IMAGE_TYPES.get((file.content_type or "").lower())
+    if not ext:
+        raise HTTPException(
+            status_code=400,
+            detail=f"不支持的图片类型：{file.content_type or '未知'}（支持 png / jpg / webp / gif）",
+        )
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="图片内容为空")
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=400, detail="图片过大（上限 8MB）")
+
+    card = db.query(CharacterCard).filter(CharacterCard.id == card_id).first()
+    if not card:
+        raise HTTPException(status_code=404, detail="角色卡未找到")
+
+    CARD_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+    name = f"card_{card_id}_{hashlib.md5(data).hexdigest()[:10]}{ext}"
+    (CARD_IMAGE_DIR / name).write_bytes(data)
+
+    _remove_image_file(card.image_path)          # 换图时删旧文件
+    card.image_path = f"/static/card_images/{name}"
+    db.commit()
+    db.refresh(card)
+    return card
+
+
+@router.delete("/cards/{card_id}/image", response_model=CharacterCardResponse)
+def delete_card_image(card_id: int, db: Session = Depends(get_db)):
+    """清空角色卡图片（回到默认图标）"""
+    card = db.query(CharacterCard).filter(CharacterCard.id == card_id).first()
+    if not card:
+        raise HTTPException(status_code=404, detail="角色卡未找到")
+    _remove_image_file(card.image_path)
+    card.image_path = ""
+    db.commit()
+    db.refresh(card)
+    return card
 
 
 @router.post("/cards/generate")

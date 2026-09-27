@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.config import HF_ENDPOINT, FRONTEND_DIR
+from backend.config import HF_ENDPOINT, FRONTEND_DIR, STATIC_DIR
 
 os.environ.setdefault("HF_ENDPOINT", HF_ENDPOINT)
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
@@ -56,6 +56,10 @@ app.include_router(cards_router, prefix="/api", tags=["角色卡"])
 app.include_router(worldbooks_router, prefix="/api", tags=["世界书"])
 app.include_router(update_router, prefix="/api", tags=["文档更新"])
 app.include_router(tools_router, prefix="/api/tools", tags=["工具箱"])
+
+# 用户上传的图片等静态资源（角色卡图片走这里，见 api/cards.py 的上传端点）
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="user-static")
 
 _dist_dir = FRONTEND_DIR / "dist"
 if _dist_dir.exists() and _dist_dir.is_dir():

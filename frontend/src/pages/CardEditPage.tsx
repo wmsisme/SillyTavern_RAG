@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Typography, Form, Input, Button, Select, Switch, Card, Space,
-  App, Tabs, Spin, Row, Col, Divider, Tag, InputNumber,
+  App, Tabs, Spin, Row, Col, Divider, Tag, InputNumber, Upload,
 } from 'antd'
 import {
   SaveOutlined, RobotOutlined, ArrowLeftOutlined,
-  UserOutlined, PlusOutlined,
+  UserOutlined, PlusOutlined, UploadOutlined, PictureOutlined,
 } from '@ant-design/icons'
 import { api } from '../services/api'
 
-const { Title } = Typography
+const { Title, Text } = Typography
 const { TextArea } = Input
 
 const TAG_OPTIONS = [
@@ -31,6 +31,10 @@ export default function CardEditPage() {
   const [saving, setSaving] = useState(false)
   const [aiInput, setAiInput] = useState('')
   const [generating, setGenerating] = useState(false)
+  const [imagePath, setImagePath] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [suggesting, setSuggesting] = useState(false)
+  const [generatingBar, setGeneratingBar] = useState(false)
 
   useEffect(() => {
     if (!isNew) {
@@ -38,11 +42,93 @@ export default function CardEditPage() {
       api.get(`/cards/${id}`)
         .then((data: any) => {
           form.setFieldsValue(data)
+          setImagePath(data.image_path || '')
         })
         .catch(() => message.error('加载角色卡失败'))
         .finally(() => setLoading(false))
     }
   }, [id, form, isNew])
+
+  // 图片上传：新卡还没 id，先保存再传
+  const handleUploadImage = async (f: File) => {
+    if (isNew) {
+      message.warning('请先保存角色卡，再上传图片')
+      return
+    }
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', f)
+      // 这里必须用原生 fetch：FormData 要让浏览器自己加 multipart boundary，
+      // 走 api.post 会被固定成 Content-Type: application/json 而失败。
+      const resp = await fetch(`/api/cards/${id}/image`, { method: 'POST', body: fd })
+      const data: any = await resp.json().catch(() => ({}))
+      if (!resp.ok) throw new Error(data?.detail || `HTTP ${resp.status}`)
+      setImagePath(data.image_path || '')
+      message.success('图片已上传')
+    } catch (e: any) {
+      message.error('上传失败: ' + (e.message || '未知错误'))
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleRemoveImage = async () => {
+    if (isNew) return
+    try {
+      const resp = await fetch(`/api/cards/${id}/image`, { method: 'DELETE' })
+      const data: any = await resp.json().catch(() => ({}))
+      if (!resp.ok) throw new Error(data?.detail || `HTTP ${resp.status}`)
+      setImagePath('')
+      message.success('已移除图片，列表里会显示默认图标')
+    } catch (e: any) {
+      message.error('移除失败: ' + (e.message || '未知错误'))
+    }
+  }
+
+  const characterInfo = () => {
+    const v = form.getFieldsValue()
+    return [v.name, v.gender, v.age, v.species, v.occupation, v.personality, v.description]
+      .filter(Boolean).join('，')
+  }
+
+  // 状态栏 AI 生成：按当前 is_r18 开关走对应字段（需求要求两种内容不一样）
+  const handleGenerateStatusBar = async () => {
+    const info = characterInfo()
+    if (!info) { message.warning('请先填写角色名称、性格等基本信息'); return }
+    setGeneratingBar(true)
+    try {
+      const r18 = !!form.getFieldValue('is_r18')
+      const data: any = await api.post('/cards/generate/status-bar', { character_info: info, is_r18: r18 })
+      if (data.error) throw new Error(data.error)
+      const field = r18 ? 'status_bar_content_r18' : 'status_bar_content'
+      form.setFieldValue(field, data.status_bar || '')
+      form.setFieldValue('has_status_bar', true)
+      message.success(r18 ? '已生成 R18 状态栏内容' : '已生成全年龄状态栏内容')
+    } catch (e: any) {
+      message.error('生成状态栏失败: ' + (e.message || '未知错误'))
+    } finally {
+      setGeneratingBar(false)
+    }
+  }
+
+  const handleSuggestTags = async () => {
+    const info = characterInfo()
+    if (!info) { message.warning('请先填写角色描述'); return }
+    setSuggesting(true)
+    try {
+      const data: any = await api.post('/cards/suggest-tags', { character_info: info })
+      const tags: string[] = data.tags || []
+      if (!tags.length) { message.warning('没有拿到推荐标签，再补充点角色信息试试'); return }
+      const cur: string[] = form.getFieldValue('tags') || []
+      form.setFieldValue('tags', Array.from(new Set([...cur, ...tags])))
+      message.success(`推荐 ${tags.length} 个标签，已并入当前选择`)
+    } catch (e: any) {
+      message.error('推荐标签失败: ' + (e.message || '未知错误'))
+    } finally {
+      setSuggesting(false)
+    }
+  }
 
   const handleGenerate = async () => {
     if (!aiInput.trim()) {
@@ -69,9 +155,10 @@ export default function CardEditPage() {
     setSaving(true)
     try {
       if (isNew) {
-        await api.post('/cards', values)
-        message.success('角色卡创建成功')
-        navigate('/cards')
+        const created: any = await api.post('/cards', values)
+        message.success('角色卡创建成功，接下来可以上传图片')
+        // 跳到带上 id 的编辑页：图片上传需要 card_id
+        navigate(`/cards/${created.id}`)
       } else {
         await api.put(`/cards/${id}`, values)
         message.success('角色卡更新成功')
@@ -177,6 +264,34 @@ export default function CardEditPage() {
                 label: '基本信息',
                 children: (
                   <>
+                    <Form.Item label="角色卡图片">
+                      <Space align="start" size={16}>
+                        {imagePath
+                          ? <img src={imagePath} alt="角色卡图片"
+                              style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8, border: '1px solid #f0f0f0' }} />
+                          : <div style={{
+                              width: 96, height: 96, borderRadius: 8, border: '1px dashed #d9d9d9',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb',
+                            }}>
+                              <PictureOutlined style={{ fontSize: 28 }} />
+                            </div>}
+                        <Space direction="vertical">
+                          <Upload
+                            accept="image/png,image/jpeg,image/webp,image/gif"
+                            showUploadList={false}
+                            beforeUpload={(f) => { handleUploadImage(f as File); return false }}
+                          >
+                            <Button icon={<UploadOutlined />} loading={uploading}>
+                              {imagePath ? '更换图片' : '上传图片'}
+                            </Button>
+                          </Upload>
+                          {imagePath && <Button size="small" danger onClick={handleRemoveImage}>移除图片</Button>}
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            {isNew ? '保存后才能上传' : 'png / jpg / webp / gif，≤8MB；不上传则列表显示默认图标'}
+                          </Text>
+                        </Space>
+                      </Space>
+                    </Form.Item>
                     <Row gutter={16}>
                       <Col span={12}>
                         <Form.Item label="角色名称" name="name" rules={[{ required: true }]}>
@@ -243,6 +358,11 @@ export default function CardEditPage() {
                     <Form.Item label="角色标签" name="tags">
                       <Select mode="multiple" placeholder="选择标签，可多选" options={TAG_OPTIONS.map(t => ({ label: t, value: t }))} />
                     </Form.Item>
+                    <Form.Item>
+                      <Button icon={<RobotOutlined />} loading={suggesting} onClick={handleSuggestTags}>
+                        AI 推荐标签
+                      </Button>
+                    </Form.Item>
                     <Divider />
                     <Row gutter={16}>
                       <Col span={8}>
@@ -266,6 +386,16 @@ export default function CardEditPage() {
                   <>
                     <Form.Item label="开场白" name="first_message">
                       <TextArea rows={3} placeholder="角色第一次对用户说的话" />
+                    </Form.Item>
+                    <Form.Item>
+                      <Space>
+                        <Button icon={<RobotOutlined />} loading={generatingBar} onClick={handleGenerateStatusBar}>
+                          AI 生成状态栏内容
+                        </Button>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          按当前「R18 内容」开关写入对应字段，并自动开启状态栏
+                        </Text>
+                      </Space>
                     </Form.Item>
                     <Form.Item label="状态栏内容（全年龄）" name="status_bar_content">
                       <TextArea rows={3} placeholder='[{"label":"心情","value":"愉悦"},{"label":"好感度","value":"50"}]' />

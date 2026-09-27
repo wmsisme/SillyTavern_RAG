@@ -107,6 +107,8 @@ credentials.json
 service-account.json
 
 # ==================== 本项目：后端 / 前端 本地数据（勿提交） ====================
+# 用户上传的图片等静态资源（角色卡图片就在这里）
+backend/static/
 # SQLite 业务数据（角色卡 / 世界书），属于用户数据，不进公开仓库
 backend/data.db
 backend/data.db-journal

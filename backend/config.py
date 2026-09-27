@@ -27,6 +27,11 @@ VECTOR_CACHE_META_PATH = RAG_DIR / "vector_cache_meta.json"
 REGEX_CHUNKS_DIR = RAG_DIR / "正则表达式" / "rag_chunks"
 REGEX_README_PATH = RAG_DIR / "README.md"
 
+# 用户上传的角色卡图片：属于用户数据，不进版本库（.gitignore 已拦），
+# 由 main.py 挂到 /static 对外提供，库里只存 /static/card_images/xxx.png 这样的相对 URL。
+STATIC_DIR = BACKEND_DIR / "static"
+CARD_IMAGE_DIR = STATIC_DIR / "card_images"
+
 # 向量模型：优先用项目内已下载的副本（RAG/bge-large-zh）。
 # 原来写死成 "BAAI/bge-large-zh-v1.5"，但 HF 缓存里并没有这个仓库，
 # 而加载时用的是 local_files_only=True → 必然抛 LocalEntryNotFoundError。
@@ -76,3 +81,4 @@ UPSTREAM_BRANCH = "main"
 HF_ENDPOINT = os.environ.get("HF_ENDPOINT", "https://hf-mirror.com")
 
 TMP_DIR.mkdir(parents=True, exist_ok=True)
+CARD_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
