@@ -48,13 +48,21 @@ def main() -> int:
     try:
         out = subprocess.run(
             ["docker", "compose", "exec", "-T", args.container, "pip", "list", "--format=freeze"],
-            cwd=str(ROOT), capture_output=True, text=True, timeout=180)
+            cwd=str(ROOT), capture_output=True, text=True,
+            # Windows 控制台默认 GBK，docker 的输出是 UTF-8 —— 不写死编码会直接崩在 reader 线程里
+            encoding="utf-8", errors="replace", timeout=180)
     except Exception as e:
         print("拿不到容器内的包列表：", e)
         return 2
     installed = {ln.split("==")[0].strip().lower() for ln in out.stdout.splitlines() if "==" in ln}
     if not installed:
-        print("容器没在跑？先 docker compose up -d")
+        if out.returncode != 0:
+            print(f"docker compose exec 失败（退出码 {out.returncode}）：")
+            for line in (out.stderr or "").strip().splitlines()[-3:]:
+                print("   ", line)
+            print("（常见原因：当前目录不是 compose 项目 / 服务名不对 / 容器没起）")
+        else:
+            print("容器没在跑？先 docker compose up -d")
         return 2
     print(f"容器内已装 {len(installed)} 个包")
 
