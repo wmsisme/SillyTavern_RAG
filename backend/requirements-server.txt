@@ -1,0 +1,34 @@
+# 服务器（公网部署）用的**精简**依赖清单。
+#
+# 与 backend/requirements.txt 的区别：**不含 torch / transformers / langchain* / FlagEmbedding**。
+# 那些只服务「本机模型」与「离线灌库」；公网版检索走硅基流动 API（EMBED_PROVIDER=siliconflow），
+# 装了等于白背几个 GB、冷启动还更慢。
+#
+# 本机开发 / 要跑离线灌库 → 用 backend/requirements.txt；只部署服务 → 用这份。
+#
+# ⚠️ 这份清单里**故意没有**的东西，以及代价（2026-10-06 用「扫全部 import 对照容器实装」的办法确认过）：
+#   · torch / transformers —— 只有「本机模型」那条路（EMBED_PROVIDER=local）用得到
+#   · langchain*          —— 只有「从零就地重建索引」用得到；缺了它会让空索引启动报**能照着做的错**
+#   · FlagEmbedding 等灌库依赖 —— 同上
+#   所以：**别在服务器上灌库**，索引在本机生成好再传（部署说明.md 第 1 节）。
+#   另外 opencc_rust 是可选的加速实现，没装会自动回退到上面的 opencc ✓
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+sqlalchemy>=2.0.0
+pydantic>=2.0
+
+chromadb==1.5.9
+# posthog 固定 3.x：新版改了 capture() 签名，chromadb 仍按老签名调用，会持续刷遥测报错
+posthog<4
+
+openai>=1.0.0
+httpx>=0.27
+jieba>=0.42.1
+rank-bm25>=0.2.2
+numpy>=1.24
+Pillow>=10.0.0
+# 简繁转换工具要它（2026-10-06 首次容器部署时漏了，工具箱那一项直接报错）
+opencc-python-reimplemented>=0.1.7
+python-dotenv>=1.0.0
+cryptography>=42.0.0

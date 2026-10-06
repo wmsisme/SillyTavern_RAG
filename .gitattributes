@@ -1,0 +1,17 @@
+# ==================== Git LFS - 大模型文件 ====================
+*.safetensors filter=lfs diff=lfs merge=lfs -text
+*.pth filter=lfs diff=lfs merge=lfs -text
+*.gguf filter=lfs diff=lfs merge=lfs -text
+*.onnx filter=lfs diff=lfs merge=lfs -text
+*.h5 filter=lfs diff=lfs merge=lfs -text
+
+# ==================== ChromaDB 持久化文件 ====================
+RAG/chroma_db/**/*.bin filter=lfs diff=lfs merge=lfs -text
+RAG/chroma_db/**/*.parquet filter=lfs diff=lfs merge=lfs -text
+
+# ==================== 大图片 / 资源 ====================
+*.png filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.jpeg filter=lfs diff=lfs merge=lfs -text
+*.gif filter=lfs diff=lfs merge=lfs -text
+*.webp filter=lfs diff=lfs merge=lfs -text

@@ -1,0 +1,4 @@
+# 真正的依赖清单在 backend/requirements.txt（含 fastapi / uvicorn / Pillow / opencc 等）。
+# 这份文件早先是独立维护的，长期落后于实际依赖 —— 照着它装会装出半套环境（缺 fastapi/uvicorn 等）。
+# 现改成指针，避免留一个岔路。
+-r backend/requirements.txt

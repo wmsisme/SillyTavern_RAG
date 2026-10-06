@@ -1,0 +1,100 @@
+import os
+import sys
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+
+from backend.config import HF_ENDPOINT, FRONTEND_DIR, STATIC_DIR
+
+os.environ.setdefault("HF_ENDPOINT", HF_ENDPOINT)
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+
+from backend.models.database import init_db
+from backend.api.ratelimit import install_rate_limit
+
+
+def _ensure_rag_index():
+    from backend.services.rag_service import _get_collection
+    col = _get_collection()
+    print(f"ChromaDB 索引就绪: {col.count()} 条记录")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    _ensure_rag_index()
+    yield
+
+
+app = FastAPI(
+    title="SillyTavern RAG 知识库",
+    description="SillyTavern 知识库检索与角色卡/世界书管理平台",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 按 IP 限流（每 IP 每分钟 50 次，只算贵的接口；登录注册另算）
+install_rate_limit(app)
+
+from backend.api.rag import router as rag_router
+from backend.api.cards import router as cards_router
+from backend.api.worldbooks import router as worldbooks_router
+from backend.api.update import router as update_router
+from backend.api.tools import router as tools_router
+from backend.api.health import router as health_router
+from backend.api.auth import router as auth_router
+from backend.api.llm import router as llm_router
+
+app.include_router(health_router, tags=["健康检查"])
+app.include_router(auth_router, prefix="/api", tags=["账号"])
+app.include_router(llm_router, prefix="/api", tags=["大模型平台"])
+app.include_router(rag_router, prefix="/api", tags=["RAG问答"])
+app.include_router(cards_router, prefix="/api", tags=["角色卡"])
+app.include_router(worldbooks_router, prefix="/api", tags=["世界书"])
+app.include_router(update_router, prefix="/api", tags=["文档更新"])
+app.include_router(tools_router, prefix="/api/tools", tags=["工具箱"])
+
+# 目录先建出来（上传要用），但**不再**挂成静态目录：
+# StaticFiles 不鉴权，拿到 URL 的人就能看 —— 那「只有本人能看到自己的卡」就是假的。
+# 图片统一走 /api/cards/{id}/image，校验登录态 + 归属后再发文件（见 api/cards.py）。
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+
+_dist_dir = FRONTEND_DIR / "dist"
+if _dist_dir.exists() and _dist_dir.is_dir():
+    _dist_root = _dist_dir.resolve()
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str):
+        """前端静态文件 + SPA 兜底。
+
+        为什么不用 `app.mount(StaticFiles(html=True))`：那样**深链接会 404** ——
+        别人直接打开 `/login`、`/cards` 这类前端路由会看到 404，
+        而开发模式（Vite）下一切正常，**只有上线才发现**（2026-10-06 在容器里实测踩到）。
+        这里显式约定：文件存在就发文件，否则回退 index.html。
+        """
+        if full_path.startswith("api/") or full_path == "health":
+            # 接口路径不兜底，老老实实 404 —— 免得打错的 API 拿到一个 200 的 HTML
+            raise HTTPException(status_code=404, detail="接口不存在")
+        candidate = (_dist_root / full_path).resolve()
+        if full_path and candidate.is_file() and str(candidate).startswith(str(_dist_root)):
+            return FileResponse(candidate)
+        # 带扩展名的 = 资源请求（.png/.js/.css…），找不到就该 404，不能回退成页面。
+        # 这条不是洁癖：老的角色卡直链 /static/card_images/xxx.png 一旦被兜底成 index.html，
+        # 就变成"200 + 一坨 HTML"，把「静态目录不再对外」这条安全断言冲掉了。
+        if "." in full_path.rsplit("/", 1)[-1]:
+            raise HTTPException(status_code=404, detail="资源不存在")
+        index = _dist_root / "index.html"
+        if index.is_file():
+            return FileResponse(index)
+        raise HTTPException(status_code=404, detail="前端还没构建（缺少 frontend/dist）")

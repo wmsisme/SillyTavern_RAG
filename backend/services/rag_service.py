@@ -1,0 +1,953 @@
+import os
+import hashlib
+import re
+import subprocess
+from pathlib import Path
+from typing import List, Dict, Tuple, Optional
+from dataclasses import dataclass
+
+os.environ.setdefault("HF_ENDPOINT", os.environ.get("HF_ENDPOINT", "https://hf-mirror.com"))
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+
+import jieba
+import chromadb
+import httpx
+import time
+import numpy as np
+from openai import OpenAI
+
+# torch / transformers 只在**本机模型那条路**（EMBED_PROVIDER=local）才需要。
+# 服务器上走硅基流动 API，装它们等于白背 2.5GB 的包、冷启动还更慢 —— 所以做成可选导入。
+try:
+    import torch
+    from transformers import AutoModel, AutoTokenizer
+    _TORCH_AVAILABLE = True
+except ImportError:          # 精简部署（只有 API 通路）时会走这里
+    torch = None             # type: ignore
+    AutoModel = AutoTokenizer = None  # type: ignore
+    _TORCH_AVAILABLE = False
+
+from backend.config import (
+    CHROMA_DIR, COLLECTION_NAME, EMBEDDING_MODEL_NAME,
+    RERANKER_MODEL_NAME, DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL,
+    DOCS_REPO_DIR, TRANSLATION_CACHE_PATH, REGEX_README_PATH,
+    REGEX_CHUNKS_DIR, VECTOR_CACHE_PATH, VECTOR_CACHE_META_PATH,
+    EMBED_PROVIDER, SILICONFLOW_API_KEY, SILICONFLOW_BASE_URL,
+    SILICONFLOW_EMBED_MODEL, SILICONFLOW_RERANK_MODEL,
+)
+
+EMBED_DEVICE = "cuda:0" if (torch is not None and torch.cuda.is_available()) else "cpu"
+TOP_K_RETRIEVAL = 40
+TOP_K_FINAL = 5
+
+_embedder = None
+_reranker = None
+_collection = None
+_bm25 = None
+_corpus = None
+_hash_to_meta = None
+_deepseek_client = None
+
+
+def _get_embedder():
+    global _embedder
+    if not _TORCH_AVAILABLE:
+        raise RuntimeError(
+            "本机模型路径需要 torch/transformers，但当前环境没装。"
+            "精简部署请改用 EMBED_PROVIDER=siliconflow 走 API；要用本机模型就装 backend/requirements.txt。")
+    if _embedder is None:
+        tokenizer = AutoTokenizer.from_pretrained(EMBEDDING_MODEL_NAME, local_files_only=True)
+        model = AutoModel.from_pretrained(EMBEDDING_MODEL_NAME, local_files_only=True).to(EMBED_DEVICE)
+        model.eval()
+        _embedder = (tokenizer, model, EMBED_DEVICE)
+    return _embedder
+
+
+def _get_reranker():
+    """加载 bge-reranker-v2-m3 用于精排（懒加载；失败则降级为不精排）。
+
+    ⚠ **不要改用 FlagEmbedding.FlagReranker**：实测本机上「先 import chromadb、
+    再 import FlagEmbedding」会以 0xC0000005（访问违例）**原生崩溃** —— 进程直接消失，
+    Python 层 except 抓不到，uvicorn 表现为请求 500 且服务已死。
+    对照实验（子进程隔离，看退出码）：
+      · 只 import FlagEmbedding                → 正常（退出码 0）
+      · 先 chromadb 再 import FlagEmbedding     → 崩（3221225477 = 0xC0000005）
+      · 先 FlagEmbedding 再 chromadb            → 正常，但依赖导入顺序，太脆
+    所以这里直接用 transformers 加载同一个模型，评分数学与 FlagReranker 一致。
+    """
+    global _reranker
+    if _reranker is None:
+        try:
+            from transformers import AutoModelForSequenceClassification
+            tokenizer = AutoTokenizer.from_pretrained(RERANKER_MODEL_NAME, local_files_only=True)
+            dtype = torch.float16 if str(EMBED_DEVICE).startswith("cuda") else torch.float32
+            model = AutoModelForSequenceClassification.from_pretrained(
+                RERANKER_MODEL_NAME, local_files_only=True, torch_dtype=dtype,
+            ).to(EMBED_DEVICE)
+            model.eval()
+            _reranker = (tokenizer, model, EMBED_DEVICE)
+            print(f"[rag] reranker 已加载: {RERANKER_MODEL_NAME} ({EMBED_DEVICE})")
+        except Exception as e:
+            print(f"[rag] reranker 加载失败，降级为 向量+BM25 融合（不精排）: "
+                  f"{type(e).__name__}: {str(e)[:120]}")
+            _reranker = False
+    return _reranker
+
+
+def _rerank_scores(query: str, docs: List[str], batch: int = 16) -> Optional[List[float]]:
+    """对候选块打分（query, passage 交叉编码）。没 reranker 或失败时返回 None。
+
+    max_length 取 512，与 FlagReranker 的默认 passage_max_length 一致，
+    这样 Web 侧的精排口径与 循环测试.py 的 rag_retrieve_v6 对齐。
+    """
+    if EMBED_PROVIDER != "local":
+        try:
+            return _rerank_scores_api(query, docs)
+        except Exception as e:
+            print(f"[rag] 硅基流动精排失败，退化为向量相似度: {type(e).__name__}: {str(e)[:120]}")
+            return None
+
+    rr = _get_reranker()
+    if not rr or rr is False:
+        return None
+    tokenizer, model, device = rr
+    out: List[float] = []
+    try:
+        with torch.no_grad():
+            for i in range(0, len(docs), batch):
+                part = docs[i:i + batch]
+                inputs = tokenizer([query] * len(part), [d[:1500] for d in part],
+                                   padding=True, truncation=True, max_length=512,
+                                   return_tensors="pt").to(device)
+                out.extend(model(**inputs).logits.view(-1).float().cpu().tolist())
+        return out
+    except Exception as e:
+        print(f"[rag] 精排打分失败，退化为向量相似度: {type(e).__name__}: {str(e)[:120]}")
+        return None
+
+
+_g_client = None
+
+
+def _save_vector_cache(ids, documents, metadatas, embeddings):
+    """把整库内容落盘成向量缓存，供下次启动跳过 BGE 向量化。"""
+    try:
+        import json as _json
+        import numpy as _np
+
+        VECTOR_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _np.savez(
+            str(VECTOR_CACHE_PATH),
+            # 文本必须用 object dtype：numpy 默认的定长字符串按最长条目分配固定宽度，
+            # 1798 个 chunk 会撑到 500MB+（实测 565MB，改后约 7MB）。
+            ids=_np.array(ids, dtype=object),
+            documents=_np.array(documents, dtype=object),
+            embeddings=_np.asarray(embeddings, dtype=_np.float32),
+        )
+        with open(VECTOR_CACHE_META_PATH, "w", encoding="utf-8") as f:
+            _json.dump({"count": len(ids), "metadatas": metadatas}, f, ensure_ascii=False)
+        print(f"  向量缓存已写入: {VECTOR_CACHE_PATH.name} ({len(ids)} 条)")
+    except Exception as e:
+        print(f"  向量缓存写入失败（不影响本次运行）: {str(e)[:80]}")
+
+
+def _load_vector_cache():
+    """读取向量缓存；缺失、损坏或条目数不一致时返回 None。"""
+    if not (VECTOR_CACHE_PATH.exists() and VECTOR_CACHE_META_PATH.exists()):
+        return None
+    try:
+        import json as _json
+        import numpy as _np
+
+        with open(VECTOR_CACHE_META_PATH, "r", encoding="utf-8") as f:
+            meta = _json.load(f)
+        data = _np.load(str(VECTOR_CACHE_PATH), allow_pickle=True)
+        ids = [str(x) for x in data["ids"].tolist()]
+        documents = [str(x) for x in data["documents"].tolist()]
+        embeddings = data["embeddings"]
+        metadatas = meta.get("metadatas") or []
+
+        if not (len(ids) == len(documents) == len(embeddings) == len(metadatas)):
+            print("  向量缓存条目数不一致，改走全量重建")
+            return None
+        if meta.get("count") != len(ids):
+            print("  向量缓存计数不符，改走全量重建")
+            return None
+        return {"ids": ids, "documents": documents,
+                "embeddings": embeddings, "metadatas": metadatas}
+    except Exception as e:
+        print(f"  向量缓存读取失败，改走全量重建: {str(e)[:80]}")
+        return None
+
+
+def _restore_from_cache(client) -> bool:
+    """把缓存灌回集合；成功 True，失败则由调用方回退到全量重建。"""
+    cache = _load_vector_cache()
+    if not cache:
+        return False
+    ids = cache["ids"]
+    documents = cache["documents"]
+    embeddings = cache["embeddings"].tolist()
+    metadatas = cache["metadatas"]
+    try:
+        collection = client.get_collection(COLLECTION_NAME)
+        BATCH = 256
+        for i in range(0, len(ids), BATCH):
+            collection.add(
+                ids=ids[i:i + BATCH],
+                documents=documents[i:i + BATCH],
+                embeddings=embeddings[i:i + BATCH],
+                metadatas=metadatas[i:i + BATCH],
+            )
+        print(f"  已从向量缓存恢复 {collection.count()} 条（跳过向量化）")
+        return True
+    except Exception as e:
+        print(f"  向量缓存恢复失败，回退到全量重建: {str(e)[:80]}")
+        return False
+
+
+def _repair_hnsw_pickles() -> int:
+    """删掉各 segment 目录里的 index_metadata.pickle，让 chromadb 从 WAL 重建 HNSW。
+
+    根因（2026-09-26 实测定位，纠正旧结论「索引不落盘」）：
+    上一次进程写下的 `<segment>/index_metadata.pickle` 会被**下一次新进程**读取失败，
+    报错 "Error sending backfill request to compactor: Error constructing hnsw segment
+    reader: Error loading hnsw index"。删掉它之后，chromadb 会从 chroma.sqlite3 的 WAL
+    重建索引 —— 1810 条实测约 1.4 秒即可被新进程查询。
+    对照实验（同一份库拷贝到临时目录）：
+      · 保留全部子目录      → 必失败
+      · 只留 chroma.sqlite3 → 正常（count=1810、query 成功）
+      · 只删这一个 pickle   → 正常
+    返回删除的文件数。
+    """
+    n = 0
+    try:
+        for p in CHROMA_DIR.rglob("index_metadata.pickle"):
+            try:
+                p.unlink()
+                n += 1
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return n
+
+
+def _try_heal_hnsw_index():
+    """自愈：清掉坏 pickle 后重开集合。成功返回 collection，否则 None。"""
+    global _g_client
+    try:
+        n = _repair_hnsw_pickles()
+        if not n:
+            return None
+        print(f"检测到 {n} 个可能损坏的 HNSW 索引元数据，清除后尝试从 WAL 重建...")
+        _g_client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+        col = _g_client.get_collection(COLLECTION_NAME)
+        if col.count() == 0:
+            return None
+        col.query(query_embeddings=[[0.0] * 1024], n_results=1)
+        print(f"ChromaDB 索引已自愈（不需要向量缓存）: {col.count()} 条记录")
+        return col
+    except Exception as e:
+        print(f"自愈未成功（{type(e).__name__}: {str(e)[:100]}），继续走兜底路径")
+        return None
+
+
+def _get_collection():
+    global _collection, _g_client
+    if _collection is None:
+        _g_client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+        needs_rebuild = False
+        try:
+            _collection = _g_client.get_collection(COLLECTION_NAME)
+            if _collection.count() == 0:
+                needs_rebuild = True
+            else:
+                dummy_emb = [0.0] * 1024
+                _collection.query(query_embeddings=[dummy_emb], n_results=1)
+        except Exception:
+            needs_rebuild = True
+
+        if needs_rebuild:
+            # 第一优先：自愈（~1.4s，远快于灌缓存 12s / 重新向量化 104s）
+            healed = _try_heal_hnsw_index()
+            if healed is not None:
+                _collection = healed
+                return _collection
+
+            print("ChromaDB 索引不可用，优先尝试向量缓存...")
+            try:
+                _g_client.delete_collection(COLLECTION_NAME)
+            except Exception:
+                pass
+            _g_client.create_collection(name=COLLECTION_NAME, metadata={"hnsw:space": "cosine"})
+
+            if not _restore_from_cache(_g_client):
+                # 缓存缺失或灌回失败：清空后走完整重建（翻译走缓存、重新切片向量化）
+                try:
+                    _g_client.delete_collection(COLLECTION_NAME)
+                except Exception:
+                    pass
+                _g_client.create_collection(name=COLLECTION_NAME, metadata={"hnsw:space": "cosine"})
+                _rebuild_index_inline(_g_client)
+
+            _collection = _g_client.get_collection(COLLECTION_NAME)
+            print(f"ChromaDB 索引就绪: {_collection.count()} 条记录")
+    return _collection
+
+
+# ---------------------------------------------------------------- 硅基流动通路
+_SF_EMBED_BATCH = 16      # 单次 /embeddings 的批量
+_SF_RERANK_BATCH = 40     # 单次 /rerank 的文档数
+_SF_RETRY = 4
+# bge-m3 上限 8192 tokens。中文大致 1 字 ≈ 1~1.5 token，取 6000 字很安全。
+# 为什么要截：本机模型是 truncation=True **静默截断**的，换 API 后超长文本会变成
+# HTTP 400（实测库里有一条 77628 字的「RAG切片总索引」直接把它顶爆）。
+_SF_MAX_CHARS = 6000
+
+
+def _sanitize(texts) -> List[str]:
+    """空串 / 超长都要处理：空串多数平台会 400，超长会 400（见 _SF_MAX_CHARS）。"""
+    out = []
+    for t in texts:
+        s = (t or "").strip()
+        if not s:
+            s = "（空内容）"
+        out.append(s[:_SF_MAX_CHARS])
+    return out
+
+
+def _sf_post(path: str, payload: dict) -> dict:
+    """调硅基流动，失败按指数退避重试。
+
+    两类失败都要重试：HTTP 429/5xx，以及**网络层中断**（实测遇到过
+    "peer closed connection without sending complete message body" ——
+    响应只收到一半，这种根本不是 HTTP 错误，光看状态码抓不到）。
+    其余 4xx 属于请求本身有问题，直接抛出去让调用方看见。
+    """
+    url = f"{SILICONFLOW_BASE_URL.rstrip('/')}{path}"
+    headers = {"Authorization": f"Bearer {SILICONFLOW_API_KEY}",
+               "Content-Type": "application/json"}
+    last = ""
+    for attempt in range(_SF_RETRY):
+        try:
+            r = httpx.post(url, headers=headers, json=payload, timeout=180)
+        except Exception as e:
+            last = f"{type(e).__name__}: {str(e)[:140]}"
+            time.sleep(1.5 * (2 ** attempt))
+            continue
+        if r.status_code == 200:
+            return r.json()
+        last = f"HTTP {r.status_code}: {r.text[:160]}"
+        if r.status_code in (429, 500, 503, 504):
+            time.sleep(1.5 * (2 ** attempt))
+            continue
+        break
+    raise RuntimeError(f"硅基流动调用失败（{path}）：{last}")
+
+
+def _encode_batch_api(texts: List[str]) -> List[List[float]]:
+    out: List[List[float]] = []
+    for i in range(0, len(texts), _SF_EMBED_BATCH):
+        part = _sanitize(texts[i:i + _SF_EMBED_BATCH])
+        data = _sf_post("/embeddings", {"model": SILICONFLOW_EMBED_MODEL, "input": part})
+        rows = sorted(data.get("data", []), key=lambda x: x.get("index", 0))
+        out.extend([r["embedding"] for r in rows])
+    return out
+
+
+def _rerank_scores_api(query: str, docs: List[str]) -> List[float]:
+    """硅基流动 /rerank；按索引回填，绝不靠返回顺序（它可能按分数重排过）。"""
+    scores = [0.0] * len(docs)
+    for i in range(0, len(docs), _SF_RERANK_BATCH):
+        part = _sanitize(docs[i:i + _SF_RERANK_BATCH])
+        data = _sf_post("/rerank", {"model": SILICONFLOW_RERANK_MODEL,
+                                    "query": _sanitize([query])[0], "documents": part})
+        for r in data.get("results", []):
+            idx = i + int(r.get("index", 0))
+            if 0 <= idx < len(scores):
+                scores[idx] = float(r.get("relevance_score", 0.0))
+    return scores
+
+
+def _encode_batch(texts: List[str]) -> List[List[float]]:
+    """按 EMBED_PROVIDER 走本机模型或硅基流动 API。两条路的向量**互不通用**。"""
+    if EMBED_PROVIDER != "local":
+        return _encode_batch_api(texts)
+
+    tokenizer, model, device = _get_embedder()
+    inputs = tokenizer(texts, padding=True, truncation=True, max_length=512, return_tensors="pt").to(device)
+    with torch.no_grad():
+        outputs = model(**inputs)
+        emb = outputs.last_hidden_state[:, 0]
+        emb = torch.nn.functional.normalize(emb, p=2, dim=1)
+    return emb.cpu().numpy().tolist()
+
+
+def _encode_query(query: str) -> List[float]:
+    return _encode_batch([query])[0]
+
+
+def _build_bm25():
+    """在全库文档上建 BM25 索引（jieba 分词），供关键词召回。
+
+    原来是空壳（直接把 _bm25 置 False、_corpus 置空），于是"混合检索"只剩向量一路 ——
+    中文问题的关键词经常匹配不上向量召回，实测「世界书的递归扫描」一问纯向量 Top-5
+    完全没命中 worldinfo 里的递归段落（相似度仅 0.69~0.71）。
+    """
+    global _bm25, _corpus, _hash_to_meta
+    if _bm25 is not None:
+        return
+    try:
+        from rank_bm25 import BM25Okapi
+        collection = _get_collection()
+        all_data = collection.get(limit=99999, include=["documents", "metadatas"])
+        docs = all_data.get("documents") or []
+        metas = all_data.get("metadatas") or []
+        _corpus = docs
+        _hash_to_meta = {hashlib.md5(d.encode()).hexdigest(): m for d, m in zip(docs, metas)}
+        tokenized = [list(jieba.cut(d)) for d in docs]
+        _bm25 = BM25Okapi(tokenized)
+        print(f"[rag] BM25 索引已构建: {len(docs)} 篇")
+    except Exception as e:
+        print(f"[rag] BM25 构建失败，退化为纯向量: {type(e).__name__}: {str(e)[:120]}")
+        _bm25 = False
+        _corpus = []
+        _hash_to_meta = {}
+
+
+def _bm25_search(query: str, top_k: int) -> List[Tuple[str, float]]:
+    if not _bm25 or not _corpus:
+        return []
+    try:
+        scores = _bm25.get_scores(list(jieba.cut(query)))
+        idx = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
+        return [(_corpus[i], float(scores[i])) for i in idx if scores[i] > 0]
+    except Exception:
+        return []
+
+
+def _sigmoid(x: float) -> float:
+    try:
+        return 1.0 / (1.0 + np.exp(-float(x)))
+    except Exception:
+        return 0.0
+
+
+def search(query: str, top_k: int = TOP_K_FINAL) -> List[dict]:
+    """向量 + BM25 召回 → reranker 精排，返回带真实相关度的结果。
+
+    原来这里自带一份检索实现，且在没有 reranker 时把**名次**（40/39/38…）
+    当成 score 返回 —— 拿它当质量指标会被误导。现在统一走 _retrieve_raw。
+    """
+    top_k = max(1, min(int(top_k or TOP_K_FINAL), TOP_K_RETRIEVAL))
+    docs, metas, scores, _sims = _retrieve_raw(query, top_k_final=top_k)
+
+    results = []
+    for i, (d, m) in enumerate(zip(docs, metas)):
+        results.append({
+            "content": d[:500],
+            "source": m.get("source", "unknown"),
+            "module": m.get("module", m.get("source_file", "")),
+            "score": round(float(scores[i]), 4) if i < len(scores) else 0.0,
+        })
+    return results
+
+
+def _expand_chunk_context(metas: List[Dict], expand_radius: int = 2) -> List[str]:
+    collection = _get_collection()
+    expanded = {}
+    source_cache = {}
+
+    for meta in metas:
+        source_file = meta.get("source_file", meta.get("module", ""))
+        chunk_index = meta.get("chunk_index", None)
+        if not source_file or chunk_index is None:
+            continue
+
+        if source_file not in source_cache:
+            try:
+                neighbors = collection.get(
+                    where={"source_file": source_file},
+                    include=["documents", "metadatas"],
+                    limit=99999
+                )
+                if neighbors and neighbors.get("ids"):
+                    sorted_items = sorted(
+                        zip(neighbors["metadatas"], neighbors["documents"]),
+                        key=lambda x: x[0].get("chunk_index", 0)
+                    )
+                    source_cache[source_file] = {
+                        "metas": [m for m, _ in sorted_items],
+                        "docs": [d for _, d in sorted_items],
+                        "total": len(sorted_items)
+                    }
+                else:
+                    source_cache[source_file] = None
+            except Exception:
+                source_cache[source_file] = None
+                continue
+
+        sc = source_cache.get(source_file)
+        if not sc:
+            continue
+
+        start = max(0, chunk_index - expand_radius)
+        end = min(sc["total"], chunk_index + expand_radius + 1)
+
+        for ci in range(start, end):
+            doc = sc["docs"][ci]
+            actual_ci = sc["metas"][ci].get("chunk_index", ci)
+            rkey = f"{source_file}::{actual_ci}"
+            if doc and rkey not in expanded:
+                expanded[rkey] = doc
+
+    return [expanded[k] for k in sorted(expanded.keys())]
+
+
+def _retrieve_raw(query: str, top_k_final: int = TOP_K_FINAL
+                  ) -> Tuple[List[str], List[Dict], List[float], List[float]]:
+    """检索 → (docs, metas, 对外相关度, 向量相似度)。
+
+    流程与 循环测试.py 的 rag_retrieve_v6 对齐：
+      向量 Top-40  ─┐
+                    ├─ 按 md5 去重合并 → bge-reranker 精排 → Top-{top_k_final}
+      BM25 Top-40  ─┘
+    第 3 个返回值是给前端显示/给接口返回的"相关度"，口径见 _apply_score_mode
+    （有 reranker 时 = sigmoid(精排分)，决定顺序的就是它；降级时 = 向量余弦相似度）。
+    第 4 个是向量余弦相似度（1 - distance），BM25 单独召回的块记 0（不编造）。
+    """
+    collection = _get_collection()
+    # 预热：只有**本机模型那条路**需要先把模型加载起来，免得第一次查询多等几秒。
+    # ⚠️ 这里原来是无条件调用 `_get_embedder()` —— 走 API 时它会白加载 1.2GB 本地模型
+    # （本机表现为首次查询莫名多花 8 秒），到了没装 torch 的精简镜像里更是直接抛错。
+    if EMBED_PROVIDER == "local":
+        _get_embedder()
+    _build_bm25()
+
+    qe = _encode_query(query)
+    raw = collection.query(query_embeddings=[qe], n_results=TOP_K_RETRIEVAL,
+                          include=["documents", "metadatas", "distances"])
+    vec_docs = raw["documents"][0]
+    vec_metas = raw["metadatas"][0]
+    vec_dist = (raw.get("distances") or [[]])[0]
+
+    seen_hashes = set()
+    docs = []
+    metas = []
+    sims = []
+
+    for idx, (d, m) in enumerate(zip(vec_docs, vec_metas)):
+        h = hashlib.md5(d.encode()).hexdigest()
+        if h not in seen_hashes:
+            seen_hashes.add(h)
+            docs.append(d)
+            metas.append(m)
+            dist = vec_dist[idx] if idx < len(vec_dist) else None
+            sims.append(round(1.0 - float(dist), 4) if dist is not None else 0.0)
+
+    bm25_results = _bm25_search(query, TOP_K_RETRIEVAL)
+    for bm25_doc, _bm25_score in bm25_results:
+        h = hashlib.md5(bm25_doc.encode()).hexdigest()
+        if h not in seen_hashes:
+            seen_hashes.add(h)
+            docs.append(bm25_doc)
+            original_meta = _hash_to_meta.get(h, {"source": "bm25_match", "language": "zh"})
+            metas.append(original_meta)
+            sims.append(0.0)
+
+    if len(docs) <= top_k_final:
+        # 候选本来就少，没必要精排；相关度直接用向量相似度
+        return docs, metas, [round(float(s), 4) for s in sims], sims
+
+    rerank_scores = _rerank_scores(query, docs)
+
+    if rerank_scores is None:
+        # 降级路径：按向量相似度排（BM25 单独召回的块没有相似度，自然排后面）
+        scored = sorted(zip(docs, metas, sims), key=lambda x: -x[2])[:top_k_final]
+        return (
+            [s[0] for s in scored],
+            [s[1] for s in scored],
+            [round(float(s[2]), 4) for s in scored],
+            [float(s[2]) for s in scored],
+        )
+
+    scored = sorted(zip(docs, metas, rerank_scores, sims), key=lambda x: -x[2])[:top_k_final]
+    return (
+        [s[0] for s in scored],
+        [s[1] for s in scored],
+        [round(_sigmoid(s[2]), 4) for s in scored],
+        [float(s[3]) for s in scored],
+    )
+
+
+def _build_sources(docs: List[str], metas: List[Dict], scores: List[float]) -> List[Dict]:
+    """把命中块整理成前端「参考来源」面板要的 SearchResult 形状。
+
+    HomePage 的 sources 渲染会用到 content / source / score（score 显示为"相关度 xx%"），
+    所以非流式路径也一并带上，保证两条路径的 sources 形状一致。
+    `scores` 是 `_retrieve_raw` 算好的对外相关度（有 reranker 时即 sigmoid(精排分)）。
+    """
+    sources = []
+    for i, m in enumerate(metas):
+        content = docs[i] if i < len(docs) else ""
+        sources.append({
+            "source": m.get("source", "unknown"),
+            "module": m.get("module", m.get("source_file", "")),
+            "language": m.get("language", "unknown"),
+            "content": content[:500],
+            "score": round(float(scores[i]), 4) if i < len(scores) else 0.0,
+        })
+    return sources
+
+
+def _prepare(query: str, max_doc_chars: int = 8000) -> Tuple[str, List[Dict]]:
+    """检索（向量+BM25+精排）→ 上下文扩展 → 截断合并 → 拼 prompt。ask / 流式共用。"""
+    docs, metas, scores, _sims = _retrieve_raw(query)
+
+    all_docs = list(docs)
+    if metas:
+        try:
+            ctx_docs = _expand_chunk_context(metas, expand_radius=2)
+            seen = {hashlib.md5(d.encode()).hexdigest() for d in all_docs}
+            for cd in ctx_docs:
+                h = hashlib.md5(cd.encode()).hexdigest()
+                if h not in seen:
+                    seen.add(h)
+                    all_docs.append(cd)
+        except Exception:
+            pass
+
+    merged = []
+    total_chars = 0
+    for d in all_docs:
+        chunk_len = len(d)
+        if total_chars + chunk_len > max_doc_chars:
+            remaining = max_doc_chars - total_chars
+            if remaining > 200:
+                merged.append(d[:remaining])
+            break
+        merged.append(d)
+        total_chars += chunk_len
+
+    docs_text = "\n---\n".join(merged)
+
+    prompt = (
+        "根据以下检索到的SillyTavern知识库文档，简练回答用户问题。"
+        "严格只使用文档中已有的信息，不要编造。如果文档信息不足以回答问题，请明确说明。\n\n"
+        f"问题: {query}\n\n"
+        f"检索文档:\n{docs_text}\n\n"
+        "回答:"
+    )
+    return prompt, _build_sources(docs, metas, scores)
+
+
+def ask(query: str, max_doc_chars: int = 8000, client=None) -> dict:
+    prompt, sources = _prepare(query, max_doc_chars)
+
+    try:
+        resp = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1,
+            max_tokens=2048,
+        )
+        answer = resp.choices[0].message.content.strip()
+    except Exception as e:
+        answer = f"[生成失败: {str(e)[:80]}]"
+
+    return {"answer": answer, "sources": sources}
+
+
+def ask_stream(query: str, max_doc_chars: int = 8000, client=None):
+    """只吐 token 的旧接口（保留兼容）。要来源请用 ask_stream_events。"""
+    prompt, _sources = _prepare(query, max_doc_chars)
+
+    try:
+        stream = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1,
+            max_tokens=2048,
+            stream=True,
+        )
+
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
+    except Exception as e:
+        yield f"[生成失败: {str(e)[:80]}]"
+
+
+def ask_stream_events(query: str, max_doc_chars: int = 8000, client=None):
+    """给 /api/rag/ask/stream 用的事件流：先发**真实** sources，再逐 token。
+
+    原先 api 层固定先发一个空的 sources（data: []），前端「参考来源」面板因此
+    一直是死代码；而 _retrieve_raw 其实早就拿到了 metas。现在在这里真实产出，
+    并把生成失败做成 error 事件（前端已识别 type=="error"）。
+    """
+    prompt, sources = _prepare(query, max_doc_chars)
+
+    yield {"type": "sources", "data": sources}
+
+    try:
+        stream = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1,
+            max_tokens=2048,
+            stream=True,
+        )
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield {"type": "token", "data": delta}
+    except Exception as e:
+        yield {"type": "error", "data": f"[生成失败: {str(e)[:80]}]"}
+
+
+def reload_index():
+    global _collection, _bm25, _corpus, _hash_to_meta
+    _collection = None
+    _bm25 = None
+    _corpus = None
+    _hash_to_meta = None
+    _get_collection()
+    _build_bm25()
+
+
+def _rebuild_index_inline(chromadb_client):
+    import json as _json
+    import time as _time
+
+    # langchain 只在这条"从零灌库"的路上用得到，而精简部署（requirements-server.txt）里
+    # 刻意没装它。给一句能照着做的话，而不是抛个 ImportError 让人猜。
+    try:
+        from langchain_core.documents import Document as _Document
+    except ImportError as e:
+        raise RuntimeError(
+            "索引是空的、需要就地重建，但当前环境没装灌库依赖（langchain）。"
+            "公网部署应该在本机生成好 RAG/chroma_db 再传上服务器（见 部署说明.md 第 1 节）；"
+            "确实要在本机重建就跑 python tools/rebuild_index_api.py。"
+        ) from e
+
+    EXCLUDE_PATTERNS = ["_includes", ".github", "node_modules", "static"]
+
+    st_docs_raw = []
+    if DOCS_REPO_DIR.exists():
+        for f in DOCS_REPO_DIR.rglob("*.md"):
+            rel = str(f.relative_to(DOCS_REPO_DIR))
+            if any(p in rel.split(os.sep) for p in EXCLUDE_PATTERNS):
+                continue
+            if f.name in ("LICENSE", "LicenseCredits.md", "readme.md"):
+                continue
+            try:
+                with open(f, "r", encoding="utf-8") as fp:
+                    content = fp.read()
+                if not content.strip():
+                    continue
+                st_docs_raw.append((content, {
+                    "file_name": f.name, "module": rel.replace("\\", "/"),
+                    "language": "en", "category": "sillytavern",
+                }))
+            except Exception:
+                pass
+    print(f"  英文文档: {len(st_docs_raw)} 篇")
+
+    cache = {}
+    if TRANSLATION_CACHE_PATH.exists():
+        try:
+            with open(TRANSLATION_CACHE_PATH, "r", encoding="utf-8") as f:
+                cache = _json.load(f)
+        except Exception:
+            pass
+    if not isinstance(cache, dict):
+        cache = {"__commit__": "", "translations": {}}
+    translations = cache.get("translations", cache if "__commit__" not in cache else cache.get("translations", {}))
+    prev_commit = cache.get("__commit__", "")
+
+    ds_client = _get_deepseek()
+    translated_docs = []
+    cached_count = 0
+    new_count = 0
+    failed = []
+
+    for i, (content, meta) in enumerate(st_docs_raw):
+        cache_key = hashlib.md5(content.encode()).hexdigest()
+        if cache_key in translations:
+            meta["language"] = "zh"
+            meta["source"] = "translated_official_docs"
+            translated_docs.append(_Document(page_content=translations[cache_key], metadata=meta))
+            cached_count += 1
+            continue
+        if (i + 1) % 10 == 0:
+            print(f"  翻译: {i + 1}/{len(st_docs_raw)} (缓存:{cached_count} 新:{new_count})")
+        try:
+            prompt = f"把下面的英文技术文档翻译成中文。要求：准确翻译技术术语，保留Markdown格式、代码块、表格结构。\n\n{content}"
+            resp = ds_client.chat.completions.create(
+                model=DEEPSEEK_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1, max_tokens=8192,
+            )
+            zh = (resp.choices[0].message.content or "").strip()
+            if zh and len(zh) > 10:
+                translations[cache_key] = zh
+                meta["language"] = "zh"
+                meta["source"] = "translated_official_docs"
+                translated_docs.append(_Document(page_content=zh, metadata=meta))
+                new_count += 1
+            else:
+                # 空响应要留痕：推理模型（deepseek-v4-flash 之类）会把整个 max_tokens
+                # 预算烧在隐藏的 reasoning_content 上，HTTP 200 但 content 为空。
+                print(f"  翻译返回空内容: {meta['module']} "
+                      f"(finish_reason={resp.choices[0].finish_reason}，模型={DEEPSEEK_MODEL})")
+                failed.append(meta["module"])
+                meta["language"] = "en"
+                meta["source"] = "translated_official_docs"
+                translated_docs.append(_Document(page_content=content, metadata=meta))
+        except Exception as e:
+            print(f"  翻译失败: {meta['module']} - {str(e)[:60]}")
+            failed.append(meta["module"])
+            meta["language"] = "en"
+            meta["source"] = "translated_official_docs"
+            translated_docs.append(_Document(page_content=content, metadata=meta))
+        _time.sleep(0.3)
+
+    # __commit__ 必须写文档仓库的真实 commit。
+    # 旧代码写死 "inline"，于是缓存 commit 永远对不上 → 每次更新都判定“需重译”+
+    # 下次重建又全量重译，白烧额度。
+    commit = ""
+    try:
+        r = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True,
+                           timeout=15, cwd=str(DOCS_REPO_DIR))
+        if r.returncode == 0:
+            commit = r.stdout.strip()
+    except Exception:
+        pass
+    if failed:
+        # 有翻译失败 = 这几篇这次是以**英文原文**入库的（metadata language="en"）。
+        # 此时绝不能推进 __commit__：check_update / run_update 都拿它当"已索引版本"的
+        # 权威基准，一旦推进就会判定"已是最新"，这几篇英文原文永远不会被重试。
+        # 译文本身照常落盘（成功的那些不白干），失败篇目没进缓存 → 下次重建会重译。
+        commit = prev_commit
+    elif not commit:
+        commit = prev_commit
+
+    TRANSLATION_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(TRANSLATION_CACHE_PATH, "w", encoding="utf-8") as f:
+        _json.dump({"__commit__": commit, "translations": translations}, f, ensure_ascii=False, indent=2)
+
+    fail_note = ""
+    if failed:
+        shown = "、".join(failed[:5]) + ("…" if len(failed) > 5 else "")
+        fail_note = (f" | ⚠ 翻译失败 {len(failed)} 篇（本次以英文原文入库、"
+                     f"__commit__ 未推进，下次重建会重试）：{shown}")
+    print(f"  翻译完成: 缓存 {cached_count} | 新翻译 {new_count} | "
+          f"__commit__={commit[:8] or '未知'}{fail_note}")
+
+    st_chunks = []
+    for doc in translated_docs:
+        content = doc.page_content
+        meta = doc.metadata
+        source_module = meta.get("module", "")
+        lines = content.split("\n")
+        raw_chunks = []
+        cur_lines = []
+        for line in lines:
+            if re.match(r'^#{1,3}\s', line) and cur_lines and len("".join(cur_lines).strip()) >= 50:
+                raw_chunks.append("\n".join(cur_lines))
+                cur_lines = [line]
+            else:
+                cur_lines.append(line)
+        if cur_lines and len("".join(cur_lines).strip()) >= 20:
+            raw_chunks.append("\n".join(cur_lines))
+
+        for body in raw_chunks:
+            if len(body) <= 2000:
+                ch_meta = dict(meta)
+                ch_meta["chunk_hash"] = hashlib.md5(body.encode()).hexdigest()
+                ch_meta["chunk_index"] = len(st_chunks)
+                ch_meta["source_file"] = source_module
+                st_chunks.append(_Document(page_content=body.strip(), metadata=ch_meta))
+            else:
+                paragraphs = re.split(r'\n\s*\n', body)
+                sub_cur = []
+                for para in paragraphs:
+                    if sub_cur and len("\n\n".join(sub_cur)) + len(para) > 1800:
+                        sub_body = "\n\n".join(sub_cur).strip()
+                        if len(sub_body) >= 20:
+                            ch_meta = dict(meta)
+                            ch_meta["chunk_hash"] = hashlib.md5(sub_body.encode()).hexdigest()
+                            ch_meta["chunk_index"] = len(st_chunks)
+                            ch_meta["source_file"] = source_module
+                            st_chunks.append(_Document(page_content=sub_body, metadata=ch_meta))
+                        sub_cur = [para]
+                    else:
+                        sub_cur.append(para)
+                if sub_cur:
+                    sub_body = "\n\n".join(sub_cur).strip()
+                    if len(sub_body) >= 20:
+                        ch_meta = dict(meta)
+                        ch_meta["chunk_hash"] = hashlib.md5(sub_body.encode()).hexdigest()
+                        ch_meta["chunk_index"] = len(st_chunks)
+                        ch_meta["source_file"] = source_module
+                        st_chunks.append(_Document(page_content=sub_body, metadata=ch_meta))
+
+    if REGEX_README_PATH.exists():
+        with open(REGEX_README_PATH, "r", encoding="utf-8") as f:
+            raw = f.read()
+        blocks = re.split(r"\n(?=## )", raw)
+        for block in blocks:
+            block = block.strip()
+            if not block or len(block) < 50:
+                continue
+            header = block.split("\n")[0].lstrip("#").strip()
+            h = hashlib.md5(block.encode()).hexdigest()[:8]
+            safe = re.sub(r'[^a-zA-Z0-9_\u4e00-\u9fff]', '_', header[:40])
+            st_chunks.append(_Document(page_content=block, metadata={
+                "source": f"learn-regex_{safe}_{h}",
+                "type": "syntax", "language": "zh", "topic": header, "category": "regex",
+                "chunk_hash": hashlib.md5(block.encode()).hexdigest(),
+            }))
+
+    if REGEX_CHUNKS_DIR.exists():
+        for f in sorted(REGEX_CHUNKS_DIR.rglob("*.txt")):
+            try:
+                with open(f, "r", encoding="utf-8") as fp:
+                    text = fp.read().strip()
+                if not text:
+                    continue
+                topic = str(f.relative_to(REGEX_CHUNKS_DIR)).replace("\\", "/").split("/")[0]
+                h = hashlib.md5(text.encode()).hexdigest()[:8]
+                safe = re.sub(r'[^a-zA-Z0-9_\u4e00-\u9fff]', '_', topic[:40])
+                st_chunks.append(_Document(page_content=text, metadata={
+                    "source": f"mastering-regex_{safe}_{h}",
+                    "type": "principle", "language": "zh", "topic": topic, "category": "regex",
+                    "chunk_hash": hashlib.md5(text.encode()).hexdigest(),
+                }))
+            except Exception:
+                pass
+
+    print(f"  总 chunk: {len(st_chunks)} | 向量化中...")
+
+    collection = chromadb_client.get_collection(COLLECTION_NAME)
+    BATCH = 32
+    cache_ids, cache_docs, cache_metas, cache_embs = [], [], [], []
+    for bi in range(0, len(st_chunks), BATCH):
+        batch = st_chunks[bi:bi + BATCH]
+        texts = [c.page_content for c in batch]
+        metas = [c.metadata for c in batch]
+        ids = []
+        for c in batch:
+            raw_id = f"{c.metadata.get('source','')}|{c.metadata.get('chunk_hash','')}"
+            ids.append(hashlib.md5(raw_id.encode()).hexdigest())
+        emb_list = _encode_batch(texts)
+        collection.add(embeddings=emb_list, documents=texts, metadatas=metas, ids=ids)
+        cache_ids.extend(ids)
+        cache_docs.extend(texts)
+        cache_metas.extend(metas)
+        cache_embs.extend(emb_list)
+        if (bi // BATCH) % 10 == 0:
+            print(f"  向量化: {min(bi + BATCH, len(st_chunks))}/{len(st_chunks)}")
+
+    print(f"  内联重建完成: {collection.count()} 条")
+    _save_vector_cache(cache_ids, cache_docs, cache_metas, cache_embs)

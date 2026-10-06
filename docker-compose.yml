@@ -1,0 +1,31 @@
+# 单容器部署：API + 已构建前端同源提供（没有跨域、Cookie 也简单）
+#
+# 用法：
+#   cp .env.example .env      # 填好 SECRET_KEY / SILICONFLOW_API_KEY 等
+#   docker compose up -d --build
+#
+# 数据三类，全走卷挂载（升级镜像不动用户数据）：
+#   ./RAG    向量索引（从你本机搬过来）
+#   ./data   SQLite（账号、角色卡、世界书）
+#   ./static 用户上传的卡片图片
+
+services:
+  app:
+    build: .
+    image: strag:latest
+    container_name: strag
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      # 只监听本机，由反向代理（nginx / Caddy）对外提供域名与 HTTPS。
+      # 想直接暴露就把下面改成 "8000:8000"（但那会没有 HTTPS，且限流按真实 IP 分桶需要 --proxy-headers）。
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./RAG:/app/RAG
+      - ./data:/data
+      - ./static:/data/static
+    # 单进程足够：检索全走外部 API，本机只做 BM25 与编排
+    deploy:
+      resources:
+        limits:
+          memory: 2g
