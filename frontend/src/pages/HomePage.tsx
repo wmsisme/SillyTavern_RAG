@@ -164,6 +164,12 @@ export default function HomePage() {
         </Card>
       )}
 
+      {queryLogId !== null && (
+        <div style={{ marginBottom: 24 }}>
+          <AnswerFeedback queryLogId={queryLogId} />
+        </div>
+      )}
+
       {sources.length > 0 && (
         <Card title="参考来源" size="small">
           <List
@@ -186,12 +192,6 @@ export default function HomePage() {
             )}
           />
         </Card>
-      )}
-
-      {queryLogId !== null && (
-        <div style={{ marginBottom: 24 }}>
-          <AnswerFeedback queryLogId={queryLogId} />
-        </div>
       )}
 
       {!hasSearched && (
