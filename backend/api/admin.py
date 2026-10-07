@@ -122,6 +122,49 @@ def user_content(uid: int, admin: User = Depends(current_admin),
     )
 
 
+@router.get("/admin/cards/{cid}")
+def admin_card_detail(cid: int, admin: User = Depends(current_admin),
+                      db: Session = Depends(get_db)):
+    """看某张角色卡的**完整内容**（查违规内容用）。
+
+    ⚠️ 只返回**中性字段** —— R18 相关列在公网版里被剥离掉了，引用它们会直接报错。
+    """
+    from backend.models.character_card import CharacterCard
+    card = db.query(CharacterCard).filter(CharacterCard.id == cid).first()
+    if not card:
+        raise HTTPException(status_code=404, detail="角色卡不存在")
+    return {
+        "id": card.id, "user_id": card.user_id, "name": card.name,
+        "age": card.age or "", "gender": card.gender or "",
+        "species": card.species or "", "occupation": card.occupation or "",
+        "appearance": card.appearance or "", "personality": card.personality or "",
+        "background": card.background or "", "description": card.description or "",
+        "tags": card.tags or [],
+        "has_status_bar": bool(card.has_status_bar),
+        "status_bar_content": card.status_bar_content or "",
+        "first_message": card.first_message or "",
+        "has_image": bool(card.image_path),
+        "created_at": card.created_at, "updated_at": card.updated_at,
+    }
+
+
+@router.get("/admin/worldbooks/{wid}")
+def admin_worldbook_detail(wid: int, admin: User = Depends(current_admin),
+                           db: Session = Depends(get_db)):
+    """看某本世界书的**完整内容**（含全部条目）。"""
+    from backend.models.world_book import WorldBook
+    wb = db.query(WorldBook).filter(WorldBook.id == wid).first()
+    if not wb:
+        raise HTTPException(status_code=404, detail="世界书不存在")
+    return {
+        "id": wb.id, "user_id": wb.user_id, "name": wb.name,
+        "description": wb.description or "",
+        "tags": wb.tags or [],
+        "entries": wb.entries or [],
+        "created_at": wb.created_at, "updated_at": wb.updated_at,
+    }
+
+
 @router.get("/admin/ip-bans", response_model=list[IpBanRow])
 def ip_bans(include_expired: bool = Query(False), admin: User = Depends(current_admin),
             db: Session = Depends(get_db)):

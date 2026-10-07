@@ -60,6 +60,13 @@ class QueryLog(Base):
     # 同一 IP 在短时间内重复问同一个问题时**不新建记录**，只在这条上累加。
     # 判据是「同 IP + 同问题」（达铭 2026-10-07 定）—— 不同用户问同一个问题很正常，不该合并。
     repeat_count = Column(Integer, default=1, nullable=False)
+    # 用户反馈："" / solved（有帮助）/ unsolved（没解决）/ irrelevant（检索到了但不相关）
+    feedback = Column(String(16), default="")
+    feedback_reason = Column(Text, default="")                # 用户填的原因（选填）
+    feedback_at = Column(DateTime, nullable=True)
+    # 当时的检索结果摘要（前 5 条的 source + score，JSON）——
+    # 没有它，事后看到「用户说不相关」也不知道当时系统给了什么，等于无法复现。
+    sources_digest = Column(Text, default="")
 
 
 class LoginLog(Base):
@@ -81,13 +88,6 @@ class LoginLog(Base):
     ip = Column(String(64), default="", index=True)
     user_agent = Column(String(255), default="")      # 浏览器/系统，辅助判断是不是同一台设备
     action = Column(String(16), default="login")      # login / register / logout
-    # 用户反馈："" / solved（有帮助）/ unsolved（没解决）/ irrelevant（检索到了但不相关）
-    feedback = Column(String(16), default="")
-    feedback_reason = Column(Text, default="")                # 用户填的原因（选填）
-    feedback_at = Column(DateTime, nullable=True)
-    # 当时的检索结果摘要（前 5 条的 source + score，JSON）——
-    # 没有它，事后看到「用户说不相关」也不知道当时系统给了什么，等于无法复现。
-    sources_digest = Column(Text, default="")
 
 
 class UserFeedback(Base):

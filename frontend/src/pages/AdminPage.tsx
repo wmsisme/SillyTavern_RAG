@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   App, Button, Card, Col, Form, Input, InputNumber, Modal, Popconfirm,
-  Drawer, Row, Select, Space, Statistic, Table, Tabs, Tag, Tooltip, Typography,
+  Collapse, Descriptions, Drawer, Row, Select, Space, Statistic, Table,
+  Tabs, Tag, Tooltip, Typography,
 } from 'antd'
 import type { TableColumnsType } from 'antd'
 import { ReloadOutlined, StopOutlined, CheckCircleOutlined, CrownOutlined } from '@ant-design/icons'
@@ -118,6 +119,52 @@ interface UserContentOut {
   worldbooks: UserWorldBookBrief[]
 }
 
+/** 角色卡详情（管理端只拿中性字段，R18 列在公网版里不存在） */
+interface CardDetail {
+  id: number
+  user_id: number
+  name: string
+  age: string
+  gender: string
+  species: string
+  occupation: string
+  appearance: string
+  personality: string
+  background: string
+  description: string
+  tags: string[]
+  has_status_bar: boolean
+  status_bar_content: string
+  first_message: string
+  has_image: boolean
+  updated_at?: string | null
+}
+
+interface WbEntry {
+  key: string
+  content: string
+  comment: string
+  depth: number
+  trigger_words: string[]
+}
+
+interface WbDetail {
+  id: number
+  user_id: number
+  name: string
+  description: string
+  tags: string[]
+  entries: WbEntry[]
+  updated_at?: string | null
+}
+
+/** 长文本展示样式（详情弹窗复用） */
+const preStyle = {
+  whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0,
+  fontFamily: 'inherit', fontSize: 13, maxHeight: 240, overflow: 'auto',
+  background: '#fafafa', padding: 8, borderRadius: 4,
+} as const
+
 /** 后端给的是 ISO 串，直接 toLocaleString 会带 T，统一成看得懂的样子 */
 function fmtTime(v?: string | null): string {
   if (!v) return '—'
@@ -154,6 +201,8 @@ export default function AdminPage() {
   const [loginRows, setLoginRows] = useState<LoginIpRow[]>([])
   const [contentUser, setContentUser] = useState<AdminUser | null>(null)
   const [content, setContent] = useState<UserContentOut | null>(null)
+  const [cardDetail, setCardDetail] = useState<CardDetail | null>(null)
+  const [wbDetail, setWbDetail] = useState<WbDetail | null>(null)
   const [drawerLoading, setDrawerLoading] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -327,6 +376,18 @@ export default function AdminPage() {
     } finally {
       setDrawerLoading(false)
     }
+  }
+
+  const openCardDetail = async (id: number) => {
+    try {
+      setCardDetail(await api.get<CardDetail>(`/admin/cards/${id}`))
+    } catch (e: any) { message.error(e?.message || '加载失败') }
+  }
+
+  const openWbDetail = async (id: number) => {
+    try {
+      setWbDetail(await api.get<WbDetail>(`/admin/worldbooks/${id}`))
+    } catch (e: any) { message.error(e?.message || '加载失败') }
   }
 
   const doDeletePicked = async () => {
@@ -768,6 +829,10 @@ export default function AdminPage() {
                                { title: '标签', dataIndex: 'tags', ellipsis: true },
                                { title: '有图', dataIndex: 'has_image', width: 60,
                                  render: (v: boolean) => (v ? '有' : '—') },
+                               { title: '操作', key: 'cardops', width: 70,
+                                 render: (_: unknown, r: UserCardBrief) => (
+                                   <Button size="small" onClick={() => openCardDetail(r.id)}>查看</Button>
+                                 ) },
                                { title: '更新', dataIndex: 'updated_at', width: 170,
                                  render: (v: string) => fmtTime(v) },
                              ]} />
@@ -781,10 +846,67 @@ export default function AdminPage() {
                                     { title: 'ID', dataIndex: 'id', width: 60 },
                                     { title: '名称', dataIndex: 'name', ellipsis: true },
                                     { title: '条目数', dataIndex: 'entries', width: 80 },
+                                    { title: '操作', key: 'wbops', width: 70,
+                                      render: (_: unknown, r: UserWorldBookBrief) => (
+                                        <Button size="small" onClick={() => openWbDetail(r.id)}>查看</Button>
+                                      ) },
                                     { title: '更新', dataIndex: 'updated_at', width: 170,
                                       render: (v: string) => fmtTime(v) },
                                   ]} />
       </Drawer>
+
+      <Modal open={!!cardDetail} footer={null} width={820}
+             title={cardDetail ? `角色卡 · ${cardDetail.name}` : ''}
+             onCancel={() => setCardDetail(null)}>
+        {cardDetail && (
+          <>
+            <Descriptions column={1} size="small" bordered
+              items={[
+                { key: 'basic', label: '基本信息',
+                  children: [cardDetail.age, cardDetail.gender, cardDetail.species, cardDetail.occupation]
+                    .filter(Boolean).join(' / ') || '—' },
+                { key: 'tags', label: '标签', children: (cardDetail.tags || []).join('、') || '—' },
+                { key: 'desc', label: '描述', children: <div style={preStyle}>{cardDetail.description || '—'}</div> },
+                { key: 'appearance', label: '外貌', children: <div style={preStyle}>{cardDetail.appearance || '—'}</div> },
+                { key: 'personality', label: '性格', children: <div style={preStyle}>{cardDetail.personality || '—'}</div> },
+                { key: 'background', label: '背景', children: <div style={preStyle}>{cardDetail.background || '—'}</div> },
+                { key: 'status', label: '状态栏', children: <div style={preStyle}>{cardDetail.status_bar_content || '—'}</div> },
+                { key: 'first', label: '开场白', children: <div style={preStyle}>{cardDetail.first_message || '—'}</div> },
+              ]} />
+            {cardDetail.has_image && (
+              <Typography.Paragraph type="secondary" style={{ fontSize: 12, marginTop: 8 }}>
+                这张卡还带图片文件（管理端暂不显示图片本身）。
+              </Typography.Paragraph>
+            )}
+          </>
+        )}
+      </Modal>
+
+      <Modal open={!!wbDetail} footer={null} width={820}
+             title={wbDetail ? `世界书 · ${wbDetail.name}` : ''}
+             onCancel={() => setWbDetail(null)}>
+        {wbDetail && (
+          <>
+            <Typography.Paragraph type="secondary">
+              {wbDetail.description || '（没有说明）'}
+            </Typography.Paragraph>
+            {(wbDetail.entries || []).length === 0
+              ? <Typography.Text type="secondary">这本世界书还没有条目。</Typography.Text>
+              : <Collapse items={(wbDetail.entries || []).map((e, i) => ({
+                  key: String(i),
+                  label: `${i + 1}. ${e.comment || e.key || '（未命名条目）'}`,
+                  children: (
+                    <>
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        关键词：{(e.trigger_words || []).join('、') || e.key || '—'}　｜　深度：{e.depth}
+                      </Typography.Text>
+                      <div style={{ ...preStyle, marginTop: 6 }}>{e.content || '（空）'}</div>
+                    </>
+                  ),
+                }))} />}
+          </>
+        )}
+      </Modal>
     </Space>
   )
 }
