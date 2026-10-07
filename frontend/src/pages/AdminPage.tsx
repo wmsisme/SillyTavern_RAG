@@ -71,6 +71,7 @@ interface QueryLogRow {
   sources_digest: string      // 当时的检索结果摘要（JSON：前 5 条的 source + score）
   marked: boolean             // 站长勾选「这条要拿去更新知识库」
   marked_at?: string | null
+  repeat_count: number        // 同一 IP 重复问同一个问题的次数（>1 时界面上会标出来）
 }
 
 interface FeedbackRow {
@@ -267,6 +268,15 @@ export default function AdminPage() {
     window.open('/api/admin/queries/export?marked_only=true', '_blank')
   }
 
+  const doDeletePicked = async () => {
+    try {
+      const r = await api.post('/admin/queries/delete', { ids: picked })
+      message.success(r?.message || '已删除')
+      setPicked([])
+      await reload()
+    } catch (e: any) { message.error(e?.message || '操作失败') }
+  }
+
   // ---------------------------------------------------------------- 表格列
   const userCols: TableColumnsType<AdminUser> = [
     { title: 'ID', dataIndex: 'id', width: 60 },
@@ -367,7 +377,19 @@ export default function AdminPage() {
       render: (v: string, r) => v || <Typography.Text type="secondary">未登录</Typography.Text> },
     { title: 'IP', dataIndex: 'ip', width: 140 },
     { title: '方式', dataIndex: 'kind', width: 90, render: (v: string) => KIND_LABEL[v] || v },
-    { title: '问题', dataIndex: 'query', ellipsis: true },
+    {
+      title: '问题', dataIndex: 'query', ellipsis: true,
+      render: (v: string, r) => (
+        <Space size={4}>
+          <span>{v}</span>
+          {(r.repeat_count ?? 1) > 1 && (
+            <Typography.Text type="secondary" style={{ fontSize: 12 }} title="同一 IP 在短时间内重复问了这个">
+              （重复 {r.repeat_count} 次）
+            </Typography.Text>
+          )}
+        </Space>
+      ),
+    },
     { title: '来源数', dataIndex: 'sources_count', width: 80 },
     { title: '最高相关度', dataIndex: 'top_score', width: 100,
       render: (v: number) => (v ? v.toFixed(3) : '—') },
@@ -534,6 +556,13 @@ export default function AdminPage() {
             </Button>
             <Button disabled={picked.length === 0} onClick={() => doMark(false)}>移出</Button>
             <Button onClick={exportQueue}>导出清单</Button>
+            <Popconfirm
+              title={`删掉选中的 ${picked.length} 条记录？删了就没了`}
+              disabled={picked.length === 0}
+              onConfirm={doDeletePicked}
+            >
+              <Button danger disabled={picked.length === 0}>删除选中</Button>
+            </Popconfirm>
           </Space>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             自动判定：一条来源都没召回、或最高相关度低于 {overview?.unanswered_threshold ?? 0.45}；

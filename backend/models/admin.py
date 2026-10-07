@@ -57,6 +57,9 @@ class QueryLog(Base):
     # 所以这里只做标记，真正的「补什么内容」由站长勾选后再定（见 tools/update_queue.py）。
     marked = Column(Boolean, default=False, nullable=False, index=True)
     marked_at = Column(DateTime, nullable=True)
+    # 同一 IP 在短时间内重复问同一个问题时**不新建记录**，只在这条上累加。
+    # 判据是「同 IP + 同问题」（达铭 2026-10-07 定）—— 不同用户问同一个问题很正常，不该合并。
+    repeat_count = Column(Integer, default=1, nullable=False)
     # 用户反馈："" / solved（有帮助）/ unsolved（没解决）/ irrelevant（检索到了但不相关）
     feedback = Column(String(16), default="")
     feedback_reason = Column(Text, default="")                # 用户填的原因（选填）

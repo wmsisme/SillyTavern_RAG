@@ -162,27 +162,67 @@ def _digest_sources(sources) -> str:
         return ""
 
 
+def dedup_window() -> int:
+    """同 IP + 同问题，多久之内算「重复」（秒）；0 = 关闭去重。
+
+    达铭 2026-10-07 定的判据：**同 IP 的同问题**才算重复 ——
+    不同用户问同一个问题是很正常的事，不该被合并。
+    """
+    try:
+        return int(os.environ.get("DEDUP_WINDOW_SECONDS", "") or 60)
+    except ValueError:
+        return 60
+
+
 def log_query(db: Session, *, ip: str, user: Optional[User], kind: str, query: str,
               sources_count: int = 0, top_score: float = 0.0,
               sources=None) -> Optional[QueryLog]:
-    """记一条提问。**调用方要 try/except** —— 日志写失败不许影响用户问答。"""
+    """记一条提问。**调用方要 try/except** —— 日志写失败不许影响用户问答。
+
+    同一 IP 在 `DEDUP_WINDOW_SECONDS` 内重复问同一个问题时**不新建记录**，
+    只在已有那条上累加 `repeat_count` —— 否则用户连点/重试几下，
+    后台就多出一串一模一样的行（2026-10-07 实测：同一秒里 8 条）。
+    """
     text_q = (query or "").strip()
     if not text_q:
         return None
     th = unanswered_threshold()
     score = float(top_score or 0.0)
+    n_ip = normalize_ip(ip)
+    text_q = text_q[:2000]
+
+    window = dedup_window()
+    if window > 0 and n_ip:
+        existed = (db.query(QueryLog)
+                     .filter(QueryLog.ip == n_ip,
+                             QueryLog.query == text_q,
+                             QueryLog.created_at >= datetime.now() - timedelta(seconds=window))
+                     .order_by(QueryLog.id.desc())
+                     .first())
+        if existed is not None:
+            existed.repeat_count = int(existed.repeat_count or 1) + 1
+            # 顺手更新检索质量：用户最后看到的是这一次
+            existed.sources_count = int(sources_count or 0)
+            existed.top_score = score
+            existed.answered = bool(sources_count and score >= th)
+            existed.sources_digest = _digest_sources(sources)
+            db.commit()
+            db.refresh(existed)
+            return existed
+
     row = QueryLog(
         created_at=datetime.now(),
-        ip=normalize_ip(ip),
+        ip=n_ip,
         user_id=user.id if user else None,
         username=user.username if user else "",
         kind=kind,
-        query=text_q[:2000],
+        query=text_q,
         sources_count=int(sources_count or 0),
         top_score=score,
         # 没召回任何来源，或最高分低于阈值 → 疑似没答上来
         answered=bool(sources_count and score >= th),
         sources_digest=_digest_sources(sources),
+        repeat_count=1,
     )
     db.add(row)
     db.commit()
@@ -421,6 +461,16 @@ def mark_queries(db: Session, ids: List[int], marked: bool = True) -> int:
         r.marked_at = now if marked else None
     db.commit()
     return len(rows)
+
+
+def delete_queries(db: Session, ids: List[int]) -> int:
+    """按 id 删除若干条提问记录（站长清理测试痕迹用）。返回删除条数。"""
+    if not ids:
+        return 0
+    n = (db.query(QueryLog).filter(QueryLog.id.in_(ids))
+           .delete(synchronize_session=False))
+    db.commit()
+    return n
 
 
 def export_update_queue(db: Session, only_marked: bool = True) -> str:

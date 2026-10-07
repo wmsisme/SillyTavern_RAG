@@ -23,7 +23,7 @@ from backend.models.database import get_db
 from backend.models.user import User
 from backend.schemas.admin import (
     ActiveIpRow, AdminOverview, AdminUserRow, BanIpRequest, BanRequest,
-    IpBanRow, MarkQueriesRequest, QueryLogPage, QueryLogRow,
+    DeleteQueriesRequest, IpBanRow, MarkQueriesRequest, QueryLogPage, QueryLogRow,
 )
 from backend.schemas.user import OkResponse
 from backend.services import admin_service
@@ -136,6 +136,7 @@ def queries(page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200)
             feedback_reason=r.feedback_reason or "", feedback_at=r.feedback_at,
             sources_digest=r.sources_digest or "",
             marked=bool(r.marked), marked_at=r.marked_at,
+            repeat_count=int(r.repeat_count or 1),
         ) for r in rows],
     )
 
@@ -152,6 +153,16 @@ def mark_queries(req: MarkQueriesRequest, admin: User = Depends(current_admin),
     if req.marked:
         return OkResponse(message=f"已把 {n} 条加入待更新清单（点『只看待更新』能看回来）")
     return OkResponse(message=f"已把 {n} 条移出待更新清单")
+
+
+@router.post("/admin/queries/delete", response_model=OkResponse)
+def delete_queries(req: DeleteQueriesRequest, admin: User = Depends(current_admin),
+                   db: Session = Depends(get_db)):
+    """按 id 删除若干条提问记录 —— 站长清理自己测试痕迹用。"""
+    n = admin_service.delete_queries(db, req.ids)
+    if not n:
+        return OkResponse(message="没有匹配的记录（可能已经被删过）")
+    return OkResponse(message=f"已删除 {n} 条提问记录")
 
 
 @router.get("/admin/queries/export")

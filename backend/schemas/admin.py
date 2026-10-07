@@ -73,6 +73,14 @@ class QueryLogRow(BaseModel):
     # 站长勾选「这条要拿去更新知识库」
     marked: bool = False
     marked_at: Optional[datetime] = None
+    # 同一 IP 短时间内重复问同一个问题时，只留一条、在这里累加
+    repeat_count: int = 1
+
+
+class DeleteQueriesRequest(BaseModel):
+    """按 id 删除提问记录（清理测试痕迹用）。"""
+
+    ids: List[int]
 
 
 class MarkQueriesRequest(BaseModel):
