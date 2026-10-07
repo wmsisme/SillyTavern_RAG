@@ -198,6 +198,7 @@ python tools/check_syntax.py backend # 后端语法自检
 
 python tools/manage_users.py --list  # 账号运维：--reset-password / --make-admin / --deactivate / --ban / --ban-ip / --unban-ip
 python tools/backup.py               # 数据备份（SQLite 在线备份 + 卡图 + .env）；--list 看现有备份、--keep N 改保留份数
+python tools/watchdog.py             # 探活 + 自愈：服务挂了自动拉回来（由计划任务每 3 分钟调用；见 tools/desktop/README.md）
 python tools/rebuild_index_api.py    # 换检索模型后重建索引（--dry-run 先试 20 条；支持断点续传）
 ```
 
