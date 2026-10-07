@@ -59,3 +59,26 @@ class QueryLog(Base):
     # 当时的检索结果摘要（前 5 条的 source + score，JSON）——
     # 没有它，事后看到「用户说不相关」也不知道当时系统给了什么，等于无法复现。
     sources_digest = Column(Text, default="")
+
+
+class UserFeedback(Base):
+    """用户主动提交的功能反馈（顶部栏「反馈」按钮，只有登录用户能看到入口）。
+
+    与 QueryLog 的区别：QueryLog 记的是「用户问了什么」（系统自动记），
+    这张表记的是「用户主动想说什么」—— 哪里不足、哪里不顺手、哪里报错。
+    建议类信息只有用户主动说才拿得到，日志里永远不会有。
+    """
+
+    __tablename__ = "user_feedback"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    created_at = Column(DateTime, default=datetime.now, index=True)   # 本地时间，同上
+    user_id = Column(Integer, nullable=True, index=True)
+    username = Column(String(64), default="")
+    ip = Column(String(64), default="")
+    category = Column(String(16), default="其他")     # 建议 / 体验 / 故障 / 其他
+    content = Column(Text, nullable=False)
+    page = Column(String(128), default="")            # 在哪个页面点的（方便定位）
+    handled = Column(Boolean, default=False, nullable=False, index=True)
+    handled_at = Column(DateTime, nullable=True)
+    handled_by = Column(String(64), default="")

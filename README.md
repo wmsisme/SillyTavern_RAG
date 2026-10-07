@@ -38,7 +38,8 @@
 | API 设置（BYOK） | 填自己的大模型 Key，两种存法：**只存这台浏览器** / **存进我的账号（加密落库）** | [frontend/src/components/LLMSettingsModal.tsx](frontend/src/components/LLMSettingsModal.tsx)、[backend/services/llm_provider.py](backend/services/llm_provider.py) |
 | 按 IP 限流 | 贵重接口 50 次/分钟/IP，登录注册 10 次/分钟/IP（滑动窗口，超限返回 429 + `Retry-After`） | [backend/api/ratelimit.py](backend/api/ratelimit.py) |
 | **后台管理与封禁**（仅管理员） | 概览统计 · 用户列表（含会话数 / 提问数 / 最后提问时间）· **封号 / 解封**（当场踢下线）· **IP 黑名单**（限期或永久；环回地址永不封）· 活跃 IP 排行（同一 IP 上多个账号 = 共享账号线索）· 提问记录（可只看没答上来的） | [backend/api/admin.py](backend/api/admin.py)、[backend/api/ban_guard.py](backend/api/ban_guard.py)、[frontend/src/pages/AdminPage.tsx](frontend/src/pages/AdminPage.tsx) |
-| 提问记录与用户反馈 | 每次检索 / 问答都留痕（谁、IP、问题、召回条数、最高相关度、是否答上来）；**用户可评价「有帮助 / 没解决 / 检索到的内容不相关」并写明原因**，反馈时还会记下当时的来源摘要（前 5 条的来源与分数） | [backend/api/rag.py](backend/api/rag.py)、[backend/services/admin_service.py](backend/services/admin_service.py)、[frontend/src/components/AnswerFeedback.tsx](frontend/src/components/AnswerFeedback.tsx) |
+| 提问记录与回答评价 | 每次检索 / 问答都留痕（谁、IP、问题、召回条数、最高相关度、是否答上来）；**用户可评价「有帮助 / 没解决 / 检索到的内容不相关」并写明原因**，反馈时还会记下当时的来源摘要（前 5 条的来源与分数） | [backend/api/rag.py](backend/api/rag.py)、[backend/services/admin_service.py](backend/services/admin_service.py)、[frontend/src/components/AnswerFeedback.tsx](frontend/src/components/AnswerFeedback.tsx) |
+| **功能反馈**（登录后） | 顶部栏「反馈」按钮：选分类（建议 / 体验 / 故障 / 其他）+ 写内容，提交时自动带上所在页面；后台可查看、标记已处理。入口只给登录用户看，服务端同样要求登录 | [backend/api/feedback.py](backend/api/feedback.py)、[frontend/src/components/UserFeedbackModal.tsx](frontend/src/components/UserFeedbackModal.tsx) |
 | 文档更新检测 | 检查上游官方文档仓是否有更新（**需要本机文档仓**，容器部署下不可用，见「已知边界」） | [backend/api/update.py](backend/api/update.py) |
 
 **支持的模型平台**（7 家，均在 [backend/services/llm_provider.py](backend/services/llm_provider.py) 集中注册，
@@ -152,6 +153,7 @@ cd frontend && npm run dev                                        # 前端 http:
 | 工具箱 | `POST /api/tools/separator` · `/worldbook-converter` · `/chinese-converter` · `/width-converter` · `/jsonl-novel-converter` |
 | 文档更新 | `GET /api/update/check` · `POST /api/update/run`（管理员） · `GET /api/update/status` |
 | 后台管理（管理员） | `GET /api/admin/overview` · `GET /api/admin/users` · `POST /api/admin/users/{id}/ban\|unban\|make-admin` · `GET/POST /api/admin/ip-bans` · `DELETE /api/admin/ip-bans/{id}` · `GET /api/admin/active-ips` · `GET/DELETE /api/admin/queries` |
+| 功能反馈 | `POST /api/feedback`（登录用户提交） · `GET /api/admin/feedback` · `POST /api/admin/feedback/{id}/handle` · `DELETE /api/admin/feedback/{id}`（后三个仅管理员） |
 
 完整参数与响应模型见运行时的 `/docs`（FastAPI 自动生成）。
 
@@ -204,7 +206,7 @@ python tools/rebuild_index_api.py    # 换检索模型后重建索引（--dry-ru
 
 | 数据 | 位置（容器内） | 说明 |
 | --- | --- | --- |
-| 账号、卡片、世界书、**提问记录、封禁名单** | `/data/data.db` | SQLite，直接拷文件即可备份 |
+| 账号、卡片、世界书、**提问记录、封禁名单、用户反馈** | `/data/data.db` | SQLite，直接拷文件即可备份 |
 | 用户上传的卡片图 | `/data/static/` | 走鉴权端点提供，不对外直链 |
 | 向量索引 + 缓存 | `/app/RAG/` | 由本机生成后传上来，服务器上不重算 |
 
@@ -227,8 +229,9 @@ python tools/rebuild_index_api.py    # 换检索模型后重建索引（--dry-ru
 - **提问与反馈会被记录**：每次检索 / 问答都会在服务端留下「提问内容 + 账号 + IP + 召回质量」，
   用户提交的评价（有帮助 / 没解决 / **内容不相关**）与**填写的文字原因**同样会保存，
   并且会连同「当时的来源摘要」一起存 —— 事后才说得清是召回给错了、还是文档自己没写清楚。
-  用途有两个：排查违规使用（封号 / 封 IP 的依据）、整理「哪些问题答不上来、哪些内容不相关」以便改进知识库。
-  条数有上限（`QUERY_LOG_MAX`），站长可在后台清理。
+  此外，登录用户从顶部栏「反馈」按钮提交的建议 / 体验问题 / 故障也会原样保存（含账号与所在页面）。
+  用途：排查违规使用（封号 / 封 IP 的依据）、改进知识库与功能。
+  提问记录条数有上限（`QUERY_LOG_MAX`），站长可在后台清理。
   ⚠️ **要当对外服务的话，建议同时在页面上向用户明示这一点**（当前版本只在本文档里说明）。
 
 ---

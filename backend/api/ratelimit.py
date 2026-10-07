@@ -34,6 +34,7 @@ HEAVY_PREFIXES: tuple = (
     "/api/tools/",            # 工具箱：CPU 与解析都在这
     "/api/llm/test",          # 拿它当免费代理试 key 的，要挡
     "/api/update/",           # 文档索引更新
+    "/api/feedback",          # 用户反馈：防刷（正常没人一分钟发 50 条）
 )
 AUTH_PREFIXES: tuple = (
     "/api/auth/login",

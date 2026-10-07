@@ -61,6 +61,7 @@ from backend.api.health import router as health_router
 from backend.api.auth import router as auth_router
 from backend.api.llm import router as llm_router
 from backend.api.admin import router as admin_router
+from backend.api.feedback import router as feedback_router
 
 app.include_router(health_router, tags=["健康检查"])
 app.include_router(auth_router, prefix="/api", tags=["账号"])
@@ -71,6 +72,7 @@ app.include_router(worldbooks_router, prefix="/api", tags=["世界书"])
 app.include_router(update_router, prefix="/api", tags=["文档更新"])
 app.include_router(tools_router, prefix="/api/tools", tags=["工具箱"])
 app.include_router(admin_router, prefix="/api", tags=["后台管理"])
+app.include_router(feedback_router, prefix="/api", tags=["用户反馈"])
 
 # 目录先建出来（上传要用），但**不再**挂成静态目录：
 # StaticFiles 不鉴权，拿到 URL 的人就能看 —— 那「只有本人能看到自己的卡」就是假的。

@@ -17,7 +17,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
-from backend.models.admin import IpBan, QueryLog
+from backend.models.admin import IpBan, QueryLog, UserFeedback
 from backend.models.user import SessionToken, User
 
 # 永远不能封的地址：环回。封了它 = 本机自己都进不来（反代场景下更是全站瘫痪）
@@ -307,6 +307,8 @@ def overview(db: Session) -> dict:
         "queries_unanswered": db.query(func.count(QueryLog.id)).filter(QueryLog.answered.is_(False)).scalar() or 0,
         "ip_bans_active": len([b for b in bans if not (b.expires_at and b.expires_at < now)]),
         "unanswered_threshold": unanswered_threshold(),
+        "feedback_total": db.query(func.count(UserFeedback.id)).scalar() or 0,
+        "feedback_unhandled": db.query(func.count(UserFeedback.id)).filter(UserFeedback.handled.is_(False)).scalar() or 0,
     }
 
 
@@ -329,3 +331,71 @@ def user_rows(db: Session) -> List[dict]:
             "queries": cnt, "last_query_at": last,
         })
     return out
+
+
+# ------------------------------------------------------------------ 用户主动反馈
+FEEDBACK_CATEGORIES = ("建议", "体验", "故障", "其他")
+
+
+def log_user_feedback(db: Session, *, user: Optional[User], ip: str, content: str,
+                      category: str = "其他", page: str = "") -> Optional[UserFeedback]:
+    """记一条用户主动反馈（顶部栏「反馈」按钮）。调用方要 try/except。"""
+    text = (content or "").strip()
+    if not text:
+        return None
+    cat = (category or "其他").strip()
+    if cat not in FEEDBACK_CATEGORIES:
+        cat = "其他"
+    row = UserFeedback(
+        created_at=datetime.now(),
+        user_id=user.id if user else None,
+        username=user.username if user else "",
+        ip=normalize_ip(ip),
+        category=cat,
+        content=text[:4000],
+        page=(page or "")[:128],
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def list_user_feedback(db: Session, page: int = 1, page_size: int = 50,
+                       only_unhandled: bool = False,
+                       category: str = "") -> Tuple[int, int, List[UserFeedback]]:
+    """返回 (总数, 未处理数, 当页记录)。"""
+    q = db.query(UserFeedback)
+    if only_unhandled:
+        q = q.filter(UserFeedback.handled.is_(False))
+    if category:
+        q = q.filter(UserFeedback.category == category)
+    total = q.count()
+    unhandled = (db.query(func.count(UserFeedback.id))
+                   .filter(UserFeedback.handled.is_(False)).scalar() or 0)
+    page = max(1, page)
+    page_size = min(max(1, page_size), 200)
+    rows = (q.order_by(UserFeedback.id.desc())
+             .offset((page - 1) * page_size).limit(page_size).all())
+    return total, unhandled, rows
+
+
+def mark_user_feedback_handled(db: Session, fid: int, handled: bool = True,
+                               by: str = "") -> bool:
+    row = db.query(UserFeedback).filter(UserFeedback.id == fid).first()
+    if not row:
+        return False
+    row.handled = handled
+    row.handled_at = datetime.now() if handled else None
+    row.handled_by = by if handled else ""
+    db.commit()
+    return True
+
+
+def delete_user_feedback(db: Session, fid: int) -> bool:
+    row = db.query(UserFeedback).filter(UserFeedback.id == fid).first()
+    if not row:
+        return False
+    db.delete(row)
+    db.commit()
+    return True

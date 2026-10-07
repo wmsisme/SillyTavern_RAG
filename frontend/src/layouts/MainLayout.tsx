@@ -13,9 +13,11 @@ import {
   KeyOutlined,
   ApiOutlined,
   SafetyOutlined,
+  MessageOutlined,
 } from '@ant-design/icons'
 import UpdateNotice from '../components/UpdateNotice'
 import LLMSettingsModal from '../components/LLMSettingsModal'
+import UserFeedbackModal from '../components/UserFeedbackModal'
 import { api } from '../services/api'
 import { useAuth } from '../services/auth'
 import { isLLMConfigured, setMissingKeyHandler } from '../services/llm'
@@ -59,6 +61,9 @@ export default function MainLayout() {
   const [pwdOpen, setPwdOpen] = useState(false)
   const [pwdSaving, setPwdSaving] = useState(false)
   const [pwdForm] = Form.useForm()
+
+  // 用户反馈：登录后才在顶部栏出现（未登录的人没有身份，说了也没法回访）
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   // API 设置（BYOK）：没配 key 时右上角亮个红点；任何地方撞到"没 key"都直接弹这个框
   const [llmOpen, setLlmOpen] = useState(false)
@@ -149,6 +154,18 @@ export default function MainLayout() {
           <span style={{ marginLeft: 16, fontSize: 18, fontWeight: 500 }}>
             {menuItems.find(item => item.key === selectedKey)?.label || 'SillyTavern RAG 知识库'}
           </span>
+          {/* 用户反馈入口（达铭 2026-10-07 要求）：放在标题右边、只有登录后可见 */}
+          {user && (
+            <Button
+              type="text"
+              icon={<MessageOutlined />}
+              onClick={() => setFeedbackOpen(true)}
+              style={{ marginLeft: 12 }}
+              title="哪里不好用、哪里缺东西、哪里出错 —— 都可以告诉站长"
+            >
+              反馈
+            </Button>
+          )}
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
             {/* 文档更新是管理动作（/api/update/run 只放给管理员）：普通用户不该看见这个入口，
                 否则点了「立即更新」只会拿到 403 */}
@@ -231,6 +248,7 @@ export default function MainLayout() {
         </Form>
       </Modal>
       <LLMSettingsModal open={llmOpen} onClose={() => setLlmOpen(false)} />
+      <UserFeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </Layout>
   )
 }

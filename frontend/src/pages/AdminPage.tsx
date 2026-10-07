@@ -18,6 +18,8 @@ interface Overview {
   queries_unanswered: number
   ip_bans_active: number
   unanswered_threshold: number
+  feedback_total: number
+  feedback_unhandled: number
 }
 
 interface AdminUser {
@@ -69,6 +71,20 @@ interface QueryLogRow {
   sources_digest: string      // 当时的检索结果摘要（JSON：前 5 条的 source + score）
 }
 
+interface FeedbackRow {
+  id: number
+  created_at?: string | null
+  user_id?: number | null
+  username: string
+  ip: string
+  category: string
+  content: string
+  page: string
+  handled: boolean
+  handled_at?: string | null
+  handled_by: string
+}
+
 /** 后端给的是 ISO 串，直接 toLocaleString 会带 T，统一成看得懂的样子 */
 function fmtTime(v?: string | null): string {
   if (!v) return '—'
@@ -91,6 +107,11 @@ export default function AdminPage() {
   const [activeIps, setActiveIps] = useState<ActiveIpRow[]>([])
   const [queries, setQueries] = useState<QueryLogRow[]>([])
   const [qTotal, setQTotal] = useState(0)
+  const [feedbacks, setFeedbacks] = useState<FeedbackRow[]>([])
+  const [fbTotal, setFbTotal] = useState(0)
+  const [fbUnhandled, setFbUnhandled] = useState(0)
+  const [fbOnlyUnhandled, setFbOnlyUnhandled] = useState(false)
+  const [fbPage, setFbPage] = useState(1)
   const [qPage, setQPage] = useState(1)
   const [filter, setFilter] = useState<'all' | 'unanswered' | 'irrelevant' | 'unsolved'>('all')
   const [loading, setLoading] = useState(false)
@@ -120,16 +141,24 @@ export default function AdminPage() {
     setQueries(r.items); setQTotal(r.total)
   }, [qPage, filter])
 
+  const loadFeedback = useCallback(async () => {
+    const q = new URLSearchParams({ page: String(fbPage), page_size: '50' })
+    if (fbOnlyUnhandled) q.set('only_unhandled', 'true')
+    const r = await api.get<{ total: number; unhandled: number; items: FeedbackRow[] }>(
+      `/admin/feedback?${q}`)
+    setFeedbacks(r.items); setFbTotal(r.total); setFbUnhandled(r.unhandled)
+  }, [fbPage, fbOnlyUnhandled])
+
   const reload = useCallback(async () => {
     setLoading(true)
     try {
-      await Promise.all([loadBase(), loadQueries()])
+      await Promise.all([loadBase(), loadQueries(), loadFeedback()])
     } catch (e: any) {
       message.error(e?.message || '加载失败')
     } finally {
       setLoading(false)
     }
-  }, [loadBase, loadQueries, message])
+  }, [loadBase, loadQueries, loadFeedback, message])
 
   useEffect(() => {
     if (ready && user?.is_admin) reload()
@@ -197,6 +226,22 @@ export default function AdminPage() {
         // 活跃 IP 表里还没进黑名单的，这里就不该出现解封按钮
         message.info(`${key} 不在黑名单里`)
       }
+      await reload()
+    } catch (e: any) { message.error(e?.message || '操作失败') }
+  }
+
+  const doHandleFeedback = async (row: FeedbackRow, handled: boolean) => {
+    try {
+      const r = await api.post(`/admin/feedback/${row.id}/handle?handled=${handled}`)
+      message.success(r?.message || '已更新')
+      await reload()
+    } catch (e: any) { message.error(e?.message || '操作失败') }
+  }
+
+  const doDeleteFeedback = async (row: FeedbackRow) => {
+    try {
+      const r = await api.delete(`/admin/feedback/${row.id}`)
+      message.success(r?.message || '已删除')
       await reload()
     } catch (e: any) { message.error(e?.message || '操作失败') }
   }
@@ -349,12 +394,68 @@ export default function AdminPage() {
     },
   ]
 
+  const feedbackCols: TableColumnsType<FeedbackRow> = [
+    { title: '时间', dataIndex: 'created_at', width: 160, render: (v: string) => fmtTime(v) },
+    {
+      title: '用户', dataIndex: 'username', width: 110,
+      render: (v: string) => v || <Typography.Text type="secondary">—</Typography.Text>,
+    },
+    { title: '分类', dataIndex: 'category', width: 80, render: (v: string) => <Tag>{v}</Tag> },
+    { title: '内容', dataIndex: 'content', ellipsis: true },
+    {
+      title: '来自页面', dataIndex: 'page', width: 140,
+      render: (v: string) => (v ? <Typography.Text code>{v}</Typography.Text> : '—'),
+    },
+    {
+      title: '状态', dataIndex: 'handled', width: 110,
+      render: (v: boolean) => (v ? <Tag color="green">已处理</Tag> : <Tag color="orange">待处理</Tag>),
+    },
+    {
+      title: '操作', key: 'ops', width: 180,
+      render: (_: unknown, r) => (
+        <Space size={4}>
+          <Button size="small" onClick={() => doHandleFeedback(r, !r.handled)}>
+            {r.handled ? '改回待处理' : '标记已处理'}
+          </Button>
+          <Popconfirm title="删掉这条反馈？" onConfirm={() => doDeleteFeedback(r)}>
+            <Button size="small" danger>删除</Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ]
+
   const tabs = [
     {
       key: 'users', label: `用户管理（${users.length}）`,
       children: (
         <Table<AdminUser> rowKey="id" size="small" loading={loading}
                           columns={userCols} dataSource={users} pagination={false} />
+      ),
+    },
+    {
+      key: 'feedback', label: `用户反馈（待处理 ${fbUnhandled}）`,
+      children: (
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Space wrap>
+            <Button
+              type={fbOnlyUnhandled ? 'primary' : 'default'}
+              onClick={() => { setFbOnlyUnhandled(!fbOnlyUnhandled); setFbPage(1) }}
+            >
+              只看待处理的
+            </Button>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              用户从顶部栏「反馈」按钮主动提交的意见（建议 / 体验 / 故障）——
+              这类信息日志里不会有，是他们开口才拿得到的
+            </Typography.Text>
+          </Space>
+          <Table<FeedbackRow> rowKey="id" size="small" loading={loading}
+                             columns={feedbackCols} dataSource={feedbacks}
+                             pagination={{
+                               current: fbPage, pageSize: 50, total: fbTotal,
+                               onChange: (p) => setFbPage(p), showSizeChanger: false,
+                             }} />
+        </Space>
       ),
     },
     {
@@ -428,6 +529,12 @@ export default function AdminPage() {
           valueStyle={{ color: (overview?.queries_unanswered ?? 0) > 0 ? '#fa8c16' : undefined }} /></Card></Col>
         <Col span={4}><Card size="small"><Statistic title="角色卡" value={overview?.cards_total ?? 0} /></Card></Col>
         <Col span={4}><Card size="small"><Statistic title="IP 黑名单" value={overview?.ip_bans_active ?? 0} /></Card></Col>
+        <Col span={4}>
+          <Card size="small">
+            <Statistic title="待处理反馈" value={overview?.feedback_unhandled ?? 0}
+                       valueStyle={{ color: (overview?.feedback_unhandled ?? 0) > 0 ? '#fa8c16' : undefined }} />
+          </Card>
+        </Col>
       </Row>
 
       <Space>

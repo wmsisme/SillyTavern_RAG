@@ -15,6 +15,8 @@ class AdminOverview(BaseModel):
     queries_unanswered: int
     ip_bans_active: int
     unanswered_threshold: float
+    feedback_total: int = 0
+    feedback_unhandled: int = 0
 
 
 class AdminUserRow(BaseModel):
@@ -84,3 +86,34 @@ class ActiveIpRow(BaseModel):
     usernames: str = ""              # 拼好的用户名列表，最多几个
     last_at: Optional[datetime] = None
     banned: bool = False
+
+
+# ------------------------------------------------------------------ 用户反馈
+class FeedbackCreate(BaseModel):
+    """顶部栏「反馈」按钮提交的内容（仅登录用户）。"""
+
+    content: str
+    category: str = "其他"          # 建议 / 体验 / 故障 / 其他
+    page: str = ""                  # 在哪个页面点的
+
+
+class UserFeedbackRow(BaseModel):
+    id: int
+    created_at: Optional[datetime] = None
+    user_id: Optional[int] = None
+    username: str = ""
+    ip: str = ""
+    category: str = "其他"
+    content: str
+    page: str = ""
+    handled: bool = False
+    handled_at: Optional[datetime] = None
+    handled_by: str = ""
+
+
+class UserFeedbackPage(BaseModel):
+    total: int
+    unhandled: int
+    page: int
+    page_size: int
+    items: List[UserFeedbackRow]

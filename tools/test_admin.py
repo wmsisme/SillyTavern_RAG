@@ -18,6 +18,7 @@
   ⑧ 管理接口权限：未登录 401、非管理员 403、管理员 200
   ⑨ 管理员不能封自己
   ⑩ 活跃 IP 聚合能看出「一个 IP 上有多个账号」（共享账号的线索）
+  ⑪ 用户主动反馈：落库 / 待处理筛选 / 谁处理的；未登录 401、太短 400
 """
 import json
 import os
@@ -229,11 +230,44 @@ def test_admin_api():
     db.close()
 
 
+def test_user_feedback():
+    print("\n⑪ 用户主动反馈（顶部栏按钮）")
+    db = SessionLocal()
+    u = auth_service.register(db, "fbuser", "pw123456")
+    row = admin_service.log_user_feedback(db, user=u, ip="9.9.9.9", category="体验",
+                                          content="手机上打开排版乱了", page="/cards")
+    check(row is not None and row.content == "手机上打开排版乱了", "反馈内容原样落库")
+    check(row.handled is False, "新反馈默认是「待处理」")
+
+    total, unhandled, rows = admin_service.list_user_feedback(db, only_unhandled=True)
+    check(total >= 1 and unhandled >= 1 and all(not r.handled for r in rows),
+          f"「只看待处理的」筛出 {len(rows)} 条，条条都没处理过")
+
+    admin_service.mark_user_feedback_handled(db, row.id, True, by="banme")
+    db.refresh(row)
+    check(row.handled is True and row.handled_by == "banme",
+          "标记已处理会记住是谁处理的（免得两个人重复看同一条）")
+
+    c = TestClient(app)
+    check(c.post("/api/feedback", json={"content": "匿名反馈"}).status_code == 401,
+          "未登录提交反馈 → 401 —— 界面藏起来不算权限控制，服务端也要拦")
+    _, tok, _ = auth_service.login(db, "fbuser", "pw123456")
+    r = c.post("/api/feedback", json={"content": "1"},
+               headers={"Authorization": f"Bearer {tok}"})
+    check(r.status_code == 400, f"太短的反馈被挡 → {r.status_code}")
+    r = c.post("/api/feedback",
+               json={"content": "希望支持导出角色卡", "category": "建议", "page": "/cards"},
+               headers={"Authorization": f"Bearer {tok}"})
+    check(r.status_code == 200, f"登录用户能正常提交 → {r.status_code}")
+    db.close()
+
+
 def main() -> int:
     test_ban_flow()
     test_ip_ban()
     test_query_log()
     test_admin_api()
+    test_user_feedback()
     print()
     if fails:
         print(f"❌ 失败 {len(fails)} 项：")
