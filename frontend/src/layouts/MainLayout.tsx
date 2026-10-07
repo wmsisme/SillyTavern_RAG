@@ -12,6 +12,7 @@ import {
   LogoutOutlined,
   KeyOutlined,
   ApiOutlined,
+  SafetyOutlined,
 } from '@ant-design/icons'
 import UpdateNotice from '../components/UpdateNotice'
 import LLMSettingsModal from '../components/LLMSettingsModal'
@@ -21,12 +22,16 @@ import { isLLMConfigured, setMissingKeyHandler } from '../services/llm'
 
 const { Header, Sider, Content } = Layout
 
-const menuItems = [
+const baseMenuItems = [
   { key: '/', icon: <HomeOutlined />, label: '首页搜索' },
   { key: '/cards', icon: <UserOutlined />, label: '角色卡管理' },
   { key: '/worldbooks', icon: <BookOutlined />, label: '世界书管理' },
   { key: '/toolbox', icon: <ToolOutlined />, label: '工具箱' },
 ]
+
+// 后台管理只在「已登录 + 是管理员」时出现 —— 普通用户看不见这个入口，
+// 也就不会点进去撞一屏 403（后端那几个接口本来也只放给管理员）。
+const adminMenuItem = { key: '/admin', icon: <SafetyOutlined />, label: '后台管理' }
 
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false)
@@ -36,6 +41,7 @@ export default function MainLayout() {
   const { user, setUser } = useAuth()
   const { token } = theme.useToken()
 
+  const menuItems = user?.is_admin ? [...baseMenuItems, adminMenuItem] : baseMenuItems
   const selectedKey = '/' + location.pathname.split('/')[1]
 
   const handleLogout = async () => {

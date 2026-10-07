@@ -19,11 +19,21 @@ class SearchResult(BaseModel):
 
 class SearchResponse(BaseModel):
     results: List[SearchResult]
+    # 这次检索在服务端的记录 id（前端「没解决」按钮要拿它回传）
+    query_log_id: Optional[int] = None
 
 
 class AskResponse(BaseModel):
     answer: str
     sources: List[dict]
+    query_log_id: Optional[int] = None
+
+
+class FeedbackRequest(BaseModel):
+    """「这个问题没解决」按钮。比阈值判断更可信 —— 用户说了算。"""
+
+    query_log_id: int
+    solved: bool = False
 
 
 class UpdateCheckResponse(BaseModel):

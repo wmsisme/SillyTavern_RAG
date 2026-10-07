@@ -37,6 +37,8 @@
 | 账号与多租户 | 注册登录（httponly Cookie）、改密码、首个注册者自动成为管理员、**卡片 / 世界书按用户隔离** | [backend/api/auth.py](backend/api/auth.py)、[backend/services/auth_service.py](backend/services/auth_service.py) |
 | API 设置（BYOK） | 填自己的大模型 Key，两种存法：**只存这台浏览器** / **存进我的账号（加密落库）** | [frontend/src/components/LLMSettingsModal.tsx](frontend/src/components/LLMSettingsModal.tsx)、[backend/services/llm_provider.py](backend/services/llm_provider.py) |
 | 按 IP 限流 | 贵重接口 50 次/分钟/IP，登录注册 10 次/分钟/IP（滑动窗口，超限返回 429 + `Retry-After`） | [backend/api/ratelimit.py](backend/api/ratelimit.py) |
+| **后台管理与封禁**（仅管理员） | 概览统计 · 用户列表（含会话数 / 提问数 / 最后提问时间）· **封号 / 解封**（当场踢下线）· **IP 黑名单**（限期或永久；环回地址永不封）· 活跃 IP 排行（同一 IP 上多个账号 = 共享账号线索）· 提问记录（可只看没答上来的） | [backend/api/admin.py](backend/api/admin.py)、[backend/api/ban_guard.py](backend/api/ban_guard.py)、[frontend/src/pages/AdminPage.tsx](frontend/src/pages/AdminPage.tsx) |
+| 提问记录 | 每次检索 / 问答都留痕（谁、IP、问题、召回条数、最高相关度、是否答上来）；用户可点「没解决」反馈 | [backend/api/rag.py](backend/api/rag.py)、[backend/services/admin_service.py](backend/services/admin_service.py) |
 | 文档更新检测 | 检查上游官方文档仓是否有更新（**需要本机文档仓**，容器部署下不可用，见「已知边界」） | [backend/api/update.py](backend/api/update.py) |
 
 **支持的模型平台**（7 家，均在 [backend/services/llm_provider.py](backend/services/llm_provider.py) 集中注册，
@@ -144,11 +146,12 @@ cd frontend && npm run dev                                        # 前端 http:
 | 健康 | `GET /health`（含索引条数与当前版本号） |
 | 账号 | `GET /api/auth/config` · `POST /api/auth/register` · `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` · `POST /api/auth/password` |
 | 大模型 | `GET /api/llm/providers` · `GET/PUT/DELETE /api/llm/settings` · `POST /api/llm/test` |
-| 检索问答 | `POST /api/rag/search` · `POST /api/rag/ask` · `POST /api/rag/ask/stream` |
+| 检索问答 | `POST /api/rag/search` · `POST /api/rag/ask` · `POST /api/rag/ask/stream` · `POST /api/rag/feedback`（「没解决」反馈） |
 | 角色卡 | `GET/POST /api/cards` · `GET/PUT/DELETE /api/cards/{id}` · `GET/POST/DELETE /api/cards/{id}/image` · `POST /api/cards/generate` · `POST /api/cards/generate/preview` · `POST /api/cards/generate/status-bar` · `POST /api/cards/generate/greeting` · `POST /api/cards/suggest-tags` |
 | 世界书 | `GET/POST /api/worldbooks` · `GET/PUT/DELETE /api/worldbooks/{id}` · `POST /api/worldbooks/generate/preview` · `POST /api/worldbooks/suggest-entries` |
 | 工具箱 | `POST /api/tools/separator` · `/worldbook-converter` · `/chinese-converter` · `/width-converter` · `/jsonl-novel-converter` |
 | 文档更新 | `GET /api/update/check` · `POST /api/update/run`（管理员） · `GET /api/update/status` |
+| 后台管理（管理员） | `GET /api/admin/overview` · `GET /api/admin/users` · `POST /api/admin/users/{id}/ban\|unban\|make-admin` · `GET/POST /api/admin/ip-bans` · `DELETE /api/admin/ip-bans/{id}` · `GET /api/admin/active-ips` · `GET/DELETE /api/admin/queries` |
 
 完整参数与响应模型见运行时的 `/docs`（FastAPI 自动生成）。
 
@@ -168,6 +171,8 @@ cd frontend && npm run dev                                        # 前端 http:
 | `RATE_LIMIT_PER_MIN` / `RATE_LIMIT_AUTH_PER_MIN` | 50 / 10 | 每 IP 每分钟的贵重接口 / 登录注册额度 |
 | `TRUST_PROXY` | 0 | 反代**不在同一台机器**上时才设 1；否则全站会共用一个额度 |
 | `REGISTER_INVITE_CODE` | 空 | 留空 = 开放注册；填了必须带邀请码 |
+| `UNANSWERED_THRESHOLD` | 0.45 | 最高相关度低于它就算「没答上来」，进后台的待补清单 |
+| `QUERY_LOG_MAX` | 20000 | 提问记录最多留多少条，超了从最老的开始裁 |
 | `COOKIE_SECURE` | 0 | 上了 HTTPS 后设 1 |
 
 ---
@@ -183,6 +188,7 @@ python tools/test_toolbox.py         # 工具箱 5 个工具（需后端在跑�
 python tools/test_byok.py            # BYOK：无凭证报错 / 假 Key 被拒 / 账号内存密文（--live 才发真实调用）
 python tools/test_ratelimit.py       # 限流：贵接口 429、换 IP 可用、非贵接口不受影响
 python tools/test_concurrency.py     # 并发：8 个请求是否真并行、事件循环有没有被占住（需后端在跑）
+python tools/test_admin.py           # 后台与封禁：封号 / 解封 / 封 IP / 权限边界 / 提问判定（用临时库，不碰真实数据）
 
 python tools/test_deployed_site.py --base http://<服务器>:8000   # 部署冒烟（首次部署务必跑）
 python tools/check_server_deps.py    # 把 backend 的 import 与容器实际装的包对照，防「本机能跑、部署缺包」
@@ -198,7 +204,7 @@ python tools/rebuild_index_api.py    # 换检索模型后重建索引（--dry-ru
 
 | 数据 | 位置（容器内） | 说明 |
 | --- | --- | --- |
-| 账号、卡片、世界书 | `/data/data.db` | SQLite，直接拷文件即可备份 |
+| 账号、卡片、世界书、**提问记录、封禁名单** | `/data/data.db` | SQLite，直接拷文件即可备份 |
 | 用户上传的卡片图 | `/data/static/` | 走鉴权端点提供，不对外直链 |
 | 向量索引 + 缓存 | `/app/RAG/` | 由本机生成后传上来，服务器上不重算 |
 
@@ -218,6 +224,10 @@ python tools/rebuild_index_api.py    # 换检索模型后重建索引（--dry-ru
 - **密码**：`pbkdf2_sha256` 加盐哈希（标准库实现），**无法找回**，只能由管理员重置；改密码会踢掉所有旧会话。
 - **限流**：贵重接口与登录注册分别限流，超限 429 并给 `Retry-After`；额度按真实 IP 分桶。
 - **不写日志的**：API Key 不落日志；异常信息里也不带 Key 原文。
+- **提问会被记录**：每次检索 / 问答都会在服务端留下「提问内容 + 账号 + IP + 召回质量」，
+  用途有两个 —— 排查违规使用（封号 / 封 IP 的依据）、整理「哪些问题答不上来」以便补知识库。
+  条数有上限（`QUERY_LOG_MAX`），站长可在后台清理。
+  ⚠️ **要当对外服务的话，建议同时在页面上向用户明示这一点**（当前版本只在本文档里说明）。
 
 ---
 

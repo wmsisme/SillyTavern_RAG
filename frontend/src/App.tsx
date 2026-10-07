@@ -9,6 +9,7 @@ import WorldBookEditPage from './pages/WorldBookEditPage'
 import ToolboxPage from './pages/ToolboxPage'
 import ToolDetailPage from './pages/ToolDetailPage'
 import LoginPage from './pages/LoginPage'
+import AdminPage from './pages/AdminPage'
 import RequireLogin from './components/RequireLogin'
 import { AuthProvider } from './services/auth'
 
@@ -43,6 +44,8 @@ function App() {
           <Route path="/worldbooks" element={<RequireLogin><WorldBooksPage /></RequireLogin>} />
           <Route path="/worldbooks/:id" element={<RequireLogin><WorldBookEditPage /></RequireLogin>} />
           <Route path="/worldbooks/new" element={<RequireLogin><WorldBookEditPage /></RequireLogin>} />
+          {/* 后台管理：页内还会再判一次 is_admin（双保险），后端那几个接口本来也只放给管理员 */}
+          <Route path="/admin" element={<RequireLogin><AdminPage /></RequireLogin>} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

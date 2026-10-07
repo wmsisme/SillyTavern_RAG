@@ -15,8 +15,11 @@ class User(Base):
     username = Column(String(64), unique=True, nullable=False, index=True)
     password_hash = Column(String(200), nullable=False)
     is_admin = Column(Boolean, default=False, nullable=False)   # 首个注册者
-    is_active = Column(Boolean, default=True, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)   # False = 被封 / 已停用
     created_at = Column(DateTime, server_default=func.now())
+    # 封禁留痕（管理后台要显示"为什么被封"）：解封时清空
+    ban_reason = Column(String(255), default="")
+    banned_at = Column(DateTime, nullable=True)
 
 
 class SessionToken(Base):

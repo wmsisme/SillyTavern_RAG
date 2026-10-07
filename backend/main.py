@@ -13,6 +13,7 @@ os.environ.setdefault("HF_ENDPOINT", HF_ENDPOINT)
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
 from backend.models.database import init_db
+from backend.api.ban_guard import install_ip_ban_guard
 from backend.api.ratelimit import install_rate_limit
 
 
@@ -44,6 +45,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 顺序有讲究：**封禁挡在限流之前** —— 已被封的 IP 不该继续消耗限流额度，
+# 日志里也不该继续刷它的请求。
+install_ip_ban_guard(app)
+
 # 按 IP 限流（每 IP 每分钟 50 次，只算贵的接口；登录注册另算）
 install_rate_limit(app)
 
@@ -55,6 +60,7 @@ from backend.api.tools import router as tools_router
 from backend.api.health import router as health_router
 from backend.api.auth import router as auth_router
 from backend.api.llm import router as llm_router
+from backend.api.admin import router as admin_router
 
 app.include_router(health_router, tags=["健康检查"])
 app.include_router(auth_router, prefix="/api", tags=["账号"])
@@ -64,6 +70,7 @@ app.include_router(cards_router, prefix="/api", tags=["角色卡"])
 app.include_router(worldbooks_router, prefix="/api", tags=["世界书"])
 app.include_router(update_router, prefix="/api", tags=["文档更新"])
 app.include_router(tools_router, prefix="/api/tools", tags=["工具箱"])
+app.include_router(admin_router, prefix="/api", tags=["后台管理"])
 
 # 目录先建出来（上传要用），但**不再**挂成静态目录：
 # StaticFiles 不鉴权，拿到 URL 的人就能看 —— 那「只有本人能看到自己的卡」就是假的。
