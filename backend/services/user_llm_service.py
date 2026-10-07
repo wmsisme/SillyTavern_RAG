@@ -28,12 +28,15 @@ def save(db: Session, user_id: int, provider: str, api_key: str,
     api_key = (api_key or "").strip()
     if not api_key and row is None:
         raise ValueError("请填 API Key")
+    # 地址在**存的时候**就校验（指向内网直接拒绝并说明原因）——
+    # 别让它先落库、等下次请求才炸，那时用户早忘了自己填过什么
+    base_url = llm_provider.validate_base_url((base_url or "").strip())
     if row is None:
         row = UserLLMSettings(user_id=user_id)
         db.add(row)
     row.provider = provider
     row.model = (model or "").strip()
-    row.base_url = (base_url or "").strip()
+    row.base_url = base_url
     if api_key:
         row.api_key_enc = secret_box.encrypt(api_key)
     db.commit()

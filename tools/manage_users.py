@@ -86,9 +86,14 @@ def main() -> int:
 
         if args.reset_password:
             user = _find(db, args.reset_password)
-            pw = args.password or getpass.getpass(f"给 {user.username} 设置新密码（至少 6 位）: ")
-            if len(pw) < 6:
-                raise SystemExit("密码至少 6 位")
+            pw = args.password or getpass.getpass(
+                f"给 {user.username} 设置新密码（至少 {auth_service.MIN_PASSWORD_LEN} 位，别用纯数字）: ")
+            # 走和注册 / 改密码**同一套**策略：这个入口是站长的兜底工具，
+            # 但不能成为"弱密码的唯一后门"
+            try:
+                auth_service.check_password_strength(pw)
+            except auth_service.AuthError as e:
+                raise SystemExit(f"❌ {e}")
             user.password_hash = auth_service.hash_password(pw)
             # 顺手踢掉所有旧会话：忘记密码的场景下，旧会话可能还留在别的浏览器里
             killed = db.query(SessionToken).filter(SessionToken.user_id == user.id).delete()

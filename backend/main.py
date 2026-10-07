@@ -3,9 +3,9 @@ import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from backend.config import HF_ENDPOINT, FRONTEND_DIR, STATIC_DIR
 
@@ -15,6 +15,28 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 from backend.models.database import init_db
 from backend.api.ban_guard import install_ip_ban_guard
 from backend.api.ratelimit import install_rate_limit
+
+# ---------------------------------------------------------------- 生产安全默认
+# 交互式文档默认**关掉**（2026-10-07 安全测试发现 /docs、/redoc、/openapi.json
+# 在公网是敞开的：等于把一张完整的接口地图递给来访者）。
+# 本地想看文档：在 .env 里写 ENABLE_DOCS=1。
+def _flag(name: str, default: str = "0") -> bool:
+    return os.environ.get(name, default).strip().lower() not in ("0", "", "false", "no", "off")
+
+
+ENABLE_DOCS = _flag("ENABLE_DOCS")
+CSP_ENABLED = _flag("CSP_ENABLED", "1")
+
+# 请求体上限（2026-10-07 加固）。**分两档**，因为两类请求的代价不一样：
+#   · multipart 上传：Starlette 会把它落到磁盘临时文件，内存压力小，
+#     真正的天花板由各接口自己卡（工具箱 10MB / 卡图 8MB）——这里放宽到 64MB，
+#     只是不让"上传 1GB"这种事跑到解析阶段（那样磁盘先满）。
+#   · 其它（JSON 等）：解析结果**整个进内存**，卡紧一点。
+# 为什么不全用一个小值：Content-Length 一超就在**读完之前**回 413，
+# 客户端（还在往里写 body）看到的是"连接被断开"，而不是那句人话。
+# 所以这里只挡"离谱的大"，把"稍微超限"留给接口自己给出友好提示。
+MAX_BODY_JSON = 16 * 1024 * 1024
+MAX_BODY_MULTIPART = 64 * 1024 * 1024
 
 
 def _ensure_rag_index():
@@ -35,6 +57,9 @@ app = FastAPI(
     description="SillyTavern 知识库检索与角色卡/世界书管理平台",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url="/docs" if ENABLE_DOCS else None,
+    redoc_url="/redoc" if ENABLE_DOCS else None,
+    openapi_url="/openapi.json" if ENABLE_DOCS else None,
 )
 
 app.add_middleware(
@@ -45,12 +70,59 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def _security_headers(request: Request, call_next):
+    """安全响应头（2026-10-07 补）——原来一个都没有。
+
+    · nosniff      —— 别让浏览器"猜"类型：上传的图片被当成脚本执行就麻烦了
+    · X-Frame-Options / frame-ancestors —— 防点击劫持（把本站套进 iframe 骗点击）
+    · Referrer-Policy —— 跳到外部站点时不带完整 URL（URL 里可能带查询词）
+    · CSP          —— 纵深防御：只准加载本站资源。前端构建产物只有 1 个 JS + 1 个 CSS，
+                      没有内联脚本、没有外部 CDN，所以 script-src 'self' 是合身的；
+                      style 必须放 'unsafe-inline'（antd 运行时注入样式）。
+                      万一页面因此显示异常：.env 里 CSP_ENABLED=0 即可关掉。
+    · HSTS         —— 只在 https 请求上加（本机 http://127.0.0.1 访问时加了没用，
+                      反而会让浏览器把 localhost 记成强制 https）
+
+    顺手在这里挡住超大请求体（见 MAX_BODY_BYTES）：**能在读完之前拒绝，就别读完再说**。
+    """
+    cl = request.headers.get("content-length", "")
+    if cl.isdigit():
+        is_upload = request.headers.get("content-type", "").startswith("multipart/form-data")
+        cap = MAX_BODY_MULTIPART if is_upload else MAX_BODY_JSON
+        if int(cl) > cap:
+            return JSONResponse(
+                status_code=413,
+                content={"detail": f"请求体太大了（上限 {cap // 1024 // 1024} MB）"},
+            )
+
+    resp = await call_next(request)
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options", "DENY")
+    resp.headers.setdefault("Referrer-Policy", "same-origin")
+    resp.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=()")
+    resp.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+    if CSP_ENABLED:
+        resp.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; "
+            "object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
+        )
+    if request.url.scheme == "https":
+        resp.headers.setdefault("Strict-Transport-Security", "max-age=15552000")
+    return resp
+
+
 # 顺序有讲究：**封禁挡在限流之前** —— 已被封的 IP 不该继续消耗限流额度，
 # 日志里也不该继续刷它的请求。
-install_ip_ban_guard(app)
-
-# 按 IP 限流（每 IP 每分钟 50 次，只算贵的接口；登录注册另算）
+#
+# ⚠️ Starlette 的 add_middleware 是往列表**头部插**的，所以**后安装的在外层、先执行**。
+# 想让封禁先跑，就得**后安装它** —— 顺序写反过一次（2026-10-07 复查发现），
+# 结果是限流跑在封禁前面：被封的 IP 照样消耗额度、拿到的还是 429 而不是"你被封了"。
 install_rate_limit(app)
+install_ip_ban_guard(app)
 
 from backend.api.rag import router as rag_router
 from backend.api.cards import router as cards_router

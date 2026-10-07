@@ -12,8 +12,10 @@
 用法：python tools/test_deployed_site.py [--base http://127.0.0.1:8000]
 """
 import argparse
+import os
 import sys
 import time
+from pathlib import Path
 
 import httpx
 
@@ -21,6 +23,24 @@ try:  # Windows 管道 / 控制台默认 GBK：中文与 emoji 输出会炸，�
     sys.stdout.reconfigure(encoding="utf-8")
 except Exception:
     pass
+
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def _env(name: str) -> str:
+    """从项目 .env 里读一个值（站点开了邀请码时注册要用；不在脚本里写死）。"""
+    try:
+        for line in (ROOT / ".env").read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = line.strip()
+            if line.startswith(name + "="):
+                return line.split("=", 1)[1].strip()
+    except OSError:
+        pass
+    return os.environ.get(name, "")
+
+
+INVITE_CODE = _env("REGISTER_INVITE_CODE")
 
 
 fails: list[str] = []
@@ -65,8 +85,10 @@ def main() -> int:
     print("\n④ 注册 + 登录态 + 数据隔离")
     uname = f"smoke{int(time.time()) % 1000000}"
     c = httpx.Client(base_url=BASE, timeout=60)
-    r = c.post("/api/auth/register", json={"username": uname, "password": "pw123456"})
-    check(r.status_code == 201, f"注册 {uname}（HTTP {r.status_code}）")
+    # 站点开了邀请码就必须带上（值从 .env 读，不写死在脚本里）
+    r = c.post("/api/auth/register",
+               json={"username": uname, "password": "pwSmoke2026", "invite_code": INVITE_CODE})
+    check(r.status_code == 201, f"注册 {uname}（HTTP {r.status_code}{'，邀请码没带上？' if r.status_code == 400 else ''}）")
     r = c.get("/api/auth/me")
     check(r.status_code == 200 and r.json().get("username") == uname, "带 Cookie 能问到本人")
     r = c.get("/api/cards")

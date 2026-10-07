@@ -55,11 +55,16 @@ def _record(request: Request, user: Optional[User], kind: str, query: str,
 @router.post("/rag/search", response_model=SearchResponse)
 def rag_search(req: SearchRequest, request: Request,
                user: Optional[User] = Depends(current_user_optional)):
+    q = (req.query or "").strip()
+    # 空查询以前会照常跑一遍检索（白白烧一次 embedding + rerank 额度），
+    # 现在直接拦住并给人话提示
+    if not q:
+        raise HTTPException(status_code=400, detail="先输入要查的内容")
     try:
-        results = rag_service.search(req.query, top_k=req.top_k)
+        results = rag_service.search(q, top_k=req.top_k)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    log_id = _record(request, user, "search", req.query, results)
+    log_id = _record(request, user, "search", q, results)
     return SearchResponse(results=results, query_log_id=log_id)
 
 
@@ -67,11 +72,14 @@ def rag_search(req: SearchRequest, request: Request,
 def rag_ask(req: AskRequest, request: Request,
             user: Optional[User] = Depends(current_user_optional),
             client=Depends(llm_client)):
+    q = (req.query or "").strip()
+    if not q:
+        raise HTTPException(status_code=400, detail="先输入要问的问题")
     try:
-        result = rag_service.ask(req.query, client=client)
+        result = rag_service.ask(q, client=client)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    log_id = _record(request, user, "ask", req.query, result.get("sources") or [])
+    log_id = _record(request, user, "ask", q, result.get("sources") or [])
     return AskResponse(answer=result["answer"], sources=result["sources"],
                        query_log_id=log_id)
 
@@ -80,20 +88,24 @@ def rag_ask(req: AskRequest, request: Request,
 async def rag_ask_stream(req: AskRequest, request: Request,
                          user: Optional[User] = Depends(current_user_optional),
                          client=Depends(llm_client)):
+    q = (req.query or "").strip()
+    if not q:
+        raise HTTPException(status_code=400, detail="先输入要问的问题")
+
     def generate():
         log_id = None
         recorded = False
         try:
-            for event in rag_service.ask_stream_events(req.query, client=client):
+            for event in rag_service.ask_stream_events(q, client=client):
                 # sources 事件一出来就先记账 —— 不等生成完（生成可能中途失败），
                 # 而且"有没有召回来源"正是判断答没答上来的关键。
                 if not recorded and event.get("type") == "sources":
-                    log_id = _record(request, user, "ask_stream", req.query,
+                    log_id = _record(request, user, "ask_stream", q,
                                      event.get("data") or [])
                     recorded = True
                 yield json.dumps(event, ensure_ascii=False) + "\n"
             if not recorded:      # 检索阶段就炸了、连 sources 都没发 —— 也要留痕
-                log_id = _record(request, user, "ask_stream", req.query, [])
+                log_id = _record(request, user, "ask_stream", q, [])
             yield json.dumps({"type": "done", "query_log_id": log_id},
                              ensure_ascii=False) + "\n"
         except Exception as e:

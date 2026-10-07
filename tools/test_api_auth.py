@@ -25,6 +25,10 @@ sys.path.insert(0, str(ROOT))
 _DB = Path(tempfile.mkdtemp(prefix="strag-api-")) / "api.db"
 os.environ["DB_PATH"] = str(_DB)
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
+# 这个测试验的是「注册 → 登录态 → 归属隔离」这条链本身，不是邀请码门槛：
+# 把邀请码清空，免得线上 .env 一启用邀请码，这里就全部注册不上（2026-10-07 踩到）。
+# 邀请码自己的逻辑在 tools/test_security.py 里单独测。
+os.environ["REGISTER_INVITE_CODE"] = ""
 
 from fastapi.testclient import TestClient                      # noqa: E402
 from backend.main import app                                   # noqa: E402

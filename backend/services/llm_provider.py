@@ -21,13 +21,96 @@
 """
 from __future__ import annotations
 
+import ipaddress
 import json
+import os
+import socket
+import threading
 from dataclasses import dataclass, field
 from typing import Iterator, Optional
+from urllib.parse import urlparse
 
 import httpx
 
 ANTHROPIC_VERSION = "2023-06-01"
+
+# ---------------------------------------------------------------- 出网安全
+# 背景（2026-10-07 安全测试）：base_url 是**请求头里带进来的**，而 /api/llm/test
+# 连登录都不需要。原来后端会照着这个地址直接发请求 —— 等于给任何访客一个
+# 「让服务器替我发请求」的开关（SSRF）：实测能探本机端口、把目标响应片段回显在
+# 错误信息里（http://127.0.0.1:8000/health → 405 + 对方的 JSON 原文）。
+#
+# 所以：**凡是要连出去的地址，先证明它指向公网**。判据用 is_global ——
+# 一举排除环回 / 私有 / 链路本地 / 保留 / 文档段 / CGNAT（含 Tailscale 的
+# 100.64.0.0/10，本机自己就在这个网段里）。
+_BLOCKED_IP_HINT = "自定义地址不能指向内网 / 本机地址（服务器安全策略）"
+
+# 单次外部调用的超时：连接一定要短（黑洞地址 8 秒就放弃），读可以长一点
+# （大模型生成本来就慢）。原来一个 timeout=120 全包，攻击者指一个"只接受连接、
+# 不回包"的地址就能把这一个线程按住两分钟 —— 40 个并发就把 FastAPI 的
+# 线程池占满，全站同步接口一起卡死。
+LLM_TIMEOUT = httpx.Timeout(connect=8.0, read=120.0, write=20.0, pool=5.0)
+
+# 同时在途的外部调用数（进程级）。超过就快速失败，而不是无限排队把线程吃光。
+MAX_CONCURRENT_CALLS = int(os.environ.get("LLM_MAX_CONCURRENT", "8") or 8)
+_LLM_SLOTS = threading.BoundedSemaphore(max(1, MAX_CONCURRENT_CALLS))
+SLOT_WAIT_SECONDS = 15.0
+
+
+class LLMBusyError(RuntimeError):
+    """在途调用太多，这次没抢到名额（明确告诉用户"稍后再试"，别让他白等）。"""
+
+
+def _blocked_ip(ip) -> bool:
+    return (not ip.is_global) or ip.is_multicast
+
+
+def validate_base_url(url: str) -> str:
+    """校验用户给的 base_url，返回原值；不合规抛 ValueError（消息直接给用户看）。
+
+    两道：① 协议只能是 http/https；② 主机名解析出的**每一个** IP 都必须是公网地址。
+    解析用 socket.getaddrinfo（域名与裸 IP 都覆盖），所以 http://127.0.0.1、
+    http://[::1]、http://10.0.0.1、http://169.254.169.254（云元数据）都会被挡住。
+
+    残留风险（如实记着）：校验时解析一次、真正连接时又解析一次，
+    理论上存在 DNS rebinding 的时间窗。缓解手段是**禁跟随重定向** + 短连接超时，
+    要彻底堵死得在连接层校验对端 IP —— 目前这个威胁模型下不值得引那么重的东西。
+    """
+    raw = (url or "").strip()
+    if not raw:
+        return ""
+    parsed = urlparse(raw)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError("自定义地址必须以 http:// 或 https:// 开头")
+    host = parsed.hostname
+    if not host:
+        raise ValueError("自定义地址里没有主机名")
+    try:
+        infos = socket.getaddrinfo(host, parsed.port or (443 if parsed.scheme == "https" else 80),
+                                   proto=socket.IPPROTO_TCP)
+    except socket.gaierror:
+        raise ValueError(f"这个地址解析不了：{host}")
+    for info in infos:
+        addr = info[4][0]
+        try:
+            # 去掉 IPv6 的 scope id（fe80::1%eth0）
+            ip = ipaddress.ip_address(addr.split("%", 1)[0])
+        except ValueError:
+            continue
+        if _blocked_ip(ip):
+            raise ValueError(_BLOCKED_IP_HINT)
+    return raw
+
+
+def _http_client() -> httpx.Client:
+    """发往外部平台用的 HTTP 客户端。
+
+    两个关键设置：
+      · follow_redirects=False —— 否则一个公网域名 302 到 http://127.0.0.1:8000
+        就绕过了上面那道校验（校验只发生在发请求之前）。
+      · 分项超时 —— 见 LLM_TIMEOUT 的注释。
+    """
+    return httpx.Client(follow_redirects=False, timeout=LLM_TIMEOUT)
 
 # ---------------------------------------------------------------- 平台注册表
 # 前端「API 设置」页直接渲染这份表；base_url 只在这里定义一次。
@@ -153,23 +236,29 @@ class LLMCredentials:
 
 def from_headers(provider: str, api_key: str, model: str = "", base_url: str = "",
                  custom_base_url_allowed: bool = True) -> Optional[LLMCredentials]:
-    """从请求头构造凭证；缺 provider 或 key 就返回 None（由 api 层转成 400）。"""
+    """从请求头构造凭证；缺 provider 或 key 就返回 None（由 api 层转成 400）。
+
+    base_url 不合规（指向内网 / 协议不对）会抛 ValueError ——
+    调用方要把它转成 400 并把原话回给用户，而不是当成服务端错误。
+    """
     provider = (provider or "").strip().lower()
     api_key = (api_key or "").strip()
     if not provider or not api_key:
         return None
+    # 自定义地址先过 SSRF 校验；不允许自定义时一律用注册表里的内置地址
+    base_url = validate_base_url(base_url) if custom_base_url_allowed else ""
     if provider not in PROVIDERS:
         # 未知平台名：仍然允许，但按 OpenAI 兼容处理，且必须自带 base_url
-        if not (base_url or "").strip():
+        if not base_url:
             return None
         return LLMCredentials(provider=provider, api_key=api_key, model=model.strip(),
-                              base_url=base_url.strip(), protocol="openai")
+                              base_url=base_url, protocol="openai")
     meta = PROVIDERS[provider]
     return LLMCredentials(
         provider=provider,
         api_key=api_key,
         model=(model or "").strip(),
-        base_url=(base_url or "").strip() if custom_base_url_allowed else "",
+        base_url=base_url,
         protocol=meta["protocol"],
     )
 
@@ -218,9 +307,33 @@ class _Completions:
     def create(self, *, model: str = "", messages: list, temperature: float = 0.7,
                max_tokens: int = 1024, stream: bool = False):
         model = model or self._creds.effective_model
-        if self._creds.protocol == "anthropic":
-            return _anthropic_create(self._creds, model, messages, temperature, max_tokens, stream)
-        return _openai_create(self._creds, model, messages, temperature, max_tokens, stream)
+        # 名额从发请求一直占到生成结束（流式也要占）—— 这是防「慢速请求拖死线程池」的关键：
+        # 抢不到名额立刻失败，让用户重试，而不是把线程一个个搭进去。
+        if not _LLM_SLOTS.acquire(timeout=SLOT_WAIT_SECONDS):
+            raise LLMBusyError(
+                f"服务器同时在处理的外部调用已达上限（{MAX_CONCURRENT_CALLS} 个），请稍后再试")
+        try:
+            if self._creds.protocol == "anthropic":
+                out = _anthropic_create(self._creds, model, messages, temperature,
+                                        max_tokens, stream)
+            else:
+                out = _openai_create(self._creds, model, messages, temperature,
+                                     max_tokens, stream)
+        except BaseException:
+            _LLM_SLOTS.release()
+            raise
+        if not stream:
+            _LLM_SLOTS.release()
+            return out
+        return _releasing(out)
+
+
+def _releasing(gen: Iterator):
+    """流式生成器的包装：迭代完（或中途出错 / 客户端断开）就把并发名额还回去。"""
+    try:
+        yield from gen
+    finally:
+        _LLM_SLOTS.release()
 
 
 class _Chat:
@@ -245,7 +358,10 @@ def _openai_create(creds: LLMCredentials, model: str, messages: list, temperatur
                    max_tokens: int, stream: bool):
     from openai import OpenAI   # 延迟导入：不配 key 的部署少走一段初始化
 
-    client = OpenAI(api_key=creds.api_key, base_url=creds.effective_base_url, timeout=120)
+    # timeout 交给 http_client（SDK 在传入 http_client 时以它为准），
+    # 关键是 follow_redirects=False —— 挡住"公网域名 302 到 127.0.0.1"这条绕过路
+    client = OpenAI(api_key=creds.api_key, base_url=creds.effective_base_url,
+                    http_client=_http_client())
     resp = client.chat.completions.create(
         model=model, messages=messages, temperature=temperature,
         max_tokens=max_tokens, stream=stream,
@@ -292,7 +408,8 @@ def _anthropic_create(creds: LLMCredentials, model: str, messages: list, tempera
     url = f"{creds.effective_base_url}/v1/messages"
 
     if not stream:
-        with httpx.Client(timeout=120) as c:
+        # 同一个 client 配置：不跟随重定向 + 分项超时（理由见 _http_client）
+        with _http_client() as c:
             r = c.post(url, headers=headers, json=body)
             r.raise_for_status()
             data = r.json()
@@ -301,7 +418,7 @@ def _anthropic_create(creds: LLMCredentials, model: str, messages: list, tempera
         return _Resp(text.strip())
 
     def gen() -> Iterator[_Chunk]:
-        with httpx.Client(timeout=120) as c:
+        with _http_client() as c:
             with c.stream("POST", url, headers=headers, json={**body, "stream": True}) as r:
                 r.raise_for_status()
                 for line in r.iter_lines():

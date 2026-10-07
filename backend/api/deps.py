@@ -50,17 +50,27 @@ def llm_credentials(request: Request, db: Session = Depends(get_db),
     账号那条是「换设备登录也能直接用」。
 
     刻意**不**回落到服务端 .env 里的 key：公网上那样等于谁都能刷站长的余额。
+
+    base_url 指向内网时 from_headers 会抛 ValueError（SSRF 防护），
+    这里转成 400 并把原因原样回给用户 —— 不能让它变成 500 或者静默失败。
     """
-    creds = llm_provider.from_headers(
-        request.headers.get(llm_provider.HEADER_PROVIDER, ""),
-        request.headers.get(llm_provider.HEADER_KEY, ""),
-        request.headers.get(llm_provider.HEADER_MODEL, ""),
-        request.headers.get(llm_provider.HEADER_BASE_URL, ""),
-    )
+    try:
+        creds = llm_provider.from_headers(
+            request.headers.get(llm_provider.HEADER_PROVIDER, ""),
+            request.headers.get(llm_provider.HEADER_KEY, ""),
+            request.headers.get(llm_provider.HEADER_MODEL, ""),
+            request.headers.get(llm_provider.HEADER_BASE_URL, ""),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if creds:
         return creds
     if user is not None:
-        creds = user_llm_service.to_credentials(user_llm_service.get(db, user.id))
+        try:
+            creds = user_llm_service.to_credentials(user_llm_service.get(db, user.id))
+        except ValueError as e:
+            raise HTTPException(status_code=400,
+                                detail=f"你账号里存的大模型地址不能用了：{e}")
         if creds:
             return creds
     raise HTTPException(

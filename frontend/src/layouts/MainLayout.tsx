@@ -230,8 +230,8 @@ export default function MainLayout() {
                      rules={[{ required: true, message: '请输入当前密码' }]}>
             <Input.Password autoComplete="current-password" />
           </Form.Item>
-          <Form.Item name="new_password" label="新密码（至少 6 位）"
-                     rules={[{ required: true, min: 6, message: '新密码至少 6 位' }]}>
+          <Form.Item name="new_password" label="新密码（至少 8 位，别用纯数字）"
+                     rules={[{ required: true, min: 8, message: '新密码至少 8 位' }]}>
             <Input.Password autoComplete="new-password" />
           </Form.Item>
           <Form.Item name="confirm" label="再输一次新密码" dependencies={['new_password']}

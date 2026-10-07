@@ -28,6 +28,25 @@ ALLOWED_IMAGE_TYPES = {
 }
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
 
+# 只信 Content-Type 是不够的（那是客户端说的），再看一眼文件头。
+# 起因（2026-10-07 安全测试）：内容随便是什么都能上传成功，等于把图床当文件柜用。
+IMAGE_MAGIC = {
+    ".png": [b"\x89PNG\r\n\x1a\n"],
+    ".jpg": [b"\xff\xd8\xff"],
+    ".gif": [b"GIF87a", b"GIF89a"],
+    ".webp": [b"RIFF"],
+}
+
+
+def _looks_like_image(data: bytes, ext: str) -> bool:
+    if len(data) < 12:
+        return False
+    if not any(data.startswith(m) for m in IMAGE_MAGIC.get(ext, [])):
+        return False
+    if ext == ".webp" and data[8:12] != b"WEBP":     # RIFF 是通用容器头
+        return False
+    return True
+
 
 def _remove_image_file(image_path: Optional[str]):
     """删掉 backend/static 下的旧图片。
@@ -146,11 +165,15 @@ async def upload_card_image(card_id: int, file: UploadFile = File(...),
             status_code=400,
             detail=f"不支持的图片类型：{file.content_type or '未知'}（支持 png / jpg / webp / gif）",
         )
-    data = await file.read()
+    # 只读到"上限 + 1"字节：超限时立刻停手，不把整个大文件拉进内存
+    data = await file.read(MAX_IMAGE_BYTES + 1)
     if not data:
         raise HTTPException(status_code=400, detail="图片内容为空")
     if len(data) > MAX_IMAGE_BYTES:
         raise HTTPException(status_code=400, detail="图片过大（上限 8MB）")
+    if not _looks_like_image(data, ext):
+        raise HTTPException(status_code=400,
+                            detail="这个文件的内容和图片格式对不上（不是真正的图片），换一张试试")
 
     card = (db.query(CharacterCard)
               .filter(CharacterCard.id == card_id, CharacterCard.user_id == user.id)

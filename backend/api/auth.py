@@ -37,14 +37,22 @@ def _log_login(db: Session, request: Request, user, action: str) -> None:
         print(f"[loginlog] 记录失败（不影响登录）：{e}")
 
 
-def _attach_cookie(resp: Response, token: str, expires) -> None:
+def _attach_cookie(req: Request, resp: Response, token: str, expires) -> None:
+    """下发会话 Cookie。
+
+    Secure 标志**按本次请求的协议自适应**（2026-10-07 加固）：
+      · 走 https（公网 = Tailscale Funnel，会带 X-Forwarded-Proto，uvicorn 已据此改写
+        scheme）→ 打上 Secure，浏览器就不会在明文 http 下把它发出去；
+      · 走 http://127.0.0.1:8000（本机调试）→ 不打，否则浏览器根本不存，本机就登不上。
+    COOKIE_SECURE=1 仍然可以强制打开（比如以后前面挂了反代却不传 proto）。
+    """
     resp.set_cookie(
         key=auth_service.COOKIE_NAME,
         value=token,
         max_age=int((expires - datetime.now()).total_seconds()),
         httponly=True,
         samesite="lax",
-        secure=auth_service.cookie_secure(),
+        secure=auth_service.cookie_secure() or req.url.scheme == "https",
         path="/",
     )
 
@@ -68,7 +76,7 @@ def register(req: RegisterRequest, request: Request, resp: Response,
     except auth_service.AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
     _log_login(db, request, user, "register")
-    _attach_cookie(resp, token, expires)
+    _attach_cookie(request, resp, token, expires)
     return LoginResponse(user=UserResponse.model_validate(user), token=token)
 
 
@@ -80,7 +88,7 @@ def login(req: LoginRequest, request: Request, resp: Response,
     except auth_service.AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
     _log_login(db, request, user, "login")
-    _attach_cookie(resp, token, expires)
+    _attach_cookie(request, resp, token, expires)
     return LoginResponse(user=UserResponse.model_validate(user), token=token)
 
 

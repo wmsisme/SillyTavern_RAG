@@ -57,9 +57,22 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 
 PER_MINUTE = _env_int("RATE_LIMIT_PER_MIN", 50)
+# 未登录访客的额度（2026-10-07 加固）：检索接口**不需要登录**，
+# 而每一次检索都在烧站长的 embedding / rerank 额度（硅基流动免费档也有 RPM 上限）。
+# 登录用户照旧 50，匿名 30 —— 正常人一次问答就是一个请求；
+# 之所以不敢压得更低（比如 20）：多个用户可能共用同一个 NAT 出口 IP，
+# 匿名档压太狠会把他们一起误伤（测试里 8 个并发请求就撞过这个）。
+ANON_PER_MINUTE = _env_int("RATE_LIMIT_ANON_PER_MIN", 30)
 AUTH_PER_MINUTE = _env_int("RATE_LIMIT_AUTH_PER_MIN", 10)
 ENABLED = _env_bool("RATE_LIMIT_ENABLED", True)
 TRUST_PROXY = _env_bool("TRUST_PROXY", False)
+
+# 会话 Cookie 名（判断"这次请求是不是登录用户"）。只为分档用，不校验有效性 ——
+# 校验要走数据库，而中间件是每个请求的必经之路，不该在这儿加一次查询。
+try:
+    from backend.services.auth_service import COOKIE_NAME as SESSION_COOKIE
+except Exception:                                   # pragma: no cover
+    SESSION_COOKIE = "strag_session"
 
 
 class SlidingWindow:
@@ -72,14 +85,21 @@ class SlidingWindow:
         self.max_keys = max_keys
         self._hits: Dict[str, Deque[float]] = defaultdict(deque)
 
-    def hit(self, key: str, now: Optional[float] = None) -> Tuple[bool, int]:
-        """记一次请求。返回 (是否放行, 还要等几秒)。"""
+    def hit(self, key: str, now: Optional[float] = None,
+            limit: Optional[int] = None) -> Tuple[bool, int]:
+        """记一次请求。返回 (是否放行, 还要等几秒)。
+
+        limit 可以按本次请求覆盖（未登录访客走更小的一档，见 install_rate_limit）。
+        """
+        cap = self.limit if limit is None else limit
         now = now if now is not None else time.monotonic()
         q = self._hits[key]
         cutoff = now - self.window
         while q and q[0] <= cutoff:
             q.popleft()
-        if len(q) >= self.limit:
+        if len(q) >= cap:
+            if not q:                      # cap 被配成 0 之类的极端情况：直接拒，别去摸 q[0]
+                return False, int(self.window) + 1
             retry_after = max(1, int(self.window - (now - q[0])) + 1)
             return False, retry_after
         q.append(now)
@@ -136,15 +156,21 @@ def install_rate_limit(app: FastAPI) -> None:
         bucket = auth if _match(path, AUTH_PREFIXES) else (heavy if _match(path, HEAVY_PREFIXES) else None)
         if bucket is not None:
             ip = client_ip(request)
-            ok, retry_after = bucket.hit(f"{bucket.name}:{ip}")
+            # 匿名访客额度更低：同一个桶，按"这次带没带会话 Cookie"选档
+            anon = not request.cookies.get(SESSION_COOKIE)
+            limit = min(bucket.limit, ANON_PER_MINUTE) if anon else bucket.limit
+            ok, retry_after = bucket.hit(f"{bucket.name}:{ip}", limit=limit)
             if not ok:
+                who = "未登录访客" if anon else "每 IP"
                 return JSONResponse(
                     status_code=429,
-                    content={"detail": f"请求太频繁了：{bucket.name} 类接口每 IP 每分钟上限 "
-                                      f"{bucket.limit} 次，请 {retry_after} 秒后再试。"},
+                    content={"detail": f"请求太频繁了：{bucket.name} 类接口{who}每分钟上限 "
+                                      f"{limit} 次，请 {retry_after} 秒后再试。"
+                                      f"（登录后额度更高）"},
                     headers={"Retry-After": str(retry_after)},
                 )
         return await call_next(request)
 
-    print(f"[ratelimit] 已启用：贵接口 {PER_MINUTE}/分钟/IP，登录注册 {AUTH_PER_MINUTE}/分钟/IP"
+    print(f"[ratelimit] 已启用：贵接口 {PER_MINUTE}/分钟/IP（未登录 {min(PER_MINUTE, ANON_PER_MINUTE)}），"
+          f"登录注册 {AUTH_PER_MINUTE}/分钟/IP"
           f"{'（信任 X-Forwarded-For）' if TRUST_PROXY else ''}")

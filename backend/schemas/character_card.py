@@ -18,7 +18,10 @@ class CharacterCardBase(BaseModel):
     status_bar_content: str = ""
     custom_css: str = ""
     first_message: str = ""
-    image_path: str = ""
+    # ⚠️ image_path 只在**响应**里出现（见 CharacterCardResponse），
+    # 创建 / 更新请求里刻意不收 —— 它由上传端点自己写入。
+    # 起因（2026-10-07 安全测试）：这个字段原本可以随便传，于是有人能把自己的卡
+    # 指向别人的图片路径，读别人的图、甚至删别人的图（图片删除是按这个字段找文件的）。
 
 
 class CharacterCardCreate(CharacterCardBase):
@@ -40,12 +43,13 @@ class CharacterCardUpdate(BaseModel):
     status_bar_content: Optional[str] = None
     custom_css: Optional[str] = None
     first_message: Optional[str] = None
-    image_path: Optional[str] = None
     raw_json: Optional[dict] = None
 
 
 class CharacterCardResponse(CharacterCardBase):
     id: int
+    # 只有响应带它：值是 /static/card_images/xxx.png，且一定由上传端点写入
+    image_path: str = ""
     raw_json: Optional[dict] = None
     created_at: datetime
     updated_at: datetime

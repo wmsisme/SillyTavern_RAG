@@ -45,9 +45,13 @@ export default function LoginPage() {
       <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
         <Input prefix={<UserOutlined />} placeholder="用户名" autoComplete="username" />
       </Form.Item>
-      <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
+      {/* 长度校验**只在注册页**加：登录页加会挡住老账号（密码是历史遗留的短密码就登不进来了） */}
+      <Form.Item name="password" rules={[
+        { required: true, message: '请输入密码' },
+        ...(tab === 'register' ? [{ min: 8, message: '密码至少 8 位' }] : []),
+      ]}>
         <Input.Password prefix={<LockOutlined />}
-                        placeholder={tab === 'register' ? '密码（至少 6 位，请设一个好记的）' : '密码'}
+                        placeholder={tab === 'register' ? '密码（至少 8 位，别用纯数字）' : '密码'}
                         autoComplete={tab === 'login' ? 'current-password' : 'new-password'} />
       </Form.Item>
       {tab === 'register' && (

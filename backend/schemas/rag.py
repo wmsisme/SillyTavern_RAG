@@ -1,14 +1,21 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
+
+# 查询长度上限（2026-10-07 加固）。
+# 实测：20 万字符的 query 也照单全收 —— 这个接口**不需要登录**，
+# 而每一次检索都要站长掏 embedding + rerank 的额度、还要占 CPU 分词。
+# 2000 字对"一个问题"来说非常宽裕（比它能检索出的文档片段还长）。
+MAX_QUERY_CHARS = 2000
+MAX_REASON_CHARS = 2000
 
 
 class SearchRequest(BaseModel):
-    query: str
-    top_k: int = 5
+    query: str = Field("", max_length=MAX_QUERY_CHARS)
+    top_k: int = Field(5, ge=1, le=20)       # 原来 top_k 随便传（负数、10 亿都收）
 
 
 class AskRequest(BaseModel):
-    query: str
+    query: str = Field("", max_length=MAX_QUERY_CHARS)
 
 
 class SearchResult(BaseModel):
@@ -41,7 +48,7 @@ class FeedbackRequest(BaseModel):
 
     query_log_id: int
     kind: str = "unsolved"
-    reason: str = ""
+    reason: str = Field("", max_length=MAX_REASON_CHARS)
 
 
 class UpdateCheckResponse(BaseModel):

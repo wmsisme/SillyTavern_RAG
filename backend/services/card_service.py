@@ -27,7 +27,8 @@ def create_card(db: Session, card_data: CharacterCardCreate, user_id: int) -> Ch
         status_bar_content=card_data.status_bar_content,
         custom_css=card_data.custom_css,
         first_message=card_data.first_message,
-        image_path=card_data.image_path,
+        # 图片一律留空：只有上传端点能写 image_path（见 schemas 里的说明）
+        image_path="",
         raw_json=card_data.raw_json,
     )
     db.add(card)

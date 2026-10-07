@@ -171,11 +171,15 @@ cd frontend && npm run dev                                        # 前端 http:
 | `EMBED_PROVIDER` | `siliconflow` | `siliconflow` 走 API；`local` 用本机模型（要装 torch、搬 3.4GB 模型） |
 | `DB_PATH` / `STATIC_DIR` / `RAG_DIR` | 项目内相对路径 | 数据落点；容器部署分别指向挂载卷 `/data/data.db`、`/data/static`、`/app/RAG` |
 | `RATE_LIMIT_PER_MIN` / `RATE_LIMIT_AUTH_PER_MIN` | 50 / 10 | 每 IP 每分钟的贵重接口 / 登录注册额度 |
+| `RATE_LIMIT_ANON_PER_MIN` | 30 | **未登录访客**的额度（检索与工具箱不用登录，但都在花站长的额度） |
 | `TRUST_PROXY` | 0 | 反代**不在同一台机器**上时才设 1；否则全站会共用一个额度 |
 | `REGISTER_INVITE_CODE` | 空 | 留空 = 开放注册；填了必须带邀请码 |
+| `ENABLE_DOCS` | 0 | 1 = 打开 `/docs`、`/redoc`、`/openapi.json`（**公网别开**，那等于送一份接口地图） |
+| `CSP_ENABLED` | 1 | 0 = 关掉 CSP（页面样式万一因此异常时的应急开关） |
+| `LLM_MAX_CONCURRENT` | 8 | 同时在途的外部模型调用上限（防慢速请求把工作线程占满） |
 | `UNANSWERED_THRESHOLD` | 0.45 | 最高相关度低于它就算「没答上来」，进后台的待补清单 |
 | `QUERY_LOG_MAX` | 20000 | 提问记录最多留多少条，超了从最老的开始裁 |
-| `COOKIE_SECURE` | 0 | 上了 HTTPS 后设 1 |
+| `COOKIE_SECURE` | 0 | https 下会自动给 Cookie 打 Secure；这项是强制打开用的兜底 |
 
 ---
 
@@ -191,6 +195,8 @@ python tools/test_byok.py            # BYOK：无凭证报错 / 假 Key 被拒 /
 python tools/test_ratelimit.py       # 限流：贵接口 429、换 IP 可用、非贵接口不受影响
 python tools/test_concurrency.py     # 并发：8 个请求是否真并行、事件循环有没有被占住（需后端在跑）
 python tools/test_admin.py           # 后台与封禁：封号 / 解封 / 封 IP / 权限边界 / 提问判定（用临时库，不碰真实数据）
+python tools/test_security.py        # 安全加固回归：SSRF 拦截 / 密码策略 / 越权字段 / 上传与请求体上限 /
+                                     #   安全响应头与文档开关 / 限流分档 / 中间件顺序（进程内跑，不碰真实库）
 
 python tools/test_deployed_site.py --base http://<服务器>:8000   # 部署冒烟（首次部署务必跑）
 python tools/check_server_deps.py    # 把 backend 的 import 与容器实际装的包对照，防「本机能跑、部署缺包」
@@ -226,7 +232,18 @@ python tools/rebuild_index_api.py    # 换检索模型后重建索引（--dry-ru
     响应只回打码形态、**永不回传原文**。
   这层加密挡的是「数据库文件被拖走」；它挡不住服务器被攻破 —— 想完全不经手服务器，就选第一种。
 - **密码**：`pbkdf2_sha256` 加盐哈希（标准库实现），**无法找回**，只能由管理员重置；改密码会踢掉所有旧会话。
-- **限流**：贵重接口与登录注册分别限流，超限 429 并给 `Retry-After`；额度按真实 IP 分桶。
+  注册与改密码要求**至少 8 位**，并挡掉纯数字、连续重复字符与常见弱口令（管理员重置密码走同一套策略）。
+- **限流**：贵重接口与登录注册分别限流，超限 429 并给 `Retry-After`；额度按真实 IP 分桶，
+  **未登录访客额度更低**（默认 30/分钟，登录后 50）。
+- **出网只准去公网**（2026-10 安全加固）：用户自带模型地址（BYOK 的 `base_url`）在保存和调用两处都做校验，
+  解析到环回 / 内网 / 链路本地 / 云元数据地址一律 400；外部调用还禁止跟随重定向、限制在途并发数
+  —— 否则「让服务器替我发请求」就成了一条现成的内网探测通道。
+- **上传与请求体上限**：工具箱单文件 32MB、卡片图 8MB、JSON 请求体 16MB，读之前先卡住，
+  不把「上限由来访者决定」留给内存。
+- **会话 Cookie**：`HttpOnly` + `SameSite=Lax`，**https 下自动带 `Secure`**（本机 http 调试仍可登录）。
+- **安全响应头**：`CSP`、`X-Frame-Options`、`X-Content-Type-Options: nosniff`、`Referrer-Policy`、
+  https 下的 `HSTS` —— 默认就带，不需要额外配置。
+- **接口文档默认关闭**：`/docs`、`/redoc`、`/openapi.json` 只在 `ENABLE_DOCS=1` 时开放。
 - **不写日志的**：API Key 不落日志；异常信息里也不带 Key 原文。
 - **提问与反馈会被记录**：每次检索 / 问答都会在服务端留下「提问内容 + 账号 + IP + 召回质量」，
   用户提交的评价（有帮助 / 没解决 / **内容不相关**）与**填写的文字原因**同样会保存，
@@ -245,6 +262,9 @@ python tools/rebuild_index_api.py    # 换检索模型后重建索引（--dry-ru
 - **检索依赖第三方**：向量与精排都走硅基流动，免费档有 RPM 限制，平台不可用时检索不可用。
 - **文档更新功能需要本机文档仓**：`/api/update/*` 靠 `git` 比对上游文档仓，
   容器里没有 `.git` 与文档仓，所以部署环境下该功能不可用 —— 公网版更新走「本机出索引包 → 传数据 → 重启」。
+- **BYOK 的「自定义地址」只能填公网地址**：本机 / 局域网里的自建服务（Ollama、one-api 等）会被拒
+  （`http://127.0.0.1:11434` 这类会返回 400，并说明原因）。这是 2026-10 安全加固的**有意行为**，
+  不是 bug —— 详见上一节「出网只准去公网」。真要在内网用，请把它放到公网并自行加好访问控制。
 - **单进程**：限流窗口存在进程内存里，前端由后端同源伺服；要多副本部署得先解决限流与静态资源的外置。
 - **管理员的查看范围**（2026-10-07 起）：站长能看到每个账号的**提问记录**、
   **最近登录的 IP 与设备**、以及该账号建的**角色卡与世界书**（名称 / 标签 / 条目数 / 是否有图）。
