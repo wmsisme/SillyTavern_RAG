@@ -127,7 +127,7 @@ def admin_card_detail(cid: int, admin: User = Depends(current_admin),
                       db: Session = Depends(get_db)):
     """看某张角色卡的**完整内容**（查违规内容用）。
 
-    ⚠️ 只返回**中性字段** —— R18 相关列在公网版里被剥离掉了，引用它们会直接报错。
+    ⚠️ 只返回**中性字段** —— 各版本可能不存在的列一律不碰，引用它们会直接报错。
     """
     from backend.models.character_card import CharacterCard
     card = db.query(CharacterCard).filter(CharacterCard.id == cid).first()

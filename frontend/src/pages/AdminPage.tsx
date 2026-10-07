@@ -119,7 +119,7 @@ interface UserContentOut {
   worldbooks: UserWorldBookBrief[]
 }
 
-/** 角色卡详情（管理端只拿中性字段，R18 列在公网版里不存在） */
+/** 角色卡详情（管理端只拿中性字段 —— 各版本可能不存在的列一律不碰） */
 interface CardDetail {
   id: number
   user_id: number
