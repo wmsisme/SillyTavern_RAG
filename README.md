@@ -37,7 +37,7 @@
 | 账号与多租户 | 注册登录（httponly Cookie）、改密码、首个注册者自动成为管理员、**卡片 / 世界书按用户隔离** | [backend/api/auth.py](backend/api/auth.py)、[backend/services/auth_service.py](backend/services/auth_service.py) |
 | API 设置（BYOK） | 填自己的大模型 Key，两种存法：**只存这台浏览器** / **存进我的账号（加密落库）** | [frontend/src/components/LLMSettingsModal.tsx](frontend/src/components/LLMSettingsModal.tsx)、[backend/services/llm_provider.py](backend/services/llm_provider.py) |
 | 按 IP 限流 | 贵重接口 50 次/分钟/IP，登录注册 10 次/分钟/IP（滑动窗口，超限返回 429 + `Retry-After`） | [backend/api/ratelimit.py](backend/api/ratelimit.py) |
-| **后台管理与封禁**（仅管理员） | 概览统计 · 用户列表（含会话数 / 提问数 / 最后提问时间）· **封号 / 解封**（当场踢下线）· **IP 黑名单**（限期或永久；环回地址永不封）· 活跃 IP 排行（同一 IP 上多个账号 = 共享账号线索）· 提问记录（可只看没答上来的 / 内容不相关 / 没解决；**同一 IP 短时间内重复问同一个问题会合并成一条并标出次数**；支持**删除选中**）· **待更新清单**（勾选要补进知识库的提问 → 导出 Markdown；刻意不做自动灌库） | [backend/api/admin.py](backend/api/admin.py)、[backend/api/ban_guard.py](backend/api/ban_guard.py)、[frontend/src/pages/AdminPage.tsx](frontend/src/pages/AdminPage.tsx) |
+| **后台管理与封禁**（仅管理员） | 概览统计 · 用户列表（含会话数 / 提问数 / 最后提问时间）· **封号 / 解封**（当场踢下线）· **IP 黑名单**（限期或永久；环回地址永不封）· 活跃 IP 排行（同一 IP 上多个账号 = 共享账号线索）· 提问记录（可只看没答上来的 / 内容不相关 / 没解决；**可按提问人筛选**；同一 IP 短时间内重复问同一个问题会合并成一条并标出次数；支持**删除选中**）· **用户排查**：看某账号**最近 10 次登录的 IP 与设备**（判断共享账号）、看他建的**角色卡与世界书** · **待更新清单**（勾选要补进知识库的提问 → 导出 Markdown；刻意不做自动灌库） | [backend/api/admin.py](backend/api/admin.py)、[backend/api/ban_guard.py](backend/api/ban_guard.py)、[frontend/src/pages/AdminPage.tsx](frontend/src/pages/AdminPage.tsx) |
 | 提问记录与回答评价 | 每次检索 / 问答都留痕（谁、IP、问题、召回条数、最高相关度、是否答上来）；**用户可评价「有帮助 / 没解决 / 检索到的内容不相关」并写明原因**，反馈时还会记下当时的来源摘要（前 5 条的来源与分数） | [backend/api/rag.py](backend/api/rag.py)、[backend/services/admin_service.py](backend/services/admin_service.py)、[frontend/src/components/AnswerFeedback.tsx](frontend/src/components/AnswerFeedback.tsx) |
 | **功能反馈**（登录后） | 顶部栏「反馈」按钮：选分类（建议 / 体验 / 故障 / 其他）+ 写内容，提交时自动带上所在页面；后台可查看、标记已处理。入口只给登录用户看，服务端同样要求登录 | [backend/api/feedback.py](backend/api/feedback.py)、[frontend/src/components/UserFeedbackModal.tsx](frontend/src/components/UserFeedbackModal.tsx) |
 | 文档更新检测 | 检查上游官方文档仓是否有更新（**需要本机文档仓**，容器部署下不可用，见「已知边界」） | [backend/api/update.py](backend/api/update.py) |
@@ -152,7 +152,7 @@ cd frontend && npm run dev                                        # 前端 http:
 | 世界书 | `GET/POST /api/worldbooks` · `GET/PUT/DELETE /api/worldbooks/{id}` · `POST /api/worldbooks/generate/preview` · `POST /api/worldbooks/suggest-entries` |
 | 工具箱 | `POST /api/tools/separator` · `/worldbook-converter` · `/chinese-converter` · `/width-converter` · `/jsonl-novel-converter` |
 | 文档更新 | `GET /api/update/check` · `POST /api/update/run`（管理员） · `GET /api/update/status` |
-| 后台管理（管理员） | `GET /api/admin/overview` · `GET /api/admin/users` · `POST /api/admin/users/{id}/ban\|unban\|make-admin` · `GET/POST /api/admin/ip-bans` · `DELETE /api/admin/ip-bans/{id}` · `GET /api/admin/active-ips` · `GET/DELETE /api/admin/queries` |
+| 后台管理（管理员） | `GET /api/admin/overview` · `GET /api/admin/users` · `POST /api/admin/users/{id}/ban\|unban\|make-admin` · `GET /api/admin/users/{id}/logins`（最近登录 IP） · `GET /api/admin/users/{id}/content`（他建的角色卡/世界书） · `GET/POST /api/admin/ip-bans` · `DELETE /api/admin/ip-bans/{id}` · `GET /api/admin/active-ips` · `GET/DELETE /api/admin/queries` · `POST /api/admin/queries/mark\|delete` |
 | 功能反馈 | `POST /api/feedback`（登录用户提交） · `GET /api/admin/feedback` · `POST /api/admin/feedback/{id}/handle` · `DELETE /api/admin/feedback/{id}`（后三个仅管理员） |
 
 完整参数与响应模型见运行时的 `/docs`（FastAPI 自动生成）。
@@ -246,7 +246,13 @@ python tools/rebuild_index_api.py    # 换检索模型后重建索引（--dry-ru
 - **文档更新功能需要本机文档仓**：`/api/update/*` 靠 `git` 比对上游文档仓，
   容器里没有 `.git` 与文档仓，所以部署环境下该功能不可用 —— 公网版更新走「本机出索引包 → 传数据 → 重启」。
 - **单进程**：限流窗口存在进程内存里，前端由后端同源伺服；要多副本部署得先解决限流与静态资源的外置。
-- **没做公开广场**：卡片与世界书只有本人可见，也没有分享 / 导出为公开链接的入口。
+- **管理员的查看范围**（2026-10-07 起）：站长能看到每个账号的**提问记录**、
+  **最近登录的 IP 与设备**、以及该账号建的**角色卡与世界书**（名称 / 标签 / 条目数 / 是否有图）。
+  加这个是为了能查违规内容与「一个账号多人共用」的情况；
+  **普通用户之间「只有本人能看到自己的东西」这条规则没有变**（业务接口照旧按 `user_id` 过滤）。
+  ⚠️ 要当对外服务的话，建议在隐私说明里向用户讲清「**站长可查看**」这一条。
+
+- **没做公开广场**：卡片与世界书只有本人（与站长）可见，也没有分享 / 导出为公开链接的入口。
 
 ---
 

@@ -60,6 +60,27 @@ class QueryLog(Base):
     # 同一 IP 在短时间内重复问同一个问题时**不新建记录**，只在这条上累加。
     # 判据是「同 IP + 同问题」（达铭 2026-10-07 定）—— 不同用户问同一个问题很正常，不该合并。
     repeat_count = Column(Integer, default=1, nullable=False)
+
+
+class LoginLog(Base):
+    """登录记录：谁、什么时候、从哪个 IP 登录的。
+
+    用途（达铭 2026-10-07）：判断「**同一个账号是不是被多人共用**」——
+    一个账号短时间内从好几个不同 IP 登录，通常就是共享账号；
+    配合提问记录看，就能定位"用共享账号发违规内容"的人。
+
+    ⚠️ 这是**敏感数据**（用户的网络来源），只给管理员看，界面上也不该外露给普通用户。
+    """
+
+    __tablename__ = "login_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    created_at = Column(DateTime, default=datetime.now, index=True)
+    user_id = Column(Integer, nullable=True, index=True)
+    username = Column(String(64), default="")
+    ip = Column(String(64), default="", index=True)
+    user_agent = Column(String(255), default="")      # 浏览器/系统，辅助判断是不是同一台设备
+    action = Column(String(16), default="login")      # login / register / logout
     # 用户反馈："" / solved（有帮助）/ unsolved（没解决）/ irrelevant（检索到了但不相关）
     feedback = Column(String(16), default="")
     feedback_reason = Column(Text, default="")                # 用户填的原因（选填）

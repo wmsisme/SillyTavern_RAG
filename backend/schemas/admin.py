@@ -83,6 +83,41 @@ class DeleteQueriesRequest(BaseModel):
     ids: List[int]
 
 
+# ------------------------------------------------------------------ 用户行为排查
+class LoginIpRow(BaseModel):
+    """最近登录 IP（同一个 IP 多次只算一行，但带次数与时间范围）。"""
+
+    ip: str
+    count: int
+    first_at: Optional[datetime] = None
+    last_at: Optional[datetime] = None
+    agents: str = ""          # 浏览器/系统，辅助判断是不是同一台设备
+
+
+class UserCardBrief(BaseModel):
+    id: int
+    name: str
+    tags: str = ""
+    has_image: bool = False
+    updated_at: Optional[datetime] = None
+
+
+class UserWorldBookBrief(BaseModel):
+    id: int
+    name: str
+    entries: int = 0
+    updated_at: Optional[datetime] = None
+
+
+class UserContentOut(BaseModel):
+    """某个用户建了什么（管理员排查违规内容用）。"""
+
+    user_id: int
+    username: str
+    cards: List[UserCardBrief]
+    worldbooks: List[UserWorldBookBrief]
+
+
 class MarkQueriesRequest(BaseModel):
     """站长在后台勾选「这些要拿去更新知识库」。
 

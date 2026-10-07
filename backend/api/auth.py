@@ -10,17 +10,31 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
 from backend.api.deps import current_user
+from backend.api.ratelimit import client_ip
 from backend.models.database import get_db
 from backend.models.user import User
 from backend.schemas.user import (
     AuthConfigResponse, ChangePasswordRequest, LoginRequest,
     LoginResponse, OkResponse, RegisterRequest, UserResponse,
 )
-from backend.services import auth_service
+from backend.services import admin_service, auth_service
 
 router = APIRouter()
 
 INVITE_CODE = os.environ.get("REGISTER_INVITE_CODE", "").strip()
+
+
+def _log_login(db: Session, request: Request, user, action: str) -> None:
+    """记一笔登录来源 —— 判断「共享账号」用（一个账号从好几个 IP 登录就很可疑）。
+
+    失败**不影响登录**：这只是观察数据。
+    """
+    try:
+        admin_service.log_login(db, user=user, ip=client_ip(request),
+                                user_agent=request.headers.get("user-agent", ""),
+                                action=action)
+    except Exception as e:
+        print(f"[loginlog] 记录失败（不影响登录）：{e}")
 
 
 def _attach_cookie(resp: Response, token: str, expires) -> None:
@@ -45,23 +59,27 @@ def auth_config(db: Session = Depends(get_db)):
 
 
 @router.post("/auth/register", response_model=LoginResponse, status_code=201)
-def register(req: RegisterRequest, resp: Response, db: Session = Depends(get_db)):
+def register(req: RegisterRequest, request: Request, resp: Response,
+             db: Session = Depends(get_db)):
     try:
         user = auth_service.register(db, req.username, req.password,
                                      invite_code=req.invite_code, expect_invite=INVITE_CODE)
         user, token, expires = auth_service.login(db, req.username, req.password)
     except auth_service.AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    _log_login(db, request, user, "register")
     _attach_cookie(resp, token, expires)
     return LoginResponse(user=UserResponse.model_validate(user), token=token)
 
 
 @router.post("/auth/login", response_model=LoginResponse)
-def login(req: LoginRequest, resp: Response, db: Session = Depends(get_db)):
+def login(req: LoginRequest, request: Request, resp: Response,
+          db: Session = Depends(get_db)):
     try:
         user, token, expires = auth_service.login(db, req.username, req.password)
     except auth_service.AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    _log_login(db, request, user, "login")
     _attach_cookie(resp, token, expires)
     return LoginResponse(user=UserResponse.model_validate(user), token=token)
 

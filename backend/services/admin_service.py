@@ -17,7 +17,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
-from backend.models.admin import IpBan, QueryLog, UserFeedback
+from backend.models.admin import IpBan, LoginLog, QueryLog, UserFeedback
 from backend.models.user import SessionToken, User
 
 # 永远不能封的地址：环回。封了它 = 本机自己都进不来（反代场景下更是全站瘫痪）
@@ -471,6 +471,59 @@ def delete_queries(db: Session, ids: List[int]) -> int:
            .delete(synchronize_session=False))
     db.commit()
     return n
+
+
+# ------------------------------------------------------------------ 登录记录
+def log_login(db: Session, *, user: Optional[User], ip: str, user_agent: str = "",
+              action: str = "login") -> Optional[LoginLog]:
+    """记一笔登录来源。**调用方要 try/except** —— 记不上不该影响人家登录。"""
+    row = LoginLog(
+        created_at=datetime.now(),
+        user_id=user.id if user else None,
+        username=user.username if user else "",
+        ip=normalize_ip(ip),
+        user_agent=(user_agent or "")[:255],
+        action=(action or "login")[:16],
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def list_logins(db: Session, user_id: int, limit: int = 10) -> List[LoginLog]:
+    return (db.query(LoginLog)
+              .filter(LoginLog.user_id == user_id)
+              .order_by(LoginLog.id.desc())
+              .limit(max(1, min(limit, 200)))
+              .all())
+
+
+def login_ip_summary(db: Session, user_id: int, limit: int = 10) -> List[dict]:
+    """最近 N 次**不同** IP 的登录（同一个 IP 多次只算一次，但记次数和时间）。
+
+    看这个比看逐条流水直观：一屏就能看出"这个账号是不是从好几个地方登过"。
+    """
+    rows = (db.query(LoginLog)
+              .filter(LoginLog.user_id == user_id)
+              .order_by(LoginLog.id.desc())
+              .limit(500)                     # 先取一批再在内存里聚合，够用且简单
+              .all())
+    agg: dict = {}
+    for r in rows:
+        key = r.ip or "(未知)"
+        item = agg.setdefault(key, {"ip": key, "count": 0, "first_at": r.created_at,
+                                    "last_at": r.created_at, "agents": set()})
+        item["count"] += 1
+        item["last_at"] = max(item["last_at"], r.created_at)
+        item["first_at"] = min(item["first_at"], r.created_at)
+        if r.user_agent:
+            item["agents"].add(r.user_agent[:80])
+    out = []
+    for item in sorted(agg.values(), key=lambda x: x["last_at"], reverse=True)[:max(1, limit)]:
+        item["agents"] = "；".join(list(item["agents"])[:2])
+        out.append(item)
+    return out
 
 
 def export_update_queue(db: Session, only_marked: bool = True) -> str:

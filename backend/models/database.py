@@ -54,7 +54,7 @@ def init_db():
     from backend.models.character_card import CharacterCard  # noqa: F401
     from backend.models.world_book import WorldBook          # noqa: F401
     from backend.models.user import User, SessionToken, UserLLMSettings  # noqa: F401
-    from backend.models.admin import IpBan, QueryLog, UserFeedback  # noqa: F401
+    from backend.models.admin import IpBan, LoginLog, QueryLog, UserFeedback  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     _ensure_columns()

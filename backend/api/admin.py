@@ -23,7 +23,8 @@ from backend.models.database import get_db
 from backend.models.user import User
 from backend.schemas.admin import (
     ActiveIpRow, AdminOverview, AdminUserRow, BanIpRequest, BanRequest,
-    DeleteQueriesRequest, IpBanRow, MarkQueriesRequest, QueryLogPage, QueryLogRow,
+    DeleteQueriesRequest, IpBanRow, LoginIpRow, MarkQueriesRequest, QueryLogPage,
+    QueryLogRow, UserCardBrief, UserContentOut, UserWorldBookBrief,
 )
 from backend.schemas.user import OkResponse
 from backend.services import admin_service
@@ -74,6 +75,51 @@ def make_admin(uid: int, admin: User = Depends(current_admin), db: Session = Dep
     user.is_admin = True
     db.commit()
     return OkResponse(message=f"已把 {user.username} 设为管理员")
+
+
+@router.get("/admin/users/{uid}/logins", response_model=list[LoginIpRow])
+def user_logins(uid: int, limit: int = Query(10, ge=1, le=50),
+                admin: User = Depends(current_admin), db: Session = Depends(get_db)):
+    """这个账号最近从哪些 IP 登录过 —— **判断共享账号**用。
+
+    一个账号短时间内从好几个不同 IP 登录，通常就是「一个人开号、一群人用」。
+    """
+    _find_user(db, uid)                 # 账号不存在就 404
+    return [LoginIpRow(**r) for r in admin_service.login_ip_summary(db, uid, limit=limit)]
+
+
+@router.get("/admin/users/{uid}/content", response_model=UserContentOut)
+def user_content(uid: int, admin: User = Depends(current_admin),
+                 db: Session = Depends(get_db)):
+    """看某个用户建了哪些角色卡 / 世界书。
+
+    ⚠️ 这是**管理员特权**：普通用户之间「只有本人能看到自己的东西」那条规则不变
+    （业务接口照旧按 user_id 过滤），但站长要能查违规内容。
+    """
+    user = _find_user(db, uid)
+    from backend.models.character_card import CharacterCard
+    from backend.models.world_book import WorldBook
+
+    def _tags(v) -> str:
+        if isinstance(v, list):
+            return "、".join(str(x) for x in v[:6])
+        return str(v or "")[:80]
+
+    cards = (db.query(CharacterCard).filter(CharacterCard.user_id == uid)
+               .order_by(CharacterCard.id.desc()).all())
+    wbs = (db.query(WorldBook).filter(WorldBook.user_id == uid)
+             .order_by(WorldBook.id.desc()).all())
+    return UserContentOut(
+        user_id=uid,
+        username=user.username,
+        cards=[UserCardBrief(id=c.id, name=c.name, tags=_tags(c.tags),
+                             has_image=bool(c.image_path), updated_at=c.updated_at)
+               for c in cards],
+        worldbooks=[UserWorldBookBrief(
+            id=w.id, name=w.name,
+            entries=len(w.entries) if isinstance(w.entries, list) else 0,
+            updated_at=w.updated_at) for w in wbs],
+    )
 
 
 @router.get("/admin/ip-bans", response_model=list[IpBanRow])

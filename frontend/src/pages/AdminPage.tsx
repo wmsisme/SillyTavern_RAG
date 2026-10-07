@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   App, Button, Card, Col, Form, Input, InputNumber, Modal, Popconfirm,
-  Row, Space, Statistic, Table, Tabs, Tag, Tooltip, Typography,
+  Drawer, Row, Select, Space, Statistic, Table, Tabs, Tag, Tooltip, Typography,
 } from 'antd'
 import type { TableColumnsType } from 'antd'
 import { ReloadOutlined, StopOutlined, CheckCircleOutlined, CrownOutlined } from '@ant-design/icons'
@@ -88,6 +88,36 @@ interface FeedbackRow {
   handled_by: string
 }
 
+interface LoginIpRow {
+  ip: string
+  count: number
+  first_at?: string | null
+  last_at?: string | null
+  agents: string
+}
+
+interface UserCardBrief {
+  id: number
+  name: string
+  tags: string
+  has_image: boolean
+  updated_at?: string | null
+}
+
+interface UserWorldBookBrief {
+  id: number
+  name: string
+  entries: number
+  updated_at?: string | null
+}
+
+interface UserContentOut {
+  user_id: number
+  username: string
+  cards: UserCardBrief[]
+  worldbooks: UserWorldBookBrief[]
+}
+
 /** 后端给的是 ISO 串，直接 toLocaleString 会带 T，统一成看得懂的样子 */
 function fmtTime(v?: string | null): string {
   if (!v) return '—'
@@ -118,6 +148,13 @@ export default function AdminPage() {
   const [qPage, setQPage] = useState(1)
   const [filter, setFilter] = useState<'all' | 'unanswered' | 'irrelevant' | 'unsolved' | 'marked'>('all')
   const [picked, setPicked] = useState<number[]>([])   // 勾选的提问记录 id（待更新清单）
+  const [filterUser, setFilterUser] = useState<string>('')   // 按提问人筛选
+  // 用户排查用的两个抽屉：登录 IP、建了什么内容
+  const [loginUser, setLoginUser] = useState<AdminUser | null>(null)
+  const [loginRows, setLoginRows] = useState<LoginIpRow[]>([])
+  const [contentUser, setContentUser] = useState<AdminUser | null>(null)
+  const [content, setContent] = useState<UserContentOut | null>(null)
+  const [drawerLoading, setDrawerLoading] = useState(false)
   const [loading, setLoading] = useState(false)
 
   // 封号弹窗 / 封 IP 弹窗
@@ -142,9 +179,10 @@ export default function AdminPage() {
     if (filter === 'irrelevant') q.set('feedback', 'irrelevant')
     if (filter === 'unsolved') q.set('feedback', 'unsolved')
     if (filter === 'marked') q.set('marked_only', 'true')
+    if (filterUser) q.set('username', filterUser)      // 按提问人筛选
     const r = await api.get<{ total: number; items: QueryLogRow[] }>(`/admin/queries?${q}`)
     setQueries(r.items); setQTotal(r.total)
-  }, [qPage, filter])
+  }, [qPage, filter, filterUser])
 
   const loadFeedback = useCallback(async () => {
     const q = new URLSearchParams({ page: String(fbPage), page_size: '50' })
@@ -268,6 +306,29 @@ export default function AdminPage() {
     window.open('/api/admin/queries/export?marked_only=true', '_blank')
   }
 
+  // 用户排查：看这个账号最近从哪些 IP 登录过、建了什么东西
+  const openLogins = async (u: AdminUser) => {
+    setLoginUser(u); setLoginRows([]); setDrawerLoading(true)
+    try {
+      setLoginRows(await api.get<LoginIpRow[]>(`/admin/users/${u.id}/logins?limit=10`))
+    } catch (e: any) {
+      message.error(e?.message || '加载失败')
+    } finally {
+      setDrawerLoading(false)
+    }
+  }
+
+  const openContent = async (u: AdminUser) => {
+    setContentUser(u); setContent(null); setDrawerLoading(true)
+    try {
+      setContent(await api.get<UserContentOut>(`/admin/users/${u.id}/content`))
+    } catch (e: any) {
+      message.error(e?.message || '加载失败')
+    } finally {
+      setDrawerLoading(false)
+    }
+  }
+
   const doDeletePicked = async () => {
     try {
       const r = await api.post('/admin/queries/delete', { ids: picked })
@@ -304,9 +365,9 @@ export default function AdminPage() {
     { title: '最后提问', dataIndex: 'last_query_at', width: 170, render: (v: string) => fmtTime(v) },
     { title: '注册时间', dataIndex: 'created_at', width: 170, render: (v: string) => fmtTime(v) },
     {
-      title: '操作', key: 'ops', width: 200,
+      title: '操作', key: 'ops', width: 320,
       render: (_: unknown, r) => (
-        <Space size={4}>
+        <Space size={4} wrap>
           {r.is_active ? (
             <Button size="small" danger icon={<StopOutlined />}
                     disabled={r.id === user?.id}
@@ -321,9 +382,11 @@ export default function AdminPage() {
           )}
           {!r.is_admin && (
             <Popconfirm title={`把 ${r.username} 设为管理员？`} onConfirm={() => doMakeAdmin(r)}>
-              <Button size="small">提为管理员</Button>
+              <Button size="small">提权</Button>
             </Popconfirm>
           )}
+          <Button size="small" onClick={() => openLogins(r)}>登录 IP</Button>
+          <Button size="small" onClick={() => openContent(r)}>看内容</Button>
         </Space>
       ),
     },
@@ -556,6 +619,12 @@ export default function AdminPage() {
             </Button>
             <Button disabled={picked.length === 0} onClick={() => doMark(false)}>移出</Button>
             <Button onClick={exportQueue}>导出清单</Button>
+            <Select
+              allowClear size="small" placeholder="按提问人筛选" style={{ width: 150 }}
+              value={filterUser || undefined}
+              onChange={(v) => { setFilterUser(v || ''); setQPage(1) }}
+              options={users.map(u => ({ value: u.username, label: u.username }))}
+            />
             <Popconfirm
               title={`删掉选中的 ${picked.length} 条记录？删了就没了`}
               disabled={picked.length === 0}
@@ -660,6 +729,62 @@ export default function AdminPage() {
           </Form.Item>
         </Form>
       </Modal>
+      <Drawer
+        title={loginUser ? `${loginUser.username} · 最近登录 IP` : ''}
+        open={!!loginUser} onClose={() => setLoginUser(null)} width={640}
+      >
+        <Typography.Paragraph type="secondary" style={{ fontSize: 12 }}>
+          同一个账号从好几个不同 IP 登录，通常就是「一个人开号、一群人用」。
+          配合「提问记录」按这个用户名筛选，就能看清他都问了什么。
+          <br />（本机服务只监听 127.0.0.1 时，通过本机访问的记录都会是 127.0.0.1；
+          走公网地址访问才会有真实的客户端 IP。）
+        </Typography.Paragraph>
+        <Table<LoginIpRow> rowKey="ip" size="small" loading={drawerLoading}
+                           dataSource={loginRows} pagination={false}
+                           columns={[
+                             { title: 'IP', dataIndex: 'ip', width: 160 },
+                             { title: '次数', dataIndex: 'count', width: 70 },
+                             { title: '最近一次', dataIndex: 'last_at', width: 170,
+                               render: (v: string) => fmtTime(v) },
+                             { title: '设备', dataIndex: 'agents', ellipsis: true },
+                           ]} />
+      </Drawer>
+
+      <Drawer
+        title={contentUser ? `${contentUser.username} · 建的内容` : ''}
+        open={!!contentUser} onClose={() => setContentUser(null)} width={720}
+      >
+        <Typography.Paragraph type="secondary" style={{ fontSize: 12 }}>
+          这是管理员权限：普通用户之间「只有本人能看到自己的东西」这条规则没变
+          （业务接口照旧按 user_id 过滤），但站长要能查违规内容。
+        </Typography.Paragraph>
+
+        <Typography.Title level={5}>角色卡（{content?.cards.length ?? 0}）</Typography.Title>
+        <Table<UserCardBrief> rowKey="id" size="small" loading={drawerLoading}
+                             dataSource={content?.cards || []} pagination={false}
+                             columns={[
+                               { title: 'ID', dataIndex: 'id', width: 60 },
+                               { title: '名称', dataIndex: 'name', ellipsis: true },
+                               { title: '标签', dataIndex: 'tags', ellipsis: true },
+                               { title: '有图', dataIndex: 'has_image', width: 60,
+                                 render: (v: boolean) => (v ? '有' : '—') },
+                               { title: '更新', dataIndex: 'updated_at', width: 170,
+                                 render: (v: string) => fmtTime(v) },
+                             ]} />
+
+        <Typography.Title level={5} style={{ marginTop: 16 }}>
+          世界书（{content?.worldbooks.length ?? 0}）
+        </Typography.Title>
+        <Table<UserWorldBookBrief> rowKey="id" size="small" loading={drawerLoading}
+                                  dataSource={content?.worldbooks || []} pagination={false}
+                                  columns={[
+                                    { title: 'ID', dataIndex: 'id', width: 60 },
+                                    { title: '名称', dataIndex: 'name', ellipsis: true },
+                                    { title: '条目数', dataIndex: 'entries', width: 80 },
+                                    { title: '更新', dataIndex: 'updated_at', width: 170,
+                                      render: (v: string) => fmtTime(v) },
+                                  ]} />
+      </Drawer>
     </Space>
   )
 }
