@@ -35,7 +35,8 @@ def _ensure_columns() -> None:
         "world_books": [("user_id", "INTEGER")],
         "users": [("ban_reason", "VARCHAR(255)"), ("banned_at", "DATETIME")],
         "query_logs": [("feedback_reason", "TEXT"), ("feedback_at", "DATETIME"),
-                       ("sources_digest", "TEXT")],
+                       ("sources_digest", "TEXT"), ("marked", "BOOLEAN"),
+                       ("marked_at", "DATETIME")],
     }
     with engine.begin() as conn:
         for table, cols in wanted.items():

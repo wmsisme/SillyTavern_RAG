@@ -70,6 +70,19 @@ class QueryLogRow(BaseModel):
     feedback_at: Optional[datetime] = None
     # 当时的检索结果摘要（JSON 字符串：前 5 条的 source + score）
     sources_digest: str = ""
+    # 站长勾选「这条要拿去更新知识库」
+    marked: bool = False
+    marked_at: Optional[datetime] = None
+
+
+class MarkQueriesRequest(BaseModel):
+    """站长在后台勾选「这些要拿去更新知识库」。
+
+    勾选权**刻意留在人手上**：用户随便问一句就自动灌进知识库会污染它。
+    """
+
+    ids: List[int]
+    marked: bool = True
 
 
 class QueryLogPage(BaseModel):

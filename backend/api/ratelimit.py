@@ -93,10 +93,22 @@ class SlidingWindow:
 
 
 def client_ip(request: Request) -> str:
+    """取客户端 IP（挂反代时必须拿到**真实**的那个）。
+
+    ⚠️ TRUST_PROXY 时取的是 X-Forwarded-For 的**最后一段**，不是第一段：
+    反向代理是**追加**这个头的（结果是 `客户端伪造的值, …, 真实客户端`），
+    取第一段等于让客户端自己报 IP —— 那样限流能被刷穿、封 IP 也封不住任何人。
+    只有一层代理时，最后一段就是真实客户端。
+
+    （2026-10-07 为公网映射改的：Tailscale Funnel 代理后面必须能拿到真实 IP，
+      否则「按 IP 限流」和「封 IP」这两条安全措施同时失效。）
+    """
     if TRUST_PROXY:
         fwd = request.headers.get("x-forwarded-for", "")
         if fwd:
-            return fwd.split(",")[0].strip()
+            parts = [p.strip() for p in fwd.split(",") if p.strip()]
+            if parts:
+                return parts[-1]
         real = request.headers.get("x-real-ip", "").strip()
         if real:
             return real

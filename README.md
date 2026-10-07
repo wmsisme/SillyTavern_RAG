@@ -37,7 +37,7 @@
 | 账号与多租户 | 注册登录（httponly Cookie）、改密码、首个注册者自动成为管理员、**卡片 / 世界书按用户隔离** | [backend/api/auth.py](backend/api/auth.py)、[backend/services/auth_service.py](backend/services/auth_service.py) |
 | API 设置（BYOK） | 填自己的大模型 Key，两种存法：**只存这台浏览器** / **存进我的账号（加密落库）** | [frontend/src/components/LLMSettingsModal.tsx](frontend/src/components/LLMSettingsModal.tsx)、[backend/services/llm_provider.py](backend/services/llm_provider.py) |
 | 按 IP 限流 | 贵重接口 50 次/分钟/IP，登录注册 10 次/分钟/IP（滑动窗口，超限返回 429 + `Retry-After`） | [backend/api/ratelimit.py](backend/api/ratelimit.py) |
-| **后台管理与封禁**（仅管理员） | 概览统计 · 用户列表（含会话数 / 提问数 / 最后提问时间）· **封号 / 解封**（当场踢下线）· **IP 黑名单**（限期或永久；环回地址永不封）· 活跃 IP 排行（同一 IP 上多个账号 = 共享账号线索）· 提问记录（可只看没答上来的） | [backend/api/admin.py](backend/api/admin.py)、[backend/api/ban_guard.py](backend/api/ban_guard.py)、[frontend/src/pages/AdminPage.tsx](frontend/src/pages/AdminPage.tsx) |
+| **后台管理与封禁**（仅管理员） | 概览统计 · 用户列表（含会话数 / 提问数 / 最后提问时间）· **封号 / 解封**（当场踢下线）· **IP 黑名单**（限期或永久；环回地址永不封）· 活跃 IP 排行（同一 IP 上多个账号 = 共享账号线索）· 提问记录（可只看没答上来的）· **待更新清单**（勾选要补进知识库的提问 → 导出 Markdown；刻意不做自动灌库） | [backend/api/admin.py](backend/api/admin.py)、[backend/api/ban_guard.py](backend/api/ban_guard.py)、[frontend/src/pages/AdminPage.tsx](frontend/src/pages/AdminPage.tsx) |
 | 提问记录与回答评价 | 每次检索 / 问答都留痕（谁、IP、问题、召回条数、最高相关度、是否答上来）；**用户可评价「有帮助 / 没解决 / 检索到的内容不相关」并写明原因**，反馈时还会记下当时的来源摘要（前 5 条的来源与分数） | [backend/api/rag.py](backend/api/rag.py)、[backend/services/admin_service.py](backend/services/admin_service.py)、[frontend/src/components/AnswerFeedback.tsx](frontend/src/components/AnswerFeedback.tsx) |
 | **功能反馈**（登录后） | 顶部栏「反馈」按钮：选分类（建议 / 体验 / 故障 / 其他）+ 写内容，提交时自动带上所在页面；后台可查看、标记已处理。入口只给登录用户看，服务端同样要求登录 | [backend/api/feedback.py](backend/api/feedback.py)、[frontend/src/components/UserFeedbackModal.tsx](frontend/src/components/UserFeedbackModal.tsx) |
 | 文档更新检测 | 检查上游官方文档仓是否有更新（**需要本机文档仓**，容器部署下不可用，见「已知边界」） | [backend/api/update.py](backend/api/update.py) |
@@ -196,7 +196,8 @@ python tools/test_deployed_site.py --base http://<服务器>:8000   # 部署冒�
 python tools/check_server_deps.py    # 把 backend 的 import 与容器实际装的包对照，防「本机能跑、部署缺包」
 python tools/check_syntax.py backend # 后端语法自检
 
-python tools/manage_users.py --list  # 账号运维：--reset-password / --make-admin / --deactivate
+python tools/manage_users.py --list  # 账号运维：--reset-password / --make-admin / --deactivate / --ban / --ban-ip / --unban-ip
+python tools/backup.py               # 数据备份（SQLite 在线备份 + 卡图 + .env）；--list 看现有备份、--keep N 改保留份数
 python tools/rebuild_index_api.py    # 换检索模型后重建索引（--dry-run 先试 20 条；支持断点续传）
 ```
 

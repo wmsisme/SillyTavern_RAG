@@ -207,12 +207,15 @@ def prune_query_logs(db: Session) -> int:
 
 def list_queries(db: Session, page: int = 1, page_size: int = 50,
                  only_unanswered: bool = False, ip: str = "", username: str = "",
-                 kind: str = "", feedback: str = "") -> Tuple[int, List[QueryLog]]:
+                 kind: str = "", feedback: str = "", marked_only: bool = False
+                 ) -> Tuple[int, List[QueryLog]]:
     q = db.query(QueryLog)
     if only_unanswered:
         q = q.filter(QueryLog.answered.is_(False))
     if feedback:
         q = q.filter(QueryLog.feedback == feedback)
+    if marked_only:
+        q = q.filter(QueryLog.marked.is_(True))
     if ip:
         q = q.filter(QueryLog.ip == normalize_ip(ip))
     if username:
@@ -399,3 +402,59 @@ def delete_user_feedback(db: Session, fid: int) -> bool:
     db.delete(row)
     db.commit()
     return True
+
+
+# ------------------------------------------------------------------ 待更新清单
+def mark_queries(db: Session, ids: List[int], marked: bool = True) -> int:
+    """把一批提问记录标记 / 取消标记为「待更新知识库」，返回受影响条数。
+
+    **勾选权刻意留在人手上**：用户随便问一句就自动灌进知识库，会把知识库污染成
+    一堆"用户随口一问"的转录。所以这里只做标记 —— 真正补什么内容、怎么措辞，
+    由站长勾选之后再看（见 export_update_queue）。
+    """
+    if not ids:
+        return 0
+    rows = db.query(QueryLog).filter(QueryLog.id.in_(ids)).all()
+    now = datetime.now()
+    for r in rows:
+        r.marked = marked
+        r.marked_at = now if marked else None
+    db.commit()
+    return len(rows)
+
+
+def export_update_queue(db: Session, only_marked: bool = True) -> str:
+    """把（勾选过的）提问记录导出成人能读的 Markdown 清单。
+
+    两个用途：站长过一眼确认勾对了没；照着它决定往知识库补什么内容。
+    """
+    q = db.query(QueryLog)
+    if only_marked:
+        q = q.filter(QueryLog.marked.is_(True))
+    rows = q.order_by(QueryLog.id).all()
+    if not rows:
+        return "# 待更新知识库清单\n\n（还没有勾选任何条目）\n"
+    fb_label = {"solved": "有帮助", "unsolved": "没解决", "irrelevant": "内容不相关"}
+    lines = ["# 待更新知识库清单", "",
+             f"共 {len(rows)} 条 · 导出于 {datetime.now():%Y-%m-%d %H:%M}", ""]
+    for i, r in enumerate(rows, 1):
+        lines.append(f"## {i}. [{r.id}] {r.query[:100]}")
+        lines.append("")
+        lines.append(f"- 提问人：{r.username or '（未登录）'} ｜ IP：{r.ip} ｜ {r.created_at}")
+        lines.append(f"- 检索结果：{r.sources_count} 条来源，最高相关度 {r.top_score:.3f}，"
+                     f"{'已解答' if r.answered else '**没答上来**'}")
+        if r.feedback:
+            extra = f" —— 「{r.feedback_reason}」" if r.feedback_reason else ""
+            lines.append(f"- 用户评价：**{fb_label.get(r.feedback, r.feedback)}**{extra}")
+        if r.sources_digest:
+            try:
+                items = json.loads(r.sources_digest)
+                if items:
+                    lines.append("- 当时给出的来源：")
+                    for s in items:
+                        lines.append(f"    - [{s.get('source', '?')}] {s.get('score', 0)}"
+                                     f"｜{s.get('preview', '')}")
+            except Exception:
+                pass
+        lines.append("")
+    return "\n".join(lines)

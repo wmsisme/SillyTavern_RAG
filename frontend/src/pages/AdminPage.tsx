@@ -69,6 +69,8 @@ interface QueryLogRow {
   feedback_reason: string
   feedback_at?: string | null
   sources_digest: string      // 当时的检索结果摘要（JSON：前 5 条的 source + score）
+  marked: boolean             // 站长勾选「这条要拿去更新知识库」
+  marked_at?: string | null
 }
 
 interface FeedbackRow {
@@ -113,7 +115,8 @@ export default function AdminPage() {
   const [fbOnlyUnhandled, setFbOnlyUnhandled] = useState(false)
   const [fbPage, setFbPage] = useState(1)
   const [qPage, setQPage] = useState(1)
-  const [filter, setFilter] = useState<'all' | 'unanswered' | 'irrelevant' | 'unsolved'>('all')
+  const [filter, setFilter] = useState<'all' | 'unanswered' | 'irrelevant' | 'unsolved' | 'marked'>('all')
+  const [picked, setPicked] = useState<number[]>([])   // 勾选的提问记录 id（待更新清单）
   const [loading, setLoading] = useState(false)
 
   // 封号弹窗 / 封 IP 弹窗
@@ -137,6 +140,7 @@ export default function AdminPage() {
     if (filter === 'unanswered') q.set('only_unanswered', 'true')
     if (filter === 'irrelevant') q.set('feedback', 'irrelevant')
     if (filter === 'unsolved') q.set('feedback', 'unsolved')
+    if (filter === 'marked') q.set('marked_only', 'true')
     const r = await api.get<{ total: number; items: QueryLogRow[] }>(`/admin/queries?${q}`)
     setQueries(r.items); setQTotal(r.total)
   }, [qPage, filter])
@@ -244,6 +248,23 @@ export default function AdminPage() {
       message.success(r?.message || '已删除')
       await reload()
     } catch (e: any) { message.error(e?.message || '操作失败') }
+  }
+
+  // 待更新清单：**勾选权留在人手上** —— 用户随便问一句就自动灌进知识库会把它污染掉，
+  // 所以后台只做标记，真正补什么内容等勾完再定（导出的清单可以直接拿来用）。
+  const doMark = async (marked: boolean) => {
+    if (picked.length === 0) { message.info('先勾选几条'); return }
+    try {
+      const r = await api.post('/admin/queries/mark', { ids: picked, marked })
+      message.success(r?.message || '已更新')
+      setPicked([])
+      await reload()
+    } catch (e: any) { message.error(e?.message || '操作失败') }
+  }
+
+  const exportQueue = () => {
+    // 同源请求会带上会话 Cookie，直接开新页下载
+    window.open('/api/admin/queries/export?marked_only=true', '_blank')
   }
 
   // ---------------------------------------------------------------- 表格列
@@ -355,6 +376,11 @@ export default function AdminPage() {
       render: (v: boolean, r) => (v
         ? <Tag color="green">已解答</Tag>
         : <Tag color="orange">{r.feedback === 'solved' ? '?' : '疑似未解答'}</Tag>),
+    },
+    {
+      // 注意与左边复选框的区别：复选框是「本次要操作哪些」，这一列是「已经加入待更新清单」
+      title: '待更新', dataIndex: 'marked', width: 90,
+      render: (v: boolean) => (v ? <Tag color="blue">已加入</Tag> : '—'),
     },
     {
       title: '用户反馈', key: 'fb', width: 220,
@@ -495,20 +521,34 @@ export default function AdminPage() {
               ['unanswered', '只看没答上来的'],
               ['irrelevant', '只看「内容不相关」'],
               ['unsolved', '只看「没解决」'],
+              ['marked', '只看待更新'],
             ] as const).map(([k, label]) => (
               <Button key={k} type={filter === k ? 'primary' : 'default'}
                       onClick={() => { setFilter(k); setQPage(1) }}>
                 {label}
               </Button>
             ))}
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              自动判定：一条来源都没召回、或最高相关度低于 {(overview?.unanswered_threshold ?? 0.45)}；
-              用户点过「没解决 / 内容不相关」的一律计入 —— 把鼠标停在「当时给了 N 条来源」上，
-              能看到用户点反馈时系统到底给了什么（这是判断"召回错了"还是"文档没写清楚"的依据）
-            </Typography.Text>
+            <Button type="primary" ghost disabled={picked.length === 0}
+                    onClick={() => doMark(true)}>
+              加入待更新{picked.length ? `（${picked.length}）` : ''}
+            </Button>
+            <Button disabled={picked.length === 0} onClick={() => doMark(false)}>移出</Button>
+            <Button onClick={exportQueue}>导出清单</Button>
           </Space>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            自动判定：一条来源都没召回、或最高相关度低于 {overview?.unanswered_threshold ?? 0.45}；
+            用户点过「没解决 / 内容不相关」的一律计入。
+            <br />
+            <b>待更新清单由你勾选</b>：勾中的条目点「导出清单」拿到 Markdown，
+            补进知识库后再重建索引即可 —— **刻意不做自动灌库**，用户随口一问就写进知识库会污染它。
+            表格里「待更新」列显示的是已加入的，「复选框」是本次要操作的，两者不一样。
+          </Typography.Text>
           <Table<QueryLogRow> rowKey="id" size="small" loading={loading}
                              columns={queryCols} dataSource={queries}
+                             rowSelection={{
+                               selectedRowKeys: picked,
+                               onChange: (keys) => setPicked(keys as number[]),
+                             }}
                              pagination={{
                                current: qPage, pageSize: 50, total: qTotal,
                                onChange: (p) => setQPage(p), showSizeChanger: false,

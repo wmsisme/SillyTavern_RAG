@@ -52,6 +52,11 @@ class QueryLog(Base):
     sources_count = Column(Integer, default=0)
     top_score = Column(Float, default=0.0)
     answered = Column(Boolean, default=True, nullable=False)  # False = 疑似没答上来
+    # 顺手做「标记」：站长在后台勾选「这条要拿去更新知识库」。
+    # **勾选权必须留在人手上** —— 用户随便问一句就自动灌进知识库会污染它，
+    # 所以这里只做标记，真正的「补什么内容」由站长勾选后再定（见 tools/update_queue.py）。
+    marked = Column(Boolean, default=False, nullable=False, index=True)
+    marked_at = Column(DateTime, nullable=True)
     # 用户反馈："" / solved（有帮助）/ unsolved（没解决）/ irrelevant（检索到了但不相关）
     feedback = Column(String(16), default="")
     feedback_reason = Column(Text, default="")                # 用户填的原因（选填）
