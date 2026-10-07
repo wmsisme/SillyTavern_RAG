@@ -208,6 +208,10 @@ python tools/watchdog.py             # 探活 + 自愈：服务挂了自动拉�
 python tools/rebuild_index_api.py    # 换检索模型后重建索引（--dry-run 先试 20 条；支持断点续传）
 ```
 
+> ⚠️ 几个测试**连着跑**时，可能撞上按 IP 的限流（`test_concurrency` 一次就发十几个检索请求）。
+> 看到 `429` 先等 60 秒再跑单个脚本，而不是急着当成 bug 查 —— 或者本地临时把
+> `RATE_LIMIT_PER_MIN` / `RATE_LIMIT_ANON_PER_MIN` 调大再跑。
+
 ---
 
 ## 七、数据与备份
