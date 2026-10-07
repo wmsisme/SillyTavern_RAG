@@ -25,6 +25,12 @@ import sys
 
 import httpx
 
+try:  # Windows 管道 / 控制台默认 GBK：中文与 emoji 输出会炸，这里自保一次
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 

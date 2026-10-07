@@ -20,6 +20,12 @@ import pathlib
 import subprocess
 import sys
 
+try:  # Windows 管道 / 控制台默认 GBK：中文与 emoji 输出会炸，这里自保一次
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 BACKEND = ROOT / "backend"
 

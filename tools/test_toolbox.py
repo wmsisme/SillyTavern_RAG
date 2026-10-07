@@ -20,6 +20,12 @@ from pathlib import Path
 
 import httpx
 
+try:  # Windows 管道 / 控制台默认 GBK：中文与 emoji 输出会炸，这里自保一次
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
+
 # 可选：本机有真实 SillyTavern 导出时，用环境变量指过去顺手多验一遍
 # （不设也不影响测试通过）
 _real = os.environ.get("TOOLBOX_REAL_JSONL", "")

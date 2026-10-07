@@ -12,6 +12,12 @@ import ast
 import pathlib
 import sys
 
+try:  # Windows 管道 / 控制台默认 GBK：中文与 emoji 输出会炸，这里自保一次
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
+
 
 def main(dirs: list[str]) -> int:
     bad = 0
