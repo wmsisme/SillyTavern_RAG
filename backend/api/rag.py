@@ -43,7 +43,7 @@ def _record(request: Request, user: Optional[User], kind: str, query: str,
                 top = float((results[0] or {}).get("score") or 0.0)
             row = admin_service.log_query(
                 db, ip=client_ip(request), user=user, kind=kind, query=query,
-                sources_count=len(results or []), top_score=top)
+                sources_count=len(results or []), top_score=top, sources=results)
             return row.id if row else None
         finally:
             db.close()
@@ -125,7 +125,11 @@ def rag_feedback(req: FeedbackRequest, request: Request,
         my_ip = admin_service.normalize_ip(client_ip(request))
         if not ((user and row.user_id == user.id) or (my_ip and row.ip == my_ip)):
             raise HTTPException(status_code=403, detail="只能反馈自己刚提的问题")
-        admin_service.mark_feedback(db, row.id, "solved" if req.solved else "unsolved")
-        return OkResponse(message="好，那我们继续" if req.solved else "已记下：这个问题没解决")
+        admin_service.mark_feedback(db, row.id, kind=req.kind, reason=req.reason)
+        msg = {
+            "solved": "好，那我们继续",
+            "irrelevant": "已记下：这些来源不相关 —— 谢谢，这正是我们要改进的地方",
+        }.get(req.kind, "已记下：这个问题没解决，我们会想办法补上")
+        return OkResponse(message=msg)
     finally:
         db.close()

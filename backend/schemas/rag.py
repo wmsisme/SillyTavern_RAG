@@ -30,10 +30,18 @@ class AskResponse(BaseModel):
 
 
 class FeedbackRequest(BaseModel):
-    """「这个问题没解决」按钮。比阈值判断更可信 —— 用户说了算。"""
+    """用户对这次检索/回答的评价 —— 比阈值判断更可信，用户说了算。
+
+    kind：
+      solved     = 有帮助（覆盖阈值判断，标记为已解答）
+      unsolved   = 没解决（答案没帮上忙）
+      irrelevant = **检索到内容了，但这些内容不相关**（用户明确说系统给错了）
+    reason 选填，原样记进后台 —— 「为什么说不相关」正是补知识库/调检索的依据。
+    """
 
     query_log_id: int
-    solved: bool = False
+    kind: str = "unsolved"
+    reason: str = ""
 
 
 class UpdateCheckResponse(BaseModel):

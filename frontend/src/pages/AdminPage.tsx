@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   App, Button, Card, Col, Form, Input, InputNumber, Modal, Popconfirm,
-  Row, Space, Statistic, Table, Tabs, Tag, Typography,
+  Row, Space, Statistic, Table, Tabs, Tag, Tooltip, Typography,
 } from 'antd'
 import type { TableColumnsType } from 'antd'
 import { ReloadOutlined, StopOutlined, CheckCircleOutlined, CrownOutlined } from '@ant-design/icons'
@@ -63,7 +63,10 @@ interface QueryLogRow {
   sources_count: number
   top_score: number
   answered: boolean
-  feedback: string
+  feedback: string            // "" / solved / unsolved / irrelevant
+  feedback_reason: string
+  feedback_at?: string | null
+  sources_digest: string      // 当时的检索结果摘要（JSON：前 5 条的 source + score）
 }
 
 /** 后端给的是 ISO 串，直接 toLocaleString 会带 T，统一成看得懂的样子 */
@@ -89,7 +92,7 @@ export default function AdminPage() {
   const [queries, setQueries] = useState<QueryLogRow[]>([])
   const [qTotal, setQTotal] = useState(0)
   const [qPage, setQPage] = useState(1)
-  const [onlyUnanswered, setOnlyUnanswered] = useState(false)
+  const [filter, setFilter] = useState<'all' | 'unanswered' | 'irrelevant' | 'unsolved'>('all')
   const [loading, setLoading] = useState(false)
 
   // 封号弹窗 / 封 IP 弹窗
@@ -109,11 +112,13 @@ export default function AdminPage() {
   }, [])
 
   const loadQueries = useCallback(async () => {
-    const r = await api.get<{ total: number; items: QueryLogRow[] }>(
-      `/admin/queries?page=${qPage}&page_size=50&only_unanswered=${onlyUnanswered}`,
-    )
+    const q = new URLSearchParams({ page: String(qPage), page_size: '50' })
+    if (filter === 'unanswered') q.set('only_unanswered', 'true')
+    if (filter === 'irrelevant') q.set('feedback', 'irrelevant')
+    if (filter === 'unsolved') q.set('feedback', 'unsolved')
+    const r = await api.get<{ total: number; items: QueryLogRow[] }>(`/admin/queries?${q}`)
     setQueries(r.items); setQTotal(r.total)
-  }, [qPage, onlyUnanswered])
+  }, [qPage, filter])
 
   const reload = useCallback(async () => {
     setLoading(true)
@@ -301,10 +306,46 @@ export default function AdminPage() {
     { title: '最高相关度', dataIndex: 'top_score', width: 100,
       render: (v: number) => (v ? v.toFixed(3) : '—') },
     {
-      title: '结果', dataIndex: 'answered', width: 120,
+      title: '结果', dataIndex: 'answered', width: 110,
       render: (v: boolean, r) => (v
         ? <Tag color="green">已解答</Tag>
-        : <Tag color="orange">{r.feedback === 'unsolved' ? '用户说没解决' : '疑似未解答'}</Tag>),
+        : <Tag color="orange">{r.feedback === 'solved' ? '?' : '疑似未解答'}</Tag>),
+    },
+    {
+      title: '用户反馈', key: 'fb', width: 220,
+      render: (_: unknown, r) => {
+        if (!r.feedback) return <Typography.Text type="secondary">—</Typography.Text>
+        const meta: Record<string, { color: string; text: string }> = {
+          solved: { color: 'green', text: '👍 有帮助' },
+          unsolved: { color: 'orange', text: '👎 没解决' },
+          irrelevant: { color: 'red', text: '🚫 内容不相关' },
+        }
+        const m = meta[r.feedback] || { color: 'default', text: r.feedback }
+        let digest: { source?: string; score?: number }[] = []
+        try { digest = JSON.parse(r.sources_digest || '[]') } catch { digest = [] }
+        return (
+          <Space direction="vertical" size={2}>
+            <Tag color={m.color}>{m.text}</Tag>
+            {r.feedback_reason && (
+              <Typography.Text style={{ fontSize: 12 }}>{r.feedback_reason}</Typography.Text>
+            )}
+            {digest.length > 0 && (
+              <Tooltip title={
+                <div>
+                  <div style={{ marginBottom: 4 }}>用户点反馈时，系统给出的是：</div>
+                  {digest.map((d, i) => (
+                    <div key={i}>{i + 1}. {d.source}（{Number(d.score || 0).toFixed(3)}）</div>
+                  ))}
+                </div>
+              }>
+                <Typography.Text type="secondary" style={{ fontSize: 12, cursor: 'help' }}>
+                  当时给了 {digest.length} 条来源 ▸
+                </Typography.Text>
+              </Tooltip>
+            )}
+          </Space>
+        )
+      },
     },
   ]
 
@@ -347,16 +388,22 @@ export default function AdminPage() {
       key: 'queries', label: `提问记录（未解答 ${overview?.queries_unanswered ?? 0}）`,
       children: (
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Space>
-            <Button
-              type={onlyUnanswered ? 'primary' : 'default'}
-              onClick={() => { setOnlyUnanswered(!onlyUnanswered); setQPage(1) }}
-            >
-              只看没答上来的
-            </Button>
+          <Space wrap>
+            {([
+              ['all', '全部'],
+              ['unanswered', '只看没答上来的'],
+              ['irrelevant', '只看「内容不相关」'],
+              ['unsolved', '只看「没解决」'],
+            ] as const).map(([k, label]) => (
+              <Button key={k} type={filter === k ? 'primary' : 'default'}
+                      onClick={() => { setFilter(k); setQPage(1) }}>
+                {label}
+              </Button>
+            ))}
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              判定口径：一条来源都没召回，或最高相关度低于 {(overview?.unanswered_threshold ?? 0.45)}
-              ；用户点过「没解决」的一律计入
+              自动判定：一条来源都没召回、或最高相关度低于 {(overview?.unanswered_threshold ?? 0.45)}；
+              用户点过「没解决 / 内容不相关」的一律计入 —— 把鼠标停在「当时给了 N 条来源」上，
+              能看到用户点反馈时系统到底给了什么（这是判断"召回错了"还是"文档没写清楚"的依据）
             </Typography.Text>
           </Space>
           <Table<QueryLogRow> rowKey="id" size="small" loading={loading}

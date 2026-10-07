@@ -52,4 +52,10 @@ class QueryLog(Base):
     sources_count = Column(Integer, default=0)
     top_score = Column(Float, default=0.0)
     answered = Column(Boolean, default=True, nullable=False)  # False = 疑似没答上来
-    feedback = Column(String(16), default="")                 # 用户点「没解决」→ unsolved
+    # 用户反馈："" / solved（有帮助）/ unsolved（没解决）/ irrelevant（检索到了但不相关）
+    feedback = Column(String(16), default="")
+    feedback_reason = Column(Text, default="")                # 用户填的原因（选填）
+    feedback_at = Column(DateTime, nullable=True)
+    # 当时的检索结果摘要（前 5 条的 source + score，JSON）——
+    # 没有它，事后看到「用户说不相关」也不知道当时系统给了什么，等于无法复现。
+    sources_digest = Column(Text, default="")

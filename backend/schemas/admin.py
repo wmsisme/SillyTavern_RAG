@@ -64,6 +64,10 @@ class QueryLogRow(BaseModel):
     top_score: float = 0.0
     answered: bool = True
     feedback: str = ""
+    feedback_reason: str = ""
+    feedback_at: Optional[datetime] = None
+    # 当时的检索结果摘要（JSON 字符串：前 5 条的 source + score）
+    sources_digest: str = ""
 
 
 class QueryLogPage(BaseModel):

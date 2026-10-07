@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { api, readErrorText } from '../services/api'
 import { llmHeaders, looksLikeMissingKey, notifyMissingKey } from '../services/llm'
+import AnswerFeedback from '../components/AnswerFeedback'
 
 const { Title, Paragraph, Text } = Typography
 
@@ -21,6 +22,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false)
   const [streaming, setStreaming] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  // 本次提问在服务端的记录 id —— 反馈按钮要拿它回传（由流式 done 事件带回来）
+  const [queryLogId, setQueryLogId] = useState<number | null>(null)
   const answerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -35,6 +38,7 @@ export default function HomePage() {
     setStreaming(true)
     setAnswer('')
     setSources([])
+    setQueryLogId(null)      // 新的一次提问：反馈区要重新开始（组件按 id 变化自己重置）
     setHasSearched(true)
 
     try {
@@ -79,6 +83,8 @@ export default function HomePage() {
               setAnswer(prev => prev + `\n\n**生成失败**：${data.data}`)
               setStreaming(false)
             } else if (data.type === 'done') {
+              // 后端把本次提问的记录 id 放在 done 里 —— 反馈按钮靠它定位
+              setQueryLogId(data.query_log_id ?? null)
               setStreaming(false)
             }
           } catch {}
@@ -180,6 +186,12 @@ export default function HomePage() {
             )}
           />
         </Card>
+      )}
+
+      {queryLogId !== null && (
+        <div style={{ marginBottom: 24 }}>
+          <AnswerFeedback queryLogId={queryLogId} />
+        </div>
       )}
 
       {!hasSearched && (

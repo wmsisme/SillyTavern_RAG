@@ -34,6 +34,8 @@ def _ensure_columns() -> None:
         "character_cards": [("user_id", "INTEGER")],
         "world_books": [("user_id", "INTEGER")],
         "users": [("ban_reason", "VARCHAR(255)"), ("banned_at", "DATETIME")],
+        "query_logs": [("feedback_reason", "TEXT"), ("feedback_at", "DATETIME"),
+                       ("sources_digest", "TEXT")],
     }
     with engine.begin() as conn:
         for table, cols in wanted.items():

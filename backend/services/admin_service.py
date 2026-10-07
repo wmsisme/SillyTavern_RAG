@@ -9,6 +9,7 @@
   UNANSWERED_THRESHOLD  最高相关度低于多少算「没答上来」，默认 0.45（改完要重启）
   QUERY_LOG_MAX         提问记录最多留多少条，默认 20000（超了从最老的开始裁）
 """
+import json
 import os
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
@@ -133,8 +134,37 @@ def unban_user(db: Session, user: User) -> None:
 
 
 # ------------------------------------------------------------------ 提问记录
+def _digest_sources(sources) -> str:
+    """把当时的检索结果压成摘要（前 5 条的 source + score）。
+
+    为什么要存：用户事后说「这些内容不相关」时，若不知道**当时系统到底给了什么**，
+    这条反馈既没法复现、也没法判断是「检索召回错了」还是「文档本身没写清楚」。
+    只存来源名与分数、不存正文，一条几百字节。
+    """
+    items = []
+    for s in (sources or [])[:5]:
+        if not isinstance(s, dict):
+            continue
+        try:
+            score = round(float(s.get("score") or 0), 4)
+        except (TypeError, ValueError):
+            score = 0.0
+        items.append({
+            "source": str(s.get("source") or "")[:120],
+            "score": score,
+            # 带一小段正文：光有 source 区分度不够（那是个分类名，比如 supplement），
+            # 看到「当时给的到底是哪几段」才说得清是召回错了、还是文档自己没写清楚。
+            "preview": " ".join(str(s.get("content") or "").split())[:80],
+        })
+    try:
+        return json.dumps(items, ensure_ascii=False)
+    except Exception:
+        return ""
+
+
 def log_query(db: Session, *, ip: str, user: Optional[User], kind: str, query: str,
-              sources_count: int = 0, top_score: float = 0.0) -> Optional[QueryLog]:
+              sources_count: int = 0, top_score: float = 0.0,
+              sources=None) -> Optional[QueryLog]:
     """记一条提问。**调用方要 try/except** —— 日志写失败不许影响用户问答。"""
     text_q = (query or "").strip()
     if not text_q:
@@ -152,6 +182,7 @@ def log_query(db: Session, *, ip: str, user: Optional[User], kind: str, query: s
         top_score=score,
         # 没召回任何来源，或最高分低于阈值 → 疑似没答上来
         answered=bool(sources_count and score >= th),
+        sources_digest=_digest_sources(sources),
     )
     db.add(row)
     db.commit()
@@ -176,10 +207,12 @@ def prune_query_logs(db: Session) -> int:
 
 def list_queries(db: Session, page: int = 1, page_size: int = 50,
                  only_unanswered: bool = False, ip: str = "", username: str = "",
-                 kind: str = "") -> Tuple[int, List[QueryLog]]:
+                 kind: str = "", feedback: str = "") -> Tuple[int, List[QueryLog]]:
     q = db.query(QueryLog)
     if only_unanswered:
         q = q.filter(QueryLog.answered.is_(False))
+    if feedback:
+        q = q.filter(QueryLog.feedback == feedback)
     if ip:
         q = q.filter(QueryLog.ip == normalize_ip(ip))
     if username:
@@ -229,13 +262,29 @@ def active_ips(db: Session, days: int = 7, limit: int = 50) -> List[dict]:
     return out
 
 
-def mark_feedback(db: Session, query_log_id: int, value: str = "unsolved") -> bool:
+FEEDBACK_KINDS = ("solved", "unsolved", "irrelevant")
+
+
+def mark_feedback(db: Session, query_log_id: int, kind: str = "unsolved",
+                  reason: str = "") -> bool:
+    """记用户反馈。**用户说了算** —— 优先级高于阈值判断。
+
+    · solved     → 标记为已解答（哪怕阈值判它没答上来）
+    · unsolved   → 没解决，进「该补什么」的清单
+    · irrelevant → **检索到内容了、但不相关**：同样进清单；
+                   它最容易区分「召回给错了」还是「文档自己没写清楚」，
+                   配合 sources_digest 一起看就知道当时系统给了什么。
+    """
     row = db.query(QueryLog).filter(QueryLog.id == query_log_id).first()
     if not row:
         return False
-    row.feedback = value[:16]
-    if value == "unsolved":
-        row.answered = False        # 用户说没解决，比阈值判断更可信
+    kind = (kind or "unsolved").strip().lower()
+    if kind not in FEEDBACK_KINDS:
+        kind = "unsolved"
+    row.feedback = kind
+    row.feedback_reason = (reason or "").strip()[:1000]
+    row.feedback_at = datetime.now()
+    row.answered = (kind == "solved")
     db.commit()
     return True
 

@@ -19,6 +19,7 @@
   ⑨ 管理员不能封自己
   ⑩ 活跃 IP 聚合能看出「一个 IP 上有多个账号」（共享账号的线索）
 """
+import json
 import os
 import pathlib
 import sys
@@ -140,11 +141,40 @@ def test_query_log():
     check(total >= 2 and all(not r.answered for r in rows),
           f"「只看未解答」筛出 {total} 条，且条条都是未解答")
 
-    print("\n⑦ 用户点「没解决」")
-    admin_service.mark_feedback(db, good.id, "unsolved")
+    print("\n⑦ 用户反馈（三档 + 原因）")
+    admin_service.mark_feedback(db, good.id, kind="unsolved", reason="答得不对")
     db.refresh(good)
     check(good.answered is False and good.feedback == "unsolved",
           "分数虽高，用户说没解决就翻成未解答（用户判断优先于阈值）")
+    check(good.feedback_reason == "答得不对", "用户填的原因原样落库")
+
+    # 第三档：检索到内容了、但内容不相关 —— 这档最容易暴露「召回给错了」
+    admin_service.mark_feedback(db, low.id, kind="irrelevant",
+                                reason="三条都是正则书里的，和我的问题无关")
+    db.refresh(low)
+    check(low.feedback == "irrelevant" and low.answered is False,
+          "「检索到内容、但不相关」同样计入未解答")
+    n_irr, rows_irr = admin_service.list_queries(db, feedback="irrelevant", page_size=50)
+    check(n_irr >= 1 and all(r.feedback == "irrelevant" for r in rows_irr),
+          f"按 feedback=irrelevant 筛出 {n_irr} 条，条条都是这一档")
+
+    # solved 要能覆盖阈值判断（反方向也要验：不能只会把记录判成"没答上来"）
+    admin_service.mark_feedback(db, none.id, kind="solved", reason="自己看懂了")
+    db.refresh(none)
+    check(none.answered is True,
+          "点「有帮助」能把阈值判成未解答的记录翻回已解答 —— 用户说了算，两个方向都通")
+
+    print("\n⑦b 来源摘要（反馈能复现的前提）")
+    again = admin_service.log_query(
+        db, ip="10.0.0.2", user=None, kind="search", query="带来源的问题",
+        sources_count=2, top_score=0.9,
+        sources=[{"source": "official", "score": 0.9, "content": "这是第一段的内容"},
+                 {"source": "supplement", "score": 0.8, "content": "这是第二段的内容"}])
+    digest = json.loads(again.sources_digest or "[]")
+    check(len(digest) == 2 and digest[0]["source"] == "official",
+          f"来源摘要记下了当时给出的 {len(digest)} 条")
+    check(all("preview" in d and d["preview"] for d in digest),
+          "每条都带正文摘要（不然只看到分类名，事后说不清是召回错了还是文档没写清楚）")
 
     print("\n⑩ 活跃 IP 聚合（共享账号线索）")
     u1 = auth_service.register(db, "share1", "pw123456")

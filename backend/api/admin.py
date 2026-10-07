@@ -120,11 +120,11 @@ def active_ips(days: int = Query(7, ge=1, le=365), limit: int = Query(50, ge=1, 
 @router.get("/admin/queries", response_model=QueryLogPage)
 def queries(page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200),
             only_unanswered: bool = Query(False), ip: str = Query(""),
-            username: str = Query(""), kind: str = Query(""),
+            username: str = Query(""), kind: str = Query(""), feedback: str = Query(""),
             admin: User = Depends(current_admin), db: Session = Depends(get_db)):
     total, rows = admin_service.list_queries(
         db, page=page, page_size=page_size, only_unanswered=only_unanswered,
-        ip=ip, username=username, kind=kind)
+        ip=ip, username=username, kind=kind, feedback=feedback)
     return QueryLogPage(
         total=total, page=page, page_size=page_size,
         items=[QueryLogRow(
@@ -132,6 +132,8 @@ def queries(page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200)
             username=r.username or "", kind=r.kind or "search", query=r.query,
             sources_count=r.sources_count or 0, top_score=r.top_score or 0.0,
             answered=bool(r.answered), feedback=r.feedback or "",
+            feedback_reason=r.feedback_reason or "", feedback_at=r.feedback_at,
+            sources_digest=r.sources_digest or "",
         ) for r in rows],
     )
 
