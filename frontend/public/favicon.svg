@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- 站点图标：antd 主题蓝底 + 白色放大镜（和侧边栏那个搜索图标同一套视觉） -->
+  <rect width="32" height="32" rx="7" fill="#1677ff"/>
+  <circle cx="13.8" cy="13.8" r="6.4" fill="none" stroke="#ffffff" stroke-width="2.6"/>
+  <line x1="18.8" y1="18.8" x2="25" y2="25" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
+</svg>

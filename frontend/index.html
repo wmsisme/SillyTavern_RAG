@@ -2,7 +2,12 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <!-- 站点图标：原来这里指向 Vite 脚手架自带的 /vite.svg，而那个文件**根本不存在**
+         （frontend/public/ 是空的）→ 浏览器先 404 一次，再回退去要 /favicon.ico、又 404，
+         地址栏一片空白。2026-10-08 深夜暴露到公网后被扫描器一小时扫出十几条 404 才暴露出来。
+         现在两个都提供：SVG 给现代浏览器，ICO 给老浏览器与那些只认 .ico 的抓取方。 -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.ico" sizes="32x32" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SillyTavern RAG 知识库</title>
   </head>
