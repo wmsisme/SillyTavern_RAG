@@ -16,6 +16,7 @@
 库负责「事后查得到」（日志会轮转，表不会）。
 """
 import logging
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
@@ -25,6 +26,7 @@ from backend.api.deps import current_user_optional
 from backend.api.ratelimit import client_ip
 from backend.models.admin import ClientError
 from backend.models.database import get_db
+from backend.services import alerting
 
 log = logging.getLogger("backend.client_error")
 router = APIRouter()
@@ -48,6 +50,23 @@ def report_error(payload: ClientErrorIn, request: Request,
     log.warning("前端错误 [%s] %s | page=%s | %s:%s",
                 payload.kind, payload.message[:300], payload.page,
                 payload.source[:120], payload.line)
+
+    # 前端崩了也主动喊一声。前端错误最杂，所以这里更依赖 alerting 的两道闸：
+    # key 里带了 page + message 前缀（同类聚合），再加"全局 10 分钟 3 封"兜底 ——
+    # 否则用户浏览器里的各种怪问题能把邮箱淹掉。
+    alerting.alert(
+        key=f"client:{payload.page}:{payload.message[:60]}",
+        subject=f"【酒馆RAG】前端错误：{payload.message[:50]}",
+        body=(
+            f"时间：{datetime.now():%Y-%m-%d %H:%M:%S}\n"
+            f"页面：{payload.page}\n"
+            f"类型：{payload.kind}\n"
+            f"消息：{payload.message[:500]}\n"
+            f"来源：{payload.source}:{payload.line}\n"
+            f"客户端 IP：{client_ip(request)}\n\n"
+            + (f"堆栈：\n{payload.stack[:1500]}" if payload.stack else "（无堆栈）")
+        ),
+    )
 
     row = ClientError(
         ip=client_ip(request)[:64],

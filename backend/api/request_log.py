@@ -19,7 +19,7 @@ from fastapi import FastAPI, Request
 
 from backend.api import metrics
 from backend.api.ratelimit import client_ip
-from backend.services import logging_setup
+from backend.services import alerting, logging_setup
 
 log = logging.getLogger("backend.request")
 
@@ -52,6 +52,23 @@ def install_request_log(app: FastAPI) -> None:
             line, args = "%s %s → %s  %.0fms  ip=%s", (method, path, status, ms, ip)
             if status >= 500:
                 log.error(line, *args)
+                # 服务端错误要**主动喊人** —— 这是"让线上不再瞎"的最后一块：
+                # 前面几步只做到"能查"，这一步做到"不用查也知道"。
+                # 噪音控制全在 alerting 里（同 key 冷却 + 全局 10 分钟 3 封），
+                # 不然一次故障就能把站长邮箱刷爆，那还不如不告警。
+                alerting.alert(
+                    key=f"{status}:{path}",
+                    subject=f"【酒馆RAG】服务端错误 {status} {path}",
+                    body=(
+                        f"时间：{time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+                        f"请求：{method} {path}\n"
+                        f"状态：{status}\n"
+                        f"耗时：{ms:.0f}ms\n"
+                        f"客户端 IP：{ip}\n"
+                        f"请求 ID：{rid}\n\n"
+                        "（同一类错误 5 分钟内只发一封；全局 10 分钟最多 3 封）"
+                    ),
+                )
             elif status >= 400:
                 log.warning(line, *args)          # 4xx 大概率是探测/滥用，值得单独看见
             elif ms >= slow_ms:
