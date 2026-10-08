@@ -45,7 +45,8 @@ export default function TestStageBanner() {
       message={
         <span style={{ fontSize: 13 }}>
           <strong>这个站点还在测试阶段</strong> —— 它跑在站长自己的电脑上（不是云服务器），
-          所以注册要邀请码，上传文件和检索都有上限。
+          所以注册要邀请码，上传文件和检索都有上限；<strong>AI 问答与生成需要你自备 API Key</strong>
+          （本站不提供免费额度，Key 只存在你自己的浏览器或账号里，站长看不到）。
           <strong>测试通过后会换到正式服务器，这些限制都会放开。</strong>
           遇到问题、或者想要什么功能，点「反馈」告诉我 —— 现在提的每一条都会直接影响后面怎么做。
         </span>
