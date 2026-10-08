@@ -4,7 +4,11 @@ import { BrowserRouter } from 'react-router-dom'
 import { App as AntdApp, ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import App from './App'
+import { installErrorReporting } from './services/errorReporter'
 import './index.css'
+
+// 在任何渲染之前装好错误上报：这样连 React 挂载阶段崩的错误也能被捕获
+installErrorReporting()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -142,3 +142,6 @@ RAG/rebuild_*_partial.npz
 # 容器部署的绑定挂载目录（SQLite 与用户图片，绝不能进仓库）
 /data/
 /static/
+
+# 运行日志（统一日志模块的产物，不该进仓库）
+logs/

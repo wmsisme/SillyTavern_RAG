@@ -15,6 +15,12 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 from backend.models.database import init_db
 from backend.api.ban_guard import install_ip_ban_guard
 from backend.api.ratelimit import install_rate_limit
+from backend.api.request_log import install_request_log
+from backend.services.logging_setup import setup_logging
+
+# 顶层就把日志配好：后面那几行「xxx 已启用」也要能落到文件里。
+# setup_logging() 幂等，重复调用无副作用。
+setup_logging()
 
 # ---------------------------------------------------------------- 生产安全默认
 # 交互式文档默认**关掉**（2026-10-07 安全测试发现 /docs、/redoc、/openapi.json
@@ -121,8 +127,13 @@ async def _security_headers(request: Request, call_next):
 # ⚠️ Starlette 的 add_middleware 是往列表**头部插**的，所以**后安装的在外层、先执行**。
 # 想让封禁先跑，就得**后安装它** —— 顺序写反过一次（2026-10-07 复查发现），
 # 结果是限流跑在封禁前面：被封的 IP 照样消耗额度、拿到的还是 429 而不是"你被封了"。
+#
+# 请求日志**最后安装 = 最外层**（2026-10-08 加）：这样被封禁/限流挡掉的请求
+# 也会留下一行日志 —— 那些 403 / 429 恰恰是排查滥用时最需要看的。
+# 装在里面的话，被挡的请求在日志里根本不存在，"某个 IP 被挡了多少次"就永远查不到。
 install_rate_limit(app)
 install_ip_ban_guard(app)
+install_request_log(app)
 
 from backend.api.rag import router as rag_router
 from backend.api.cards import router as cards_router
@@ -133,7 +144,9 @@ from backend.api.health import router as health_router
 from backend.api.auth import router as auth_router
 from backend.api.llm import router as llm_router
 from backend.api.admin import router as admin_router
+from backend.api.errors import router as errors_router
 from backend.api.feedback import router as feedback_router
+from backend.api.metrics import router as metrics_router
 
 app.include_router(health_router, tags=["健康检查"])
 app.include_router(auth_router, prefix="/api", tags=["账号"])
@@ -145,6 +158,10 @@ app.include_router(update_router, prefix="/api", tags=["文档更新"])
 app.include_router(tools_router, prefix="/api/tools", tags=["工具箱"])
 app.include_router(admin_router, prefix="/api", tags=["后台管理"])
 app.include_router(feedback_router, prefix="/api", tags=["用户反馈"])
+app.include_router(errors_router, prefix="/api", tags=["前端错误上报"])
+# /metrics 不挂 /api 前缀 —— Prometheus 的惯例就是根路径。
+# 它自带「只看本机」的判断（见 backend/api/metrics.py）：公网请求拿到的是 404。
+app.include_router(metrics_router, tags=["运维"])
 
 # 目录先建出来（上传要用），但**不再**挂成静态目录：
 # StaticFiles 不鉴权，拿到 URL 的人就能看 —— 那「只有本人能看到自己的卡」就是假的。
@@ -164,8 +181,11 @@ if _dist_dir.exists() and _dist_dir.is_dir():
         而开发模式（Vite）下一切正常，**只有上线才发现**（2026-10-06 在容器里实测踩到）。
         这里显式约定：文件存在就发文件，否则回退 index.html。
         """
-        if full_path.startswith("api/") or full_path == "health":
-            # 接口路径不兜底，老老实实 404 —— 免得打错的 API 拿到一个 200 的 HTML
+        if full_path.startswith("api/") or full_path in ("health", "metrics"):
+            # 接口路径不兜底，老老实实 404 —— 免得打错的 API 拿到一个 200 的 HTML。
+            # ⚠️ metrics 必须列在这里：它是根路径下的接口（Prometheus 惯例），
+            # 不特判的话会被兜底成 index.html —— 那 "只看本机" 那道判断就形同虚设，
+            # 公网也能拿到一份前端页面，还会让抓取端拿到一堆 HTML 而以为是空的。
             raise HTTPException(status_code=404, detail="接口不存在")
         candidate = (_dist_root / full_path).resolve()
         if full_path and candidate.is_file() and str(candidate).startswith(str(_dist_root)):

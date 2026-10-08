@@ -35,6 +35,9 @@ HEAVY_PREFIXES: tuple = (
     "/api/llm/test",          # 拿它当免费代理试 key 的，要挡
     "/api/update/",           # 文档索引更新
     "/api/feedback",          # 用户反馈：防刷（正常没人一分钟发 50 条）
+    "/api/errors",            # 前端错误上报：**免登录**，必须防刷 ——
+                              # 否则一个坏掉的前端（比如某段代码自己触发崩溃循环）
+                              # 能在一分钟内把 client_errors 表灌满
 )
 AUTH_PREFIXES: tuple = (
     "/api/auth/login",

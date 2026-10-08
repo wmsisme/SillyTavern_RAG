@@ -111,3 +111,35 @@ class UserFeedback(Base):
     handled = Column(Boolean, default=False, nullable=False, index=True)
     handled_at = Column(DateTime, nullable=True)
     handled_by = Column(String(64), default="")
+
+
+class ClientError(Base):
+    """前端错误上报：用户浏览器里崩了，服务端第一次能知道。
+
+    为什么单独存一张表、而不只是写日志：
+      · 日志是**轮转**的（10MB × 5），错误一多就被冲掉 —— 而错误恰恰是要**事后翻**的；
+      · 存表才能回答「这类错误今天出了多少次、集中在哪个页面」这种问题。
+
+    与 QueryLog 的分工：那个记「用户问了什么」，这个记「我们的前端坏了什么」。
+    与 LoginLog 一样带 IP，同属只给管理员看的运维数据。
+
+    **刻意不记**：用户输入内容、Cookie、token、localStorage 里的任何东西。
+    上报字段全是浏览器自己产生的技术信息（消息 / 堆栈 / 页面 / UA），
+    前端也只发这些（见 frontend/src/services/errorReporter.ts）。
+    """
+
+    __tablename__ = "client_errors"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    created_at = Column(DateTime, default=datetime.now, index=True)   # 本地时间，理由同 QueryLog
+    ip = Column(String(64), default="", index=True)
+    user_id = Column(Integer, nullable=True, index=True)              # 未登录时报错也要收
+    username = Column(String(64), default="")
+    kind = Column(String(24), default="error")                        # error / unhandledrejection
+    message = Column(Text, default="")
+    stack = Column(Text, default="")                                  # 已截断的堆栈
+    page = Column(String(255), default="", index=True)                # 出错时所在的前端路由
+    source = Column(String(255), default="")                          # 报错脚本的 URL
+    line = Column(Integer, default=0)
+    col = Column(Integer, default=0)
+    user_agent = Column(String(255), default="")

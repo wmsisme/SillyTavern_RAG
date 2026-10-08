@@ -1,0 +1,58 @@
+name: CI
+
+# 什么时候跑：往 main 推、开 PR、以及手动点一下。
+# 这是**公开仓**里第一件"工程纪律"的可见证据 —— 仓库首页那个徽章靠它亮。
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  backend:
+    name: 后端检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      # ⚠️ 刻意**只装最小依赖**：requirements.txt 里带 torch / chromadb（几百 MB 到 GB 级），
+      # 而下面这三项检查都用不上它们 —— 装了只会让每次 CI 多等好几分钟。
+      # 进程内测试用的是临时 SQLite（test_multitenant 自己设 DB_PATH）。
+      - name: 安装最小依赖
+        run: pip install sqlalchemy pydantic python-dotenv
+
+      - name: 后端语法自检
+        run: python tools/check_syntax.py backend
+
+      - name: 多租户隔离（服务层，临时库，不碰真实数据）
+        run: python tools/test_multitenant.py
+
+      # 密钥扫描：防止把 .env / .secret_key / 真实 key 形态的东西提交上来。
+      # 这一步比任何约定都可靠 —— 公开仓一旦推上去就收不回来了。
+      - name: 密钥扫描
+        run: python tools/check_no_secrets.py .
+
+  frontend:
+    name: 前端类型检查与构建
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # tsc -b 就在 build 里：类型不过就构建不出来，等于顺带做类型检查
+      - name: 安装依赖
+        run: npm ci
+        working-directory: frontend
+
+      - name: 构建（含 tsc 类型检查）
+        run: npm run build
+        working-directory: frontend
