@@ -17,7 +17,7 @@ from backend.models.database import get_db
 from backend.models.user import User
 from backend.schemas.admin import FeedbackCreate, UserFeedbackPage, UserFeedbackRow
 from backend.schemas.user import OkResponse
-from backend.services import admin_service
+from backend.services import admin_service, attachment_service
 
 router = APIRouter()
 
@@ -34,12 +34,18 @@ def submit_feedback(req: FeedbackCreate, request: Request,
     if len(content) > MAX_LEN:
         raise HTTPException(status_code=400, detail=f"太长了（上限 {MAX_LEN} 字），捡重点说就行")
     try:
-        admin_service.log_user_feedback(
+        row = admin_service.log_user_feedback(
             db, user=user, ip=client_ip(request), content=content,
             category=req.category, page=req.page)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"没存上（{str(e)[:80]}），稍后再试一次")
-    return OkResponse(message="收到，谢谢！站长能看到这条反馈。")
+
+    # 两段式的第二段：把先上传的那批附件绑到这条反馈上
+    # （只绑自己的、且还没绑过的 —— 规则在 attachment_service.bind 里）
+    n = attachment_service.bind(db, user, req.attachment_ids,
+                                source="feedback", ref_id=getattr(row, "id", None)) if row else 0
+    tail = f"，收到了 {n} 个附件" if n else ""
+    return OkResponse(message=f"收到，谢谢！站长能看到这条反馈{tail}。")
 
 
 # ---------------------------------------------------------------- 管理端
@@ -56,6 +62,8 @@ def list_feedback(page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, l
             ip=r.ip or "", category=r.category or "其他", content=r.content,
             page=r.page or "", handled=bool(r.handled), handled_at=r.handled_at,
             handled_by=r.handled_by or "",
+            # 用户投递的附件 —— 站长点一下就能下载（这就是「收技术档案」的落地处）
+            attachments=attachment_service.briefs_for(db, "feedback", r.id),
         ) for r in rows],
     )
 

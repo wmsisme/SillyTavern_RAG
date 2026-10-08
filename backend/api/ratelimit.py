@@ -38,6 +38,7 @@ HEAVY_PREFIXES: tuple = (
     "/api/errors",            # 前端错误上报：**免登录**，必须防刷 ——
                               # 否则一个坏掉的前端（比如某段代码自己触发崩溃循环）
                               # 能在一分钟内把 client_errors 表灌满
+    "/api/attachments",       # 附件上传/下载：往站长磁盘写东西，必须防刷
 )
 AUTH_PREFIXES: tuple = (
     "/api/auth/login",

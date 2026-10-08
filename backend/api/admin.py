@@ -212,6 +212,9 @@ def queries(page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200)
             username: str = Query(""), kind: str = Query(""), feedback: str = Query(""),
             marked_only: bool = Query(False),
             admin: User = Depends(current_admin), db: Session = Depends(get_db)):
+    # 列表里要带附件，所以需要它（模块顶部没 import，这里就地引入，免得动 import 区）
+    from backend.services import attachment_service
+
     total, rows = admin_service.list_queries(
         db, page=page, page_size=page_size, only_unanswered=only_unanswered,
         ip=ip, username=username, kind=kind, feedback=feedback, marked_only=marked_only)
@@ -226,6 +229,11 @@ def queries(page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200)
             sources_digest=r.sources_digest or "",
             marked=bool(r.marked), marked_at=r.marked_at,
             repeat_count=int(r.repeat_count or 1),
+            # 这条提问的评价里带的附件。**只在有评价时才去查** —— 没评价的记录不可能有附件，
+            # 这样绝大多数行不会多一次查询（列表页最怕给它加 N+1）。
+            attachments=([{"id": a.id, "orig_name": a.orig_name or "", "size": a.size or 0}
+                          for a in attachment_service.list_for(db, "query", r.id)]
+                         if r.feedback else []),
         ) for r in rows],
     )
 

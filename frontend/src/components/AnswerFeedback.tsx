@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { App, Button, Card, Input, Space, Typography } from 'antd'
 import { api } from '../services/api'
+import AttachmentPicker, { type PickedFile } from './AttachmentPicker'
 
 const { Text } = Typography
 
@@ -13,6 +14,10 @@ const { Text } = Typography
  *
  * 用户选完档位再填原因（选填，但界面会鼓励写）：
  * 原因就是我们下次该补什么、或该修哪条召回的依据。
+ *
+ * 附件（2026-10-08 加）：用户可以**直接把自己手上的资料传上来**。
+ * 这一档尤其有用 —— 他说"不相关"的时候，如果顺手传了正确的资料，
+ * 站长在后台勾「这条要补进知识库」时就能直接拿它去改，不用再来回问。
  */
 const OPTIONS = [
   { kind: 'solved', label: '👍 有帮助', tip: '这次回答解决了我的问题' },
@@ -35,12 +40,14 @@ export default function AnswerFeedback({ queryLogId }: { queryLogId: number }) {
   const { message } = App.useApp()
   const [kind, setKind] = useState<string>('')
   const [reason, setReason] = useState('')
+  const [files, setFiles] = useState<PickedFile[]>([])
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [sentCount, setSentCount] = useState(0)
 
-  // 换了一次提问（id 变了）→ 反馈状态清零，别把上一条的评价带到这一条上
+  // 换了一次提问（id 变了）→ 反馈状态清零，别把上一条的评价和附件带到这一条上
   useEffect(() => {
-    setKind(''); setReason(''); setSent(false)
+    setKind(''); setReason(''); setSent(false); setFiles([]); setSentCount(0)
   }, [queryLogId])
 
   const submit = async () => {
@@ -54,7 +61,9 @@ export default function AnswerFeedback({ queryLogId }: { queryLogId: number }) {
         query_log_id: queryLogId,
         kind,
         reason: reason.trim(),
+        attachment_ids: files.map(f => f.id),
       })
+      setSentCount(files.length)
       setSent(true)
       message.success(r?.message || '已记录，谢谢反馈')
     } catch (e: any) {
@@ -67,7 +76,10 @@ export default function AnswerFeedback({ queryLogId }: { queryLogId: number }) {
   if (sent) {
     return (
       <Card size="small">
-        <Text type="success">✅ 已记录，谢谢你的反馈 —— 站长能看到它，并据此改进知识库。</Text>
+        <Text type="success">
+          ✅ 已记录，谢谢你的反馈 —— 站长能看到它，并据此改进知识库。
+          {sentCount > 0 && `连同 ${sentCount} 个文件一起收到了。`}
+        </Text>
       </Card>
     )
   }
@@ -99,6 +111,16 @@ export default function AnswerFeedback({ queryLogId }: { queryLogId: number }) {
             placeholder={PLACEHOLDER[kind]}
             onChange={e => setReason(e.target.value)}
           />
+
+          {/* 手上有能纠正它的资料？传上来 —— 对「不相关」这一档尤其有价值 */}
+          <div style={{ marginTop: 8 }}>
+            <AttachmentPicker
+              value={files}
+              onChange={setFiles}
+              hint="（可选）有能纠正它的资料就传上来，站长会拿它去改 —— 最多 3 个、单个 20MB"
+            />
+          </div>
+
           <div style={{ marginTop: 8 }}>
             <Button type="primary" size="small" loading={sending} onClick={submit}>
               提交反馈

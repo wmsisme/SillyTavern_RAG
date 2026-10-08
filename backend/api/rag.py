@@ -138,6 +138,10 @@ def rag_feedback(req: FeedbackRequest, request: Request,
         if not ((user and row.user_id == user.id) or (my_ip and row.ip == my_ip)):
             raise HTTPException(status_code=403, detail="只能反馈自己刚提的问题")
         admin_service.mark_feedback(db, row.id, kind=req.kind, reason=req.reason)
+        # 附件（可选）：用户想说"我这份资料能纠正它"。同样只绑自己的、且未绑定的。
+        # 匿名评价时 attachment_ids 必然是空的（上传附件要求登录），bind 里也再挡了一道。
+        from backend.services import attachment_service
+        attachment_service.bind(db, user, req.attachment_ids, source="query", ref_id=row.id)
         msg = {
             "solved": "好，那我们继续",
             "irrelevant": "已记下：这些来源不相关 —— 谢谢，这正是我们要改进的地方",

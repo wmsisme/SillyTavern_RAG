@@ -143,3 +143,36 @@ class ClientError(Base):
     line = Column(Integer, default=0)
     col = Column(Integer, default=0)
     user_agent = Column(String(255), default="")
+
+
+class FeedbackAttachment(Base):
+    """反馈附件：用户在反馈时投递的文件（技术档案之类）。
+
+    **为什么单独一张表**：两个入口都要用（顶部「反馈」按钮 / 提问后的评价），
+    而且一次可以传多个 —— 是一对多的关系。
+    用 `source` + `ref_id` 指回来源；`ref_id` 允许为空（"先传文件、后交反馈"的顺序也可能出现）。
+
+    **它是「待灌库素材」的来源之一**：站长在后台勾选「这条要补进知识库」时，
+    能顺手把附件下载下来看 —— 但**绝不自动入库**（延续「我来勾选」那条规矩）。
+
+    与卡图的分工：卡图是**用户自己的资产**（他自己要看），
+    附件是**投递给站长的**（站长要用来改知识库），所以后台的可见性要求更高。
+
+    ⚠️ 磁盘闸门（2026-10-08 达铭明确要求「服务器是我的电脑，放不了那么多东西」）：
+    单文件大小 / 每次个数 / 每 IP 每天 / 每用户累计 / **全局总量** —— 五道都在
+    `services/attachment_service.py` 里，那张表只是记账。
+    """
+
+    __tablename__ = "feedback_attachments"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    created_at = Column(DateTime, default=datetime.now, index=True)   # 本地时间，理由同 QueryLog
+    ip = Column(String(64), default="", index=True)
+    user_id = Column(Integer, nullable=True, index=True)
+    username = Column(String(64), default="")
+    source = Column(String(24), default="feedback")        # feedback / query
+    ref_id = Column(Integer, nullable=True, index=True)    # user_feedback.id 或 query_logs.id
+    orig_name = Column(String(255), default="")            # 原文件名 —— **仅用于展示**，不参与取文件
+    stored_name = Column(String(80), unique=True, nullable=False)   # UUID + 扩展名，真正的磁盘名
+    size = Column(Integer, default=0)                      # 字节
+    content_type = Column(String(128), default="")

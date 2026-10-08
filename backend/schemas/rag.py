@@ -49,6 +49,10 @@ class FeedbackRequest(BaseModel):
     query_log_id: int
     kind: str = "unsolved"
     reason: str = Field("", max_length=MAX_REASON_CHARS)
+    # 可选附件（2026-10-08）：用户想说"我这份资料能纠正它"。
+    # 两段式：先 POST /api/attachments 拿到 id，再带上来 —— 免得把两个接口都改成 multipart。
+    # 匿名评价时这个字段只能是空（上传附件要求登录）。
+    attachment_ids: List[int] = []
 
 
 class UpdateCheckResponse(BaseModel):

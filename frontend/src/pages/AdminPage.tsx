@@ -73,6 +73,14 @@ interface QueryLogRow {
   marked: boolean             // 站长勾选「这条要拿去更新知识库」
   marked_at?: string | null
   repeat_count: number        // 同一 IP 重复问同一个问题的次数（>1 时界面上会标出来）
+  attachments?: AttachmentBrief[]   // 用户评价时顺手投递的文件
+}
+
+/** 附件（后台列表里的精简信息）—— 列表里点一下就直接下载，走的是鉴权端点 */
+interface AttachmentBrief {
+  id: number
+  orig_name: string
+  size: number
 }
 
 interface FeedbackRow {
@@ -87,6 +95,7 @@ interface FeedbackRow {
   handled: boolean
   handled_at?: string | null
   handled_by: string
+  attachments?: AttachmentBrief[]   // 用户投递的文件（「大佬的技术档案」就从这儿来）
 }
 
 interface LoginIpRow {
@@ -495,6 +504,26 @@ export default function AdminPage() {
     },
   ]
 
+  /**
+   * 附件链接：点一下**直接下载**。
+   * 走的是鉴权端点（/static 没有挂成静态目录），同源 <a> 会自带会话 Cookie，
+   * 所以这里不需要任何 token 处理 —— 权限由服务端判（别人的附件会 404）。
+   */
+  const renderAttachments = (list?: AttachmentBrief[]) => {
+    if (!list || !list.length) return null
+    return (
+      <Space direction="vertical" size={2}>
+        {list.map(a => (
+          <Typography.Link key={a.id} href={`/api/attachments/${a.id}`}>
+            📎 {a.orig_name}（{a.size < 1048576
+              ? `${Math.ceil(a.size / 1024)} KB`
+              : `${(a.size / 1048576).toFixed(1)} MB`}）
+          </Typography.Link>
+        ))}
+      </Space>
+    )
+  }
+
   const queryCols: TableColumnsType<QueryLogRow> = [
     { title: '时间', dataIndex: 'created_at', width: 160, render: (v: string) => fmtTime(v) },
     { title: '提问人', dataIndex: 'username', width: 110,
@@ -546,6 +575,8 @@ export default function AdminPage() {
             {r.feedback_reason && (
               <Typography.Text style={{ fontSize: 12 }}>{r.feedback_reason}</Typography.Text>
             )}
+            {/* 用户评价时投递的文件：站长勾「这条要拿去更新知识库」之前先看它 */}
+            {renderAttachments(r.attachments)}
             {digest.length > 0 && (
               <Tooltip title={
                 <div>
@@ -574,6 +605,11 @@ export default function AdminPage() {
     },
     { title: '分类', dataIndex: 'category', width: 80, render: (v: string) => <Tag>{v}</Tag> },
     { title: '内容', dataIndex: 'content', ellipsis: true },
+    {
+      title: '附件', dataIndex: 'attachments', width: 200,
+      render: (v: AttachmentBrief[]) => renderAttachments(v)
+        || <Typography.Text type="secondary">—</Typography.Text>,
+    },
     {
       title: '来自页面', dataIndex: 'page', width: 140,
       render: (v: string) => (v ? <Typography.Text code>{v}</Typography.Text> : '—'),

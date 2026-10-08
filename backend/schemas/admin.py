@@ -54,6 +54,14 @@ class IpBanRow(BaseModel):
     expired: bool = False
 
 
+class AttachmentBrief(BaseModel):
+    """后台列表里的附件信息（只给必要字段 —— 列表页不需要知道磁盘上的存名）。"""
+
+    id: int
+    orig_name: str = ""
+    size: int = 0
+
+
 class QueryLogRow(BaseModel):
     id: int
     created_at: Optional[datetime] = None
@@ -68,6 +76,8 @@ class QueryLogRow(BaseModel):
     feedback: str = ""
     feedback_reason: str = ""
     feedback_at: Optional[datetime] = None
+    # 用户评价时顺手投递的文件（2026-10-08）—— 站长勾「这条要拿去更新知识库」之前先看它
+    attachments: List[AttachmentBrief] = []
     # 当时的检索结果摘要（JSON 字符串：前 5 条的 source + score）
     sources_digest: str = ""
     # 站长勾选「这条要拿去更新知识库」
@@ -151,6 +161,10 @@ class FeedbackCreate(BaseModel):
     content: str
     category: str = "其他"          # 建议 / 体验 / 故障 / 其他
     page: str = ""                  # 在哪个页面点的
+    # 可选附件（2026-10-08）：先 POST /api/attachments 拿到 id 再带上来（两段式）。
+    # 主要用途是「大佬投递技术档案」—— 站长在后台能看到并下载，
+    # 但**绝不自动进知识库**（延续「我来勾选」那条规矩）。
+    attachment_ids: List[int] = []
 
 
 class UserFeedbackRow(BaseModel):
@@ -165,6 +179,9 @@ class UserFeedbackRow(BaseModel):
     handled: bool = False
     handled_at: Optional[datetime] = None
     handled_by: str = ""
+    # 用户投递的文件（2026-10-08）—— 这就是「大佬投递技术档案」的落地处：
+    # 站长在后台点一下就能下载，看完再决定要不要据此更新知识库（**不自动进库**）
+    attachments: List[AttachmentBrief] = []
 
 
 class UserFeedbackPage(BaseModel):

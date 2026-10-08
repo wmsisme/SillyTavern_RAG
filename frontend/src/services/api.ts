@@ -43,12 +43,20 @@ async function request<T = any>(url: string, options?: Options): Promise<T> {
   const timer = window.setTimeout(() => controller.abort(), timeout)
 
   try {
+    // ⚠️ FormData 千万不能带 Content-Type：multipart 的 boundary 是浏览器自己拼进那个头的，
+    //    手写 'application/json' 会让后端解析不出任何字段 —— 附件上传就死在这儿（2026-10-08）。
+    const isForm = typeof FormData !== 'undefined' && rest.body instanceof FormData
+
     const response = await fetch(`${BASE_URL}${url}`, {
       ...rest,
       // 会话靠 Cookie：同源请求本来就会带上，显式写出来是为了别处改成本地存储时也稳
       credentials: 'include',
       // 用户自带的大模型凭证随每个请求走（localStorage → header），后端不留存
-      headers: { 'Content-Type': 'application/json', ...llmHeaders(), ...(rest.headers || {}) },
+      headers: {
+        ...(isForm ? {} : { 'Content-Type': 'application/json' }),
+        ...llmHeaders(),
+        ...(rest.headers || {}),
+      },
       signal: controller.signal,
     })
 
@@ -81,4 +89,10 @@ export const api = {
   put: <T = any>(url: string, data?: unknown, options?: Options) =>
     request<T>(url, { method: 'PUT', body: data !== undefined ? JSON.stringify(data) : undefined, ...options }),
   delete: <T = any>(url: string, options?: Options) => request<T>(url, { method: 'DELETE', ...options }),
+  /**
+   * 表单上传（附件用）。走和别的请求完全同一套超时 / 401 / 错误解析，
+   * 唯一区别就是**不带 JSON 头**（见 request 里那段关于 boundary 的说明）。
+   */
+  upload: <T = any>(url: string, form: FormData, options?: Options) =>
+    request<T>(url, { method: 'POST', body: form, ...options }),
 }
