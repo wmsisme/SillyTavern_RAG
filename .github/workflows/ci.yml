@@ -33,7 +33,13 @@ jobs:
 
       # 密钥扫描：防止把 .env / .secret_key / 真实 key 形态的东西提交上来。
       # 这一步比任何约定都可靠 —— 公开仓一旦推上去就收不回来了。
-      - name: 密钥扫描
+      #
+      # ⚠️ 只在**开发仓**跑：公开仓里根本没有这个脚本 —— 剥离工具刻意排除了它
+      # （它含着关键词表与读 .env 的真实密钥逻辑，不该出现在公开代码里）。
+      # 公开仓那份代码是剥离产物，**在推出去之前就已经在本机跑过这两道门禁**（发版流程的闸）。
+      # 第一次跑 CI 时这里报的就是"找不到文件"，正是漏了这个条件。
+      - name: 密钥扫描（仅开发仓）
+        if: github.repository == 'wmsisme/SillyTavern_RAG_dev'
         run: python tools/check_no_secrets.py .
 
   frontend:

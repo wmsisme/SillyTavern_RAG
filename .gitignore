@@ -53,7 +53,11 @@ node_modules/
 .nuxt/
 .npm/
 .yarn/
-package-lock.json
+# ⚠️ package-lock.json **不再忽略**（2026-10-08 改）：npm 官方推荐把它提交进仓库 ——
+#    它锁住整棵依赖树，是 CI 里 `npm ci` 能跑的前提，也保证「CI 装的版本」与「本机装的版本」一致。
+#    当初把它和 .npm / .yarn 这些**缓存目录**归在一起当成产物忽略掉，是错的
+#    （第一次跑 GitHub Actions 时 setup-node 的缓存步骤就因此失败了）。
+#    yarn.lock 仍忽略：本项目用 npm，不会产生它。
 yarn.lock
 
 # ==================== 构建产物 ====================
