@@ -91,7 +91,7 @@ export default function UserFeedbackModal({ open, onClose }:
           <AttachmentPicker
             value={files}
             onChange={setFiles}
-            hint="有现成的资料要投递（比如一份技术档案）可以传上来 —— 最多 3 个、单个 20MB"
+            hint="有现成的资料要投递（比如一份技术档案）可以传上来 —— 测试期先设了 3 个 / 单个 20MB 的上限，换正式服务器后会放开"
           />
         </Form.Item>
       </Form>

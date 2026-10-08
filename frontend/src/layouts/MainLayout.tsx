@@ -15,6 +15,7 @@ import {
   SafetyOutlined,
   MessageOutlined,
 } from '@ant-design/icons'
+import TestStageBanner from '../components/TestStageBanner'
 import UpdateNotice from '../components/UpdateNotice'
 import LLMSettingsModal from '../components/LLMSettingsModal'
 import UserFeedbackModal from '../components/UserFeedbackModal'
@@ -139,6 +140,9 @@ export default function MainLayout() {
         />
       </Sider>
       <Layout>
+        {/* 测试阶段提示：放在整个页面最上面一行 ——
+            让用户在撞见各种额度限制**之前**先知道为什么（达铭 2026-10-08 要求） */}
+        <TestStageBanner />
         <Header style={{
           padding: '0 24px',
           background: token.colorBgContainer,

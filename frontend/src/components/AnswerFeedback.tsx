@@ -117,7 +117,7 @@ export default function AnswerFeedback({ queryLogId }: { queryLogId: number }) {
             <AttachmentPicker
               value={files}
               onChange={setFiles}
-              hint="（可选）有能纠正它的资料就传上来，站长会拿它去改 —— 最多 3 个、单个 20MB"
+              hint="（可选）有能纠正它的资料就传上来，站长会拿它去改 —— 测试期先设了 3 个 / 单个 20MB 的上限"
             />
           </div>
 
