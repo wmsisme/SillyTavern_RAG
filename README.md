@@ -1,5 +1,7 @@
 # SillyTavern RAG 知识库平台
 
+[![CI](https://github.com/wmsisme/SillyTavern_RAG/actions/workflows/ci.yml/badge.svg)](https://github.com/wmsisme/SillyTavern_RAG/actions/workflows/ci.yml)
+
 面向 [SillyTavern](https://github.com/SillyTavern/SillyTavern)（酒馆）玩家的**中文知识库与创作辅助 Web 应用**：
 多用户账号 + 知识库检索问答 + 角色卡 / 世界书管理 + 五件套工具箱。
 
