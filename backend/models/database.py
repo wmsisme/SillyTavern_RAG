@@ -36,7 +36,14 @@ def _ensure_columns() -> None:
         "users": [("ban_reason", "VARCHAR(255)"), ("banned_at", "DATETIME")],
         "query_logs": [("feedback_reason", "TEXT"), ("feedback_at", "DATETIME"),
                        ("sources_digest", "TEXT"), ("marked", "BOOLEAN"),
-                       ("marked_at", "DATETIME"), ("repeat_count", "INTEGER")],
+                       ("marked_at", "DATETIME"), ("repeat_count", "INTEGER"),
+                       # 系统当时的回答全文（2026-10-09 加）。
+                       # ⚠️ **给模型加新列时，一定要同时登记在这里** —— 只改模型的后果是
+                       # 「模型以为列在、库里却没有」，于是**所有新提问都在 INSERT 阶段炸掉**；
+                       # 而 _record 的 try/except 会把异常吞掉 → **静默地不再记录任何提问**
+                       # （2026-10-09 就是这么踩的：加完模型忘了登记，日志一点动静没有，
+                       #  只有手动一查才发现 query_logs 已经停止增长）。
+                       ("answer", "TEXT")],
     }
     with engine.begin() as conn:
         for table, cols in wanted.items():
@@ -55,7 +62,7 @@ def init_db():
     from backend.models.world_book import WorldBook          # noqa: F401
     from backend.models.user import User, SessionToken, UserLLMSettings  # noqa: F401
     from backend.models.admin import (IpBan, LoginLog, QueryLog, UserFeedback,  # noqa: F401
-                                      ClientError)
+                                      ClientError, FeedbackAttachment)
 
     Base.metadata.create_all(bind=engine)
     _ensure_columns()

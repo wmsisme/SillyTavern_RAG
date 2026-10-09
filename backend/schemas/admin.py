@@ -78,6 +78,9 @@ class QueryLogRow(BaseModel):
     feedback_at: Optional[datetime] = None
     # 用户评价时顺手投递的文件（2026-10-08）—— 站长勾「这条要拿去更新知识库」之前先看它
     attachments: List[AttachmentBrief] = []
+    # 系统当时的回答全文（2026-10-09 加）。达铭：「我还是想能够看到当时系统是怎么回答的，
+    # 这样可以更好的更新」—— 后台点开就能看，导出清单里也带着
+    answer: str = ""
     # 当时的检索结果摘要（JSON 字符串：前 5 条的 source + score）
     sources_digest: str = ""
     # 站长勾选「这条要拿去更新知识库」

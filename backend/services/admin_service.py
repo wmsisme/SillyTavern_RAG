@@ -174,9 +174,13 @@ def dedup_window() -> int:
         return 60
 
 
+# 答案最多存这么多字（够放完整回答；2048 tokens 的回答通常几千字）
+ANSWER_MAX_CHARS = 20000
+
+
 def log_query(db: Session, *, ip: str, user: Optional[User], kind: str, query: str,
               sources_count: int = 0, top_score: float = 0.0,
-              sources=None) -> Optional[QueryLog]:
+              sources=None, answer: str = "") -> Optional[QueryLog]:
     """记一条提问。**调用方要 try/except** —— 日志写失败不许影响用户问答。
 
     同一 IP 在 `DEDUP_WINDOW_SECONDS` 内重复问同一个问题时**不新建记录**，
@@ -206,6 +210,10 @@ def log_query(db: Session, *, ip: str, user: Optional[User], kind: str, query: s
             existed.top_score = score
             existed.answered = bool(sources_count and score >= th)
             existed.sources_digest = _digest_sources(sources)
+            # 答案同理留**最后一次**的：用户重复问，多半就是第一次没答到点子上 ——
+            # 而我们正想看"他为什么再问一遍"时系统给的是什么（那才是改进的入口）
+            if answer:
+                existed.answer = answer[:ANSWER_MAX_CHARS]
             db.commit()
             db.refresh(existed)
             return existed
@@ -222,6 +230,7 @@ def log_query(db: Session, *, ip: str, user: Optional[User], kind: str, query: s
         # 没召回任何来源，或最高分低于阈值 → 疑似没答上来
         answered=bool(sources_count and score >= th),
         sources_digest=_digest_sources(sources),
+        answer=(answer or "")[:ANSWER_MAX_CHARS],
         repeat_count=1,
     )
     db.add(row)
@@ -549,6 +558,14 @@ def export_update_queue(db: Session, only_marked: bool = True) -> str:
         if r.feedback:
             extra = f" —— 「{r.feedback_reason}」" if r.feedback_reason else ""
             lines.append(f"- 用户评价：**{fb_label.get(r.feedback, r.feedback)}**{extra}")
+        # 系统当时的回答（2026-10-09 加）—— 这是整份清单里最值钱的一节：
+        # 只有看到"系统当时答成什么样"，才知道该往知识库补什么、或者该去改哪条召回。
+        if r.answer:
+            lines.append("")
+            lines.append("**当时系统的回答：**")
+            lines.append("")
+            for ln in (r.answer or "").splitlines():
+                lines.append(f"> {ln}" if ln.strip() else ">")
         if r.sources_digest:
             try:
                 items = json.loads(r.sources_digest)

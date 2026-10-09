@@ -74,6 +74,7 @@ interface QueryLogRow {
   marked_at?: string | null
   repeat_count: number        // 同一 IP 重复问同一个问题的次数（>1 时界面上会标出来）
   attachments?: AttachmentBrief[]   // 用户评价时顺手投递的文件
+  answer?: string             // 系统当时的回答全文（2026-10-09 起才开始留）
 }
 
 /** 附件（后台列表里的精简信息）—— 列表里点一下就直接下载，走的是鉴权端点 */
@@ -556,6 +557,22 @@ export default function AdminPage() {
       // 注意与左边复选框的区别：复选框是「本次要操作哪些」，这一列是「已经加入待更新清单」
       title: '待更新', dataIndex: 'marked', width: 90,
       render: (v: boolean) => (v ? <Tag color="blue">已加入</Tag> : '—'),
+    },
+    {
+      // 系统当时的回答（2026-10-09 加）。达铭的原话：「如果可以的话我还是想能够看到当时
+      // 系统是怎么回答的，这样可以更好的更新」—— 所以这里直接给**全文**，
+      // 默认收起两行、点「展开」看完整，不用再导出文件。
+      title: '系统回答', dataIndex: 'answer', width: 340,
+      render: (v: string) => (v
+        ? (
+          <Typography.Paragraph
+            style={{ marginBottom: 0, fontSize: 12 }}
+            ellipsis={{ rows: 2, expandable: true, symbol: '展开' }}
+          >
+            {v}
+          </Typography.Paragraph>
+        )
+        : <Typography.Text type="secondary">—（这条没留下回答）</Typography.Text>),
     },
     {
       title: '用户反馈', key: 'fb', width: 220,

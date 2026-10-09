@@ -229,6 +229,9 @@ def queries(page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200)
             sources_digest=r.sources_digest or "",
             marked=bool(r.marked), marked_at=r.marked_at,
             repeat_count=int(r.repeat_count or 1),
+            # 系统当时的回答（2026-10-09 加）—— 站长在后台就能看到"系统答成什么样"，
+            # 不用再靠猜。列表直接带全文（一页 50 条 × 几 KB 可以接受）
+            answer=r.answer or "",
             # 这条提问的评价里带的附件。**只在有评价时才去查** —— 没评价的记录不可能有附件，
             # 这样绝大多数行不会多一次查询（列表页最怕给它加 N+1）。
             attachments=([{"id": a.id, "orig_name": a.orig_name or "", "size": a.size or 0}

@@ -28,7 +28,7 @@ router = APIRouter()
 
 
 def _record(request: Request, user: Optional[User], kind: str, query: str,
-            results) -> Optional[int]:
+            results, answer: str = "") -> Optional[int]:
     """记一条提问，返回记录 id（前端「没解决」按钮要拿它回传）。
 
     自己开 session 而不是用请求级的 Depends(get_db)：流式响应是在依赖清理之后才迭代完的，
@@ -43,13 +43,39 @@ def _record(request: Request, user: Optional[User], kind: str, query: str,
                 top = float((results[0] or {}).get("score") or 0.0)
             row = admin_service.log_query(
                 db, ip=client_ip(request), user=user, kind=kind, query=query,
-                sources_count=len(results or []), top_score=top, sources=results)
+                sources_count=len(results or []), top_score=top, sources=results,
+                answer=answer)
             return row.id if row else None
         finally:
             db.close()
     except Exception as e:
         print(f"[querylog] 记录失败（不影响问答）：{e}")
         return None
+
+
+def _attach_answer(log_id: Optional[int], answer: str) -> None:
+    """把答案补写到已有的那条提问记录上（**流式接口专用**）。
+
+    流式接口是"先记账、后生成完"：`sources` 事件一出来就得记（生成可能中途失败），
+    那时**还没有答案**。所以等流跑完之后，再回来补上这一笔。
+
+    同样**任何异常都吞掉** —— 这是日志，不该让用户的问答跟着失败。
+    """
+    text = (answer or "").strip()
+    if not log_id or not text:
+        return
+    try:
+        from backend.models.admin import QueryLog
+
+        db = SessionLocal()
+        try:
+            db.query(QueryLog).filter(QueryLog.id == log_id).update(
+                {"answer": text[:admin_service.ANSWER_MAX_CHARS]})
+            db.commit()
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"[querylog] 补写答案失败（不影响问答）：{e}")
 
 
 @router.post("/rag/search", response_model=SearchResponse)
@@ -79,7 +105,8 @@ def rag_ask(req: AskRequest, request: Request,
         result = rag_service.ask(q, client=client)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    log_id = _record(request, user, "ask", q, result.get("sources") or [])
+    log_id = _record(request, user, "ask", q, result.get("sources") or [],
+                     answer=result.get("answer") or "")
     return AskResponse(answer=result["answer"], sources=result["sources"],
                        query_log_id=log_id)
 
@@ -95,8 +122,11 @@ async def rag_ask_stream(req: AskRequest, request: Request,
     def generate():
         log_id = None
         recorded = False
+        chunks: list = []          # 边流边攒答案，跑完再补写到提问记录上
         try:
             for event in rag_service.ask_stream_events(q, client=client):
+                if event.get("type") == "token":
+                    chunks.append(str(event.get("data") or ""))
                 # sources 事件一出来就先记账 —— 不等生成完（生成可能中途失败），
                 # 而且"有没有召回来源"正是判断答没答上来的关键。
                 if not recorded and event.get("type") == "sources":
@@ -106,9 +136,13 @@ async def rag_ask_stream(req: AskRequest, request: Request,
                 yield json.dumps(event, ensure_ascii=False) + "\n"
             if not recorded:      # 检索阶段就炸了、连 sources 都没发 —— 也要留痕
                 log_id = _record(request, user, "ask_stream", q, [])
+            _attach_answer(log_id, "".join(chunks))
             yield json.dumps({"type": "done", "query_log_id": log_id},
                              ensure_ascii=False) + "\n"
         except Exception as e:
+            # 中途失败也把**已经生成的那部分**留下 —— 用户当时看到的就是那么多，
+            # 而那正是复盘"为什么没答完"的素材
+            _attach_answer(log_id, "".join(chunks))
             yield json.dumps({"type": "error", "data": str(e)}, ensure_ascii=False) + "\n"
             yield json.dumps({"type": "done", "query_log_id": log_id},
                              ensure_ascii=False) + "\n"
