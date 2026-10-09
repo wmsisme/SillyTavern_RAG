@@ -18,17 +18,6 @@ import time
 import numpy as np
 from openai import OpenAI
 
-# torch / transformers 只在**本机模型那条路**（EMBED_PROVIDER=local）才需要。
-# 服务器上走硅基流动 API，装它们等于白背 2.5GB 的包、冷启动还更慢 —— 所以做成可选导入。
-try:
-    import torch
-    from transformers import AutoModel, AutoTokenizer
-    _TORCH_AVAILABLE = True
-except ImportError:          # 精简部署（只有 API 通路）时会走这里
-    torch = None             # type: ignore
-    AutoModel = AutoTokenizer = None  # type: ignore
-    _TORCH_AVAILABLE = False
-
 from backend.config import (
     CHROMA_DIR, COLLECTION_NAME, EMBEDDING_MODEL_NAME,
     RERANKER_MODEL_NAME, DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL,
@@ -37,6 +26,33 @@ from backend.config import (
     EMBED_PROVIDER, SILICONFLOW_API_KEY, SILICONFLOW_BASE_URL,
     SILICONFLOW_EMBED_MODEL, SILICONFLOW_RERANK_MODEL,
 )
+
+# torch / transformers 只在**本机模型那条路**（EMBED_PROVIDER=local）才需要。
+# 服务器上走硅基流动 API，装它们等于白背 2.5GB 的包、冷启动还更慢 —— 所以做成可选导入。
+#
+# ⚠️ 2026-10-09 又往前迈了一步：**不只看"装没装"，还要看"用不用"**。
+# 以前这段写在 config 之前、**无条件执行** —— 于是即使用的是 siliconflow（走 API、
+# 根本不碰本地模型），每次启动也要白等约 3 秒。
+# 实测 import 耗时：`backend.main` 总共 10159ms，其中 torch 一个人 2963ms（**30%**）、
+# chromadb 2733ms（这个省不掉，检索真的要用）。
+# 现在改成"只有 EMBED_PROVIDER=local 才 import"，启动少等约 3 秒；
+# 走 local 的机器**行为完全不变**（照样 import）。
+if EMBED_PROVIDER == "local":
+    try:
+        import torch
+        from transformers import AutoModel, AutoTokenizer
+        _TORCH_AVAILABLE = True
+    except ImportError:      # 精简部署（只有 API 通路）时会走这里
+        torch = None         # type: ignore
+        AutoModel = AutoTokenizer = None  # type: ignore
+        _TORCH_AVAILABLE = False
+else:
+    # 走 API 那条路：名字留着当占位。用到它们的地方（_get_embedder / _get_reranker）
+    # 都会先看 _TORCH_AVAILABLE 再决定，所以这里给 None 是安全的 ——
+    # 而且 API 通路上压根不会调到那两个函数。
+    torch = None                                       # type: ignore
+    AutoModel = AutoTokenizer = None                   # type: ignore
+    _TORCH_AVAILABLE = False
 
 EMBED_DEVICE = "cuda:0" if (torch is not None and torch.cuda.is_available()) else "cpu"
 TOP_K_RETRIEVAL = 40
