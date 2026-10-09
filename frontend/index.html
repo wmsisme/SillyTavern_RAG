@@ -10,9 +10,62 @@
     <link rel="alternate icon" href="/favicon.ico" sizes="32x32" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SillyTavern RAG 知识库</title>
+
+    <!-- ============ 首屏加载动画 ============
+         ⚠️ **必须内联在这里、且不能依赖任何 JS**（2026-10-09 达铭：「要不还是加一个加载
+         动画吧，还是太慢了」）。原因有两层：
+
+         ① 它要盖住的是 **JS bundle 下载与执行的那段时间**（打包后 1.5MB）——
+            如果把动画做成 React 组件，就得等 bundle 跑完才看得到，等于白做；
+         ② uvicorn 是**先绑端口、再跑 lifespan** 的，所以服务刚重启的那几秒里，
+            请求**能连上但会一直挂着** —— 浏览器这时正好显示我们放进 #root 的东西，
+            而不是一片白。
+
+         React 挂载时 `createRoot(...).render()` 会**清空 #root 的内容**，所以这个动画
+         会自然消失，不需要额外的移除逻辑。 -->
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; }
+      #root { min-height: 100%; }
+      .boot-loader {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 20px;
+        background: #fff; color: #8c8c8c; font-size: 14px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                     "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      /* 转圈：颜色和站点主题色（antd 蓝）一致，和 favicon 上的放大镜也是同一套视觉 */
+      .boot-ring {
+        width: 42px; height: 42px; border-radius: 50%;
+        border: 3px solid #e6f0ff; border-top-color: #1677ff;
+        animation: boot-spin .8s linear infinite;
+      }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+
+      /* 那行小字**平时看不见**（4 秒后才淡入）—— 快的时候一闪而过不打扰，
+         真的慢的时候（冷启动 6-9 秒）刚好出来安抚一下，免得用户以为卡死了。 */
+      .boot-hint {
+        opacity: 0; font-size: 12px; color: #bfbfbf;
+        animation: boot-fade .6s 4s forwards;
+      }
+      @keyframes boot-fade { to { opacity: 1; } }
+
+      /* 跟随系统深色模式，免得夜里刷出个刺眼的白屏 */
+      @media (prefers-color-scheme: dark) {
+        .boot-loader { background: #141414; color: #8c8c8c; }
+        .boot-ring { border-color: #1f3a5f; border-top-color: #1677ff; }
+        .boot-hint { color: #595959; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot-loader">
+        <div class="boot-ring"></div>
+        <div>正在加载…</div>
+        <div class="boot-hint">首次加载需要一点点时间，请稍候</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
