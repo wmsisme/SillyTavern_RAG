@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Button, Dropdown, App, theme, Modal, Form, Input, Badge } from 'antd'
+import { Layout, Menu, Button, Dropdown, App, theme, Modal, Form, Input, Badge, Grid, Drawer } from 'antd'
 import {
   HomeOutlined,
   UserOutlined,
@@ -38,6 +38,15 @@ const adminMenuItem = { key: '/admin', icon: <SafetyOutlined />, label: '后台�
 
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false)
+
+  // 窄屏（手机）适配（2026-10-12）：原来侧边栏是**常驻**的，390px 宽的屏幕上它吃掉一半宽度，
+  // 正文被挤成一列几个字 —— 这就是「手机端显示有问题」的根因。
+  // 现在：md 以下（<768px）侧栏收进抽屉、顶栏只留图标、内容区收边距。
+  // 用 Grid.useBreakpoint 而不是 window.innerWidth：它基于 matchMedia，会跟着旋转/缩放自动重算。
+  const screens = Grid.useBreakpoint()
+  const isMobile = screens.md === false
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
   const navigate = useNavigate()
   const location = useLocation()
   const { message } = App.useApp()
@@ -109,42 +118,65 @@ export default function MainLayout() {
     }
   }
 
+  // 品牌区 + 菜单：桌面放进常驻侧栏，手机放进抽屉 —— 同一份内容，两处复用
+  const brandAndMenu = (
+    <>
+      <div style={{
+        height: 64,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderBottom: `1px solid ${token.colorBorderSecondary}`,
+      }}>
+        <SearchOutlined style={{ fontSize: 24, color: token.colorPrimary }} />
+        {(!collapsed || isMobile) && (
+          <span style={{ marginLeft: 12, fontSize: 16, fontWeight: 600, whiteSpace: 'nowrap' }}>
+            ST 知识库
+          </span>
+        )}
+      </div>
+      <Menu
+        mode="inline"
+        selectedKeys={[selectedKey]}
+        items={menuItems}
+        onClick={({ key }) => {
+          navigate(key)
+          if (isMobile) setDrawerOpen(false)   // 手机上选完就收起来，别挡着正文
+        }}
+        style={{ borderInlineEnd: 'none' }}
+      />
+    </>
+  )
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider
-        trigger={null}
-        collapsible
-        collapsed={collapsed}
-        style={{ background: token.colorBgContainer }}
-      >
-        <div style={{
-          height: 64,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderBottom: `1px solid ${token.colorBorderSecondary}`,
-        }}>
-          <SearchOutlined style={{ fontSize: 24, color: token.colorPrimary }} />
-          {!collapsed && (
-            <span style={{ marginLeft: 12, fontSize: 16, fontWeight: 600, whiteSpace: 'nowrap' }}>
-              ST 知识库
-            </span>
-          )}
-        </div>
-        <Menu
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          items={menuItems}
-          onClick={({ key }) => navigate(key)}
-          style={{ borderInlineEnd: 'none' }}
-        />
-      </Sider>
+      {isMobile ? (
+        <Drawer
+          placement="left"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          width={248}
+          closable={false}
+          styles={{ body: { padding: 0 } }}
+        >
+          {brandAndMenu}
+        </Drawer>
+      ) : (
+        <Sider
+          trigger={null}
+          collapsible
+          collapsed={collapsed}
+          style={{ background: token.colorBgContainer }}
+        >
+          {brandAndMenu}
+        </Sider>
+      )}
       <Layout>
         {/* 测试阶段提示：放在整个页面最上面一行 ——
             让用户在撞见各种额度限制**之前**先知道为什么（达铭 2026-10-08 要求） */}
         <TestStageBanner />
         <Header style={{
-          padding: '0 24px',
+          padding: isMobile ? '0 8px' : '0 24px',
           background: token.colorBgContainer,
           display: 'flex',
           alignItems: 'center',
@@ -152,10 +184,20 @@ export default function MainLayout() {
         }}>
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
+            icon={isMobile || collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => (isMobile ? setDrawerOpen(true) : setCollapsed(!collapsed))}
+            title={isMobile ? '打开菜单' : '收起 / 展开侧栏'}
           />
-          <span style={{ marginLeft: 16, fontSize: 18, fontWeight: 500 }}>
+          <span style={{
+            marginLeft: isMobile ? 4 : 16,
+            fontSize: isMobile ? 15 : 18,
+            fontWeight: 500,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            // 手机上标题要让位给右边的图标按钮：给个上限再省略，别把顶栏撑破
+            maxWidth: isMobile ? 96 : undefined,
+          }}>
             {menuItems.find(item => item.key === selectedKey)?.label || 'SillyTavern RAG 知识库'}
           </span>
           {/* 用户反馈入口（达铭 2026-10-07 要求）：放在标题右边、只有登录后可见 */}
@@ -164,13 +206,13 @@ export default function MainLayout() {
               type="text"
               icon={<MessageOutlined />}
               onClick={() => setFeedbackOpen(true)}
-              style={{ marginLeft: 12 }}
+              style={{ marginLeft: isMobile ? 0 : 12 }}
               title="哪里不好用、哪里缺东西、哪里出错 —— 都可以告诉站长"
             >
-              反馈
+              {!isMobile && '反馈'}
             </Button>
           )}
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: isMobile ? 2 : 12 }}>
             {/* 文档更新是管理动作（/api/update/run 只放给管理员）：普通用户不该看见这个入口，
                 否则点了「立即更新」只会拿到 403 */}
             {user?.is_admin && <UpdateNotice />}
@@ -182,7 +224,7 @@ export default function MainLayout() {
                 onClick={() => setLlmOpen(true)}
                 title={llmReady ? '已配置你自己的 API Key' : '还没配置 API Key：AI 问答与生成需要它'}
               >
-                API 设置
+                {!isMobile && 'API 设置'}
               </Button>
             </Badge>
             {user ? (
@@ -199,20 +241,20 @@ export default function MainLayout() {
                 }}
               >
                 <Button type="text">
-                  <UserOutlined style={{ marginRight: 6 }} />
-                  {user.username}{user.is_admin ? '（管理员）' : ''}
+                  <UserOutlined style={{ marginRight: isMobile ? 0 : 6 }} />
+                  {!isMobile && <>{user.username}{user.is_admin ? '（管理员）' : ''}</>}
                 </Button>
               </Dropdown>
             ) : (
               <Button type="primary" size="small" onClick={() => navigate('/login')}>
-                登录 / 注册
+                {isMobile ? '登录' : '登录 / 注册'}
               </Button>
             )}
           </div>
         </Header>
         <Content style={{
-          margin: 24,
-          padding: 24,
+          margin: isMobile ? 8 : 24,
+          padding: isMobile ? 12 : 24,
           background: token.colorBgContainer,
           borderRadius: token.borderRadiusLG,
           overflow: 'auto',

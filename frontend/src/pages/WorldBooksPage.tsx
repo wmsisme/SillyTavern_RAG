@@ -69,7 +69,7 @@ export default function WorldBooksPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
         <Title level={3} style={{ margin: 0 }}>
           <BookOutlined style={{ marginRight: 8 }} />
           世界书管理

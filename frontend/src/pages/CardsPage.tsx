@@ -158,7 +158,7 @@ export default function CardsPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
         <Title level={3} style={{ margin: 0 }}>
           <UserOutlined style={{ marginRight: 8 }} />
           角色卡管理
@@ -197,6 +197,7 @@ export default function CardsPage() {
         </Row>
 
         <Table
+          scroll={{ x: 'max-content' }}
           dataSource={data}
           columns={columns}
           rowKey="id"

@@ -110,7 +110,7 @@ export default function WorldBookEditPage() {
 
   return (
     <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
         <Space>
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/worldbooks')}>返回</Button>
           <Title level={3} style={{ margin: 0 }}>

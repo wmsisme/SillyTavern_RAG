@@ -79,9 +79,10 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#f5f5f5', padding: 24,
+      background: '#f5f5f5', padding: 16,
     }}>
-      <Card style={{ width: 420 }} variant="borderless">
+      {/* 宽度用 maxWidth + 100%（2026-10-12）：写死 420 在 390px 的手机上会顶出屏幕 */}
+      <Card style={{ width: '100%', maxWidth: 420 }} variant="borderless">
         <Space direction="vertical" size={4} style={{ marginBottom: 20, width: '100%' }}>
           <Title level={4} style={{ margin: 0 }}>
             <SearchOutlined style={{ marginRight: 8, color: '#1677ff' }} />

@@ -209,7 +209,11 @@ export default function HomePage() {
               <Tag
                 key={example}
                 color="blue"
-                style={{ cursor: 'pointer', padding: '4px 12px', fontSize: 14 }}
+                style={{
+                  cursor: 'pointer', padding: '4px 12px', fontSize: 14,
+                  // 窄屏兜底：antd 的 Tag 默认 nowrap，遇到比容器还长的示例句会顶出屏幕
+                  maxWidth: '100%', whiteSpace: 'normal', height: 'auto',
+                }}
                 onClick={() => {
                   setQuery(example)
                 }}

@@ -654,7 +654,8 @@ export default function AdminPage() {
     {
       key: 'users', label: `用户管理（${users.length}）`,
       children: (
-        <Table<AdminUser> rowKey="id" size="small" loading={loading}
+        <Table<AdminUser>
+                 scroll={{ x: 'max-content' }} rowKey="id" size="small" loading={loading}
                           columns={userCols} dataSource={users} pagination={false} />
       ),
     },
@@ -674,7 +675,8 @@ export default function AdminPage() {
               这类信息日志里不会有，是他们开口才拿得到的
             </Typography.Text>
           </Space>
-          <Table<FeedbackRow> rowKey="id" size="small" loading={loading}
+          <Table<FeedbackRow>
+                   scroll={{ x: 'max-content' }} rowKey="id" size="small" loading={loading}
                              columns={feedbackCols} dataSource={feedbacks}
                              pagination={{
                                current: fbPage, pageSize: 50, total: fbTotal,
@@ -694,7 +696,8 @@ export default function AdminPage() {
                 同一 IP 上出现多个账号 → 很可能是共享账号，点右侧按钮可直接封该 IP
               </Typography.Text>
             </Space>
-            <Table<ActiveIpRow> rowKey="ip" size="small" loading={loading}
+            <Table<ActiveIpRow>
+                     scroll={{ x: 'max-content' }} rowKey="ip" size="small" loading={loading}
                                columns={activeIpCols} dataSource={activeIps} pagination={false} />
           </div>
           <div>
@@ -704,7 +707,8 @@ export default function AdminPage() {
                 手动加一个
               </Button>
             </Space>
-            <Table<IpBanRow> rowKey="id" size="small" loading={loading}
+            <Table<IpBanRow>
+                     scroll={{ x: 'max-content' }} rowKey="id" size="small" loading={loading}
                             columns={banCols} dataSource={bans} pagination={false} />
           </div>
         </Space>
@@ -755,7 +759,8 @@ export default function AdminPage() {
             补进知识库后再重建索引即可 —— **刻意不做自动灌库**，用户随口一问就写进知识库会污染它。
             表格里「待更新」列显示的是已加入的，「复选框」是本次要操作的，两者不一样。
           </Typography.Text>
-          <Table<QueryLogRow> rowKey="id" size="small" loading={loading}
+          <Table<QueryLogRow>
+                   scroll={{ x: 'max-content' }} rowKey="id" size="small" loading={loading}
                              columns={queryCols} dataSource={queries}
                              rowSelection={{
                                selectedRowKeys: picked,
@@ -772,16 +777,16 @@ export default function AdminPage() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Row gutter={16}>
-        <Col span={4}><Card size="small"><Statistic title="用户" value={overview?.users_total ?? 0}
+      <Row gutter={[16, 16]}>
+        <Col xs={12} sm={8} md={4}><Card size="small"><Statistic title="用户" value={overview?.users_total ?? 0}
           suffix={overview?.users_banned ? <Typography.Text type="danger" style={{ fontSize: 12 }}>封 {overview.users_banned}</Typography.Text> : null} /></Card></Col>
-        <Col span={4}><Card size="small"><Statistic title="今天提问" value={overview?.queries_today ?? 0} /></Card></Col>
-        <Col span={4}><Card size="small"><Statistic title="累计提问" value={overview?.queries_total ?? 0} /></Card></Col>
-        <Col span={4}><Card size="small"><Statistic title="没答上来" value={overview?.queries_unanswered ?? 0}
+        <Col xs={12} sm={8} md={4}><Card size="small"><Statistic title="今天提问" value={overview?.queries_today ?? 0} /></Card></Col>
+        <Col xs={12} sm={8} md={4}><Card size="small"><Statistic title="累计提问" value={overview?.queries_total ?? 0} /></Card></Col>
+        <Col xs={12} sm={8} md={4}><Card size="small"><Statistic title="没答上来" value={overview?.queries_unanswered ?? 0}
           valueStyle={{ color: (overview?.queries_unanswered ?? 0) > 0 ? '#fa8c16' : undefined }} /></Card></Col>
-        <Col span={4}><Card size="small"><Statistic title="角色卡" value={overview?.cards_total ?? 0} /></Card></Col>
-        <Col span={4}><Card size="small"><Statistic title="IP 黑名单" value={overview?.ip_bans_active ?? 0} /></Card></Col>
-        <Col span={4}>
+        <Col xs={12} sm={8} md={4}><Card size="small"><Statistic title="角色卡" value={overview?.cards_total ?? 0} /></Card></Col>
+        <Col xs={12} sm={8} md={4}><Card size="small"><Statistic title="IP 黑名单" value={overview?.ip_bans_active ?? 0} /></Card></Col>
+        <Col xs={12} sm={8} md={4}>
           <Card size="small">
             <Statistic title="待处理反馈" value={overview?.feedback_unhandled ?? 0}
                        valueStyle={{ color: (overview?.feedback_unhandled ?? 0) > 0 ? '#fa8c16' : undefined }} />
@@ -853,7 +858,8 @@ export default function AdminPage() {
           <br />（本机服务只监听 127.0.0.1 时，通过本机访问的记录都会是 127.0.0.1；
           走公网地址访问才会有真实的客户端 IP。）
         </Typography.Paragraph>
-        <Table<LoginIpRow> rowKey="ip" size="small" loading={drawerLoading}
+        <Table<LoginIpRow>
+                 scroll={{ x: 'max-content' }} rowKey="ip" size="small" loading={drawerLoading}
                            dataSource={loginRows} pagination={false}
                            columns={[
                              { title: 'IP', dataIndex: 'ip', width: 160 },
@@ -874,7 +880,8 @@ export default function AdminPage() {
         </Typography.Paragraph>
 
         <Typography.Title level={5}>角色卡（{content?.cards.length ?? 0}）</Typography.Title>
-        <Table<UserCardBrief> rowKey="id" size="small" loading={drawerLoading}
+        <Table<UserCardBrief>
+                 scroll={{ x: 'max-content' }} rowKey="id" size="small" loading={drawerLoading}
                              dataSource={content?.cards || []} pagination={false}
                              columns={[
                                { title: 'ID', dataIndex: 'id', width: 60 },
@@ -893,7 +900,8 @@ export default function AdminPage() {
         <Typography.Title level={5} style={{ marginTop: 16 }}>
           世界书（{content?.worldbooks.length ?? 0}）
         </Typography.Title>
-        <Table<UserWorldBookBrief> rowKey="id" size="small" loading={drawerLoading}
+        <Table<UserWorldBookBrief>
+                 scroll={{ x: 'max-content' }} rowKey="id" size="small" loading={drawerLoading}
                                   dataSource={content?.worldbooks || []} pagination={false}
                                   columns={[
                                     { title: 'ID', dataIndex: 'id', width: 60 },
