@@ -1,0 +1,1421 @@
+{
+ "commit": "ed5423d809c6b10b8c1e9ef4a0c8ddc7f2ef7f3d",
+ "fingerprint": "57fae5e441255f90",
+ "generatedFrom": "D:\\code_item\\酒馆rag\\RAG\\translation_cache.json",
+ "rootTitle": "SillyTavern 官方文档（中文）",
+ "pages": 89,
+ "articles": 87,
+ "images": 89,
+ "imagesInCache": 115,
+ "tree": {
+  "route": "/",
+  "title": "SillyTavern 官方文档（中文）",
+  "icon": "book",
+  "hasPage": false,
+  "children": [
+   {
+    "route": "/administration/",
+    "title": "管理",
+    "icon": "gear",
+    "hasPage": true,
+    "children": [
+     {
+      "route": "/administration/tunneling/",
+      "title": "VPN 和隧道",
+      "icon": "lock",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/administration/sso/",
+      "title": "单点登录 (SSO)",
+      "icon": "key",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/administration/multi-user/",
+      "title": "多用户模式",
+      "icon": "people",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/administration/config-yaml/",
+      "title": "配置文件",
+      "icon": "cpu",
+      "hasPage": true,
+      "children": []
+     }
+    ]
+   },
+   {
+    "route": "/for-contributors/",
+    "title": "开发与自动化",
+    "icon": "command-palette",
+    "hasPage": true,
+    "children": [
+     {
+      "route": "/for-contributors/i18n/",
+      "title": "国际化 (i18n)",
+      "icon": "globe",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/for-contributors/server-plugins/",
+      "title": "服务器插件",
+      "icon": "server",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/for-contributors/writing-extensions/",
+      "title": "UI 扩展",
+      "icon": "file-added",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/for-contributors/function-calling/",
+      "title": "函数调用",
+      "icon": "code-review",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/for-contributors/provider-integrations/",
+      "title": "集成外部提供商",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     }
+    ]
+   },
+   {
+    "route": "/extensions/",
+    "title": "扩展",
+    "icon": "plug",
+    "hasPage": true,
+    "children": [
+     {
+      "route": "/extensions/extras/",
+      "title": "额外功能",
+      "icon": "zap",
+      "hasPage": true,
+      "children": [
+       {
+        "route": "/extensions/extras/installation/",
+        "title": "本地安装",
+        "icon": "gear",
+        "hasPage": true,
+        "children": []
+       }
+      ]
+     },
+     {
+      "route": "/extensions/alltalk/",
+      "title": "AllTalk TTS V2",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/blip/",
+      "title": "Blip",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/emulatorjs/",
+      "title": "EmulatorJS",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/live2d/",
+      "title": "Live2D",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/minimaxtts/",
+      "title": "MiniMax TTS",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/tts/",
+      "title": "TTS",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/vrm/",
+      "title": "VRM",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/talkinghead/",
+      "title": "talkinghead",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/dynamic-audio/",
+      "title": "动态音频",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/captioning/",
+      "title": "图像描述",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/stable-diffusion/",
+      "title": "图像生成",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/rvc/",
+      "title": "基于检索的语音转换 (RVC)",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/xtts/",
+      "title": "带语音克隆的 XTTS",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/summarize/",
+      "title": "摘要",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/smart-context/",
+      "title": "智能上下文",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/regex/",
+      "title": "正则表达式",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/websearch/",
+      "title": "网页搜索",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/chat-vectorization/",
+      "title": "聊天记录向量化",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/expression-images/",
+      "title": "角色表情",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/extensions/speech-recognition/",
+      "title": "语音识别",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     }
+    ]
+   },
+   {
+    "route": "/usage/",
+    "title": "使用指南",
+    "icon": "plus",
+    "hasPage": true,
+    "children": [
+     {
+      "route": "/usage/hotkeys/",
+      "title": "快捷键",
+      "icon": "key-asterisk",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/usage/st-reverse-proxy-guide/",
+      "title": "反向代理",
+      "icon": "server",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/usage/remoteconnections/",
+      "title": "远程连接",
+      "icon": "rss",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/usage/st-script/",
+      "title": "STscript 语言参考",
+      "icon": "file-symlink-file",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/usage/how-to-use-a-self-hosted-model/",
+      "title": "自托管 AI 模型",
+      "icon": "desktop-download",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/usage/characters/",
+      "title": "角色",
+      "icon": "person-fill",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/usage/user-settings/",
+      "title": "用户设置",
+      "icon": "gear",
+      "hasPage": true,
+      "children": [
+       {
+        "route": "/usage/user-settings/visual-novel/",
+        "title": "视觉小说（VN）模式",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       }
+      ]
+     },
+     {
+      "route": "/usage/prompts/",
+      "title": "提示词",
+      "icon": "typography",
+      "hasPage": true,
+      "children": [
+       {
+        "route": "/usage/prompts/reasoning/",
+        "title": "推理",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/prompts/prompt-manager/",
+        "title": "提示词管理器",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/prompts/cfg/",
+        "title": "CFG",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/prompts/tokenizer/",
+        "title": "分词器",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/prompts/context-template/",
+        "title": "上下文模板",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       }
+      ]
+     },
+     {
+      "route": "/usage/api-connections/",
+      "title": "API 连接",
+      "icon": "repo-forked",
+      "hasPage": true,
+      "children": [
+       {
+        "route": "/usage/api-connections/openrouter/",
+        "title": "OpenRouter",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/api-connections/openai/",
+        "title": "Chat Completions",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/api-connections/horde/",
+        "title": "AI Horde",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/api-connections/dreamgen/",
+        "title": "DreamGen",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/api-connections/google/",
+        "title": "Google Gemini",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/api-connections/koboldcpp/",
+        "title": "KoboldCpp",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/api-connections/mancer/",
+        "title": "Mancer",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/api-connections/novelai/",
+        "title": "NovelAI",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/api-connections/tabbyapi/",
+        "title": "TabbyAPI",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       }
+      ]
+     },
+     {
+      "route": "/usage/common-settings/",
+      "title": "通用设置",
+      "icon": "sliders",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/usage/chatting/",
+      "title": "聊天",
+      "icon": "report",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/usage/faq/",
+      "title": "常见问题",
+      "icon": "question",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/usage/quick-start/",
+      "title": "快速入门",
+      "icon": "rocket",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/usage/core-concepts/",
+      "title": null,
+      "icon": "",
+      "hasPage": false,
+      "children": [
+       {
+        "route": "/usage/core-concepts/uicustomization/",
+        "title": "界面自定义",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/data-bank/",
+        "title": "数据银行（RAG）",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/authors-note/",
+        "title": "作者备注",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/tags/",
+        "title": "标签",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/groupchats/",
+        "title": "群组聊天",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/instructmode/",
+        "title": "指令模式",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/chatfilemanagement/",
+        "title": "聊天文件管理",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/characterdesign/",
+        "title": "角色设计",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/connection-profiles/",
+        "title": "连接配置文件",
+        "icon": "paperclip",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/advancedformatting/",
+        "title": "高级格式化",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/personas/",
+        "title": "身份",
+        "icon": "smiley",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/worldinfo/",
+        "title": "世界信息",
+        "icon": "globe",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/macros/",
+        "title": "宏",
+        "icon": "codescan",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/usage/core-concepts/slashcommands/",
+        "title": "斜杠命令",
+        "icon": "rel-file-path",
+        "hasPage": true,
+        "children": []
+       }
+      ]
+     },
+     {
+      "route": "/usage/welcome-assistants/",
+      "title": "欢迎页面助手",
+      "icon": "people",
+      "hasPage": true,
+      "children": []
+     }
+    ]
+   },
+   {
+    "route": "/installation/",
+    "title": "安装",
+    "icon": "package",
+    "hasPage": true,
+    "children": [
+     {
+      "route": "/installation/updating/",
+      "title": "更新",
+      "icon": "repo-pull",
+      "hasPage": true,
+      "children": [
+       {
+        "route": "/installation/updating/node/",
+        "title": "如何更新 Node.js",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       },
+       {
+        "route": "/installation/updating/migration-guide-1-09/",
+        "title": "1.9.0 迁移指南",
+        "icon": "",
+        "hasPage": true,
+        "children": []
+       }
+      ]
+     },
+     {
+      "route": "/installation/linuxmacos/",
+      "title": "MacOS & Linux",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/installation/windows/",
+      "title": "Windows",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/installation/st-1.12.0-migration-guide/",
+      "title": "1.12.0 迁移指南",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/installation/android-(termux)/",
+      "title": "Android (Termux)",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     },
+     {
+      "route": "/installation/docker/",
+      "title": "Docker",
+      "icon": "",
+      "hasPage": true,
+      "children": []
+     }
+    ]
+   }
+  ]
+ },
+ "flat": [
+  {
+   "route": "/",
+   "title": "SillyTavern 官方文档（中文）",
+   "path": "index.md",
+   "hasPage": false,
+   "synthetic": true,
+   "sourceRel": ""
+  },
+  {
+   "route": "/administration/",
+   "title": "管理",
+   "path": "administration.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Administration/index.md"
+  },
+  {
+   "route": "/administration/tunneling/",
+   "title": "VPN 和隧道",
+   "path": "administration/tunneling.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Administration/tunneling.md"
+  },
+  {
+   "route": "/administration/sso/",
+   "title": "单点登录 (SSO)",
+   "path": "administration/sso.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Administration/sso.md"
+  },
+  {
+   "route": "/administration/multi-user/",
+   "title": "多用户模式",
+   "path": "administration/multi-user.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Administration/multi-user.md"
+  },
+  {
+   "route": "/administration/config-yaml/",
+   "title": "配置文件",
+   "path": "administration/config-yaml.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Administration/config-yaml.md"
+  },
+  {
+   "route": "/for-contributors/",
+   "title": "开发与自动化",
+   "path": "for-contributors.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "For_Contributors/index.md"
+  },
+  {
+   "route": "/for-contributors/i18n/",
+   "title": "国际化 (i18n)",
+   "path": "for-contributors/i18n.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "For_Contributors/i18n.md"
+  },
+  {
+   "route": "/for-contributors/server-plugins/",
+   "title": "服务器插件",
+   "path": "for-contributors/server-plugins.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "For_Contributors/Server-Plugins.md"
+  },
+  {
+   "route": "/for-contributors/writing-extensions/",
+   "title": "UI 扩展",
+   "path": "for-contributors/writing-extensions.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "For_Contributors/Writing-Extensions.md"
+  },
+  {
+   "route": "/for-contributors/function-calling/",
+   "title": "函数调用",
+   "path": "for-contributors/function-calling.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "For_Contributors/Function-Calling.md"
+  },
+  {
+   "route": "/for-contributors/provider-integrations/",
+   "title": "集成外部提供商",
+   "path": "for-contributors/provider-integrations.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "For_Contributors/Provider-Integrations.md"
+  },
+  {
+   "route": "/extensions/",
+   "title": "扩展",
+   "path": "extensions.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/index.md"
+  },
+  {
+   "route": "/extensions/extras/",
+   "title": "额外功能",
+   "path": "extensions/extras.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Extras/index.md"
+  },
+  {
+   "route": "/extensions/extras/installation/",
+   "title": "本地安装",
+   "path": "extensions/extras/installation.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Extras/Installation.md"
+  },
+  {
+   "route": "/extensions/alltalk/",
+   "title": "AllTalk TTS V2",
+   "path": "extensions/alltalk.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/AllTalk.md"
+  },
+  {
+   "route": "/extensions/blip/",
+   "title": "Blip",
+   "path": "extensions/blip.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Blip.md"
+  },
+  {
+   "route": "/extensions/emulatorjs/",
+   "title": "EmulatorJS",
+   "path": "extensions/emulatorjs.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/EmulatorJS.md"
+  },
+  {
+   "route": "/extensions/live2d/",
+   "title": "Live2D",
+   "path": "extensions/live2d.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Live2d.md"
+  },
+  {
+   "route": "/extensions/minimaxtts/",
+   "title": "MiniMax TTS",
+   "path": "extensions/minimaxtts.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/MiniMaxTTS.md"
+  },
+  {
+   "route": "/extensions/tts/",
+   "title": "TTS",
+   "path": "extensions/tts.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/TTS.md"
+  },
+  {
+   "route": "/extensions/vrm/",
+   "title": "VRM",
+   "path": "extensions/vrm.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/VRM.md"
+  },
+  {
+   "route": "/extensions/talkinghead/",
+   "title": "talkinghead",
+   "path": "extensions/talkinghead.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Extras/Talkinghead.md"
+  },
+  {
+   "route": "/extensions/dynamic-audio/",
+   "title": "动态音频",
+   "path": "extensions/dynamic-audio.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Dynamic-Audio.md"
+  },
+  {
+   "route": "/extensions/captioning/",
+   "title": "图像描述",
+   "path": "extensions/captioning.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/captioning.md"
+  },
+  {
+   "route": "/extensions/stable-diffusion/",
+   "title": "图像生成",
+   "path": "extensions/stable-diffusion.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Stable-Diffusion.md"
+  },
+  {
+   "route": "/extensions/rvc/",
+   "title": "基于检索的语音转换 (RVC)",
+   "path": "extensions/rvc.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/RVC.md"
+  },
+  {
+   "route": "/extensions/xtts/",
+   "title": "带语音克隆的 XTTS",
+   "path": "extensions/xtts.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/XTTS.md"
+  },
+  {
+   "route": "/extensions/summarize/",
+   "title": "摘要",
+   "path": "extensions/summarize.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Summarize.md"
+  },
+  {
+   "route": "/extensions/smart-context/",
+   "title": "智能上下文",
+   "path": "extensions/smart-context.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Extras/Smart-Context.md"
+  },
+  {
+   "route": "/extensions/regex/",
+   "title": "正则表达式",
+   "path": "extensions/regex.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Regex.md"
+  },
+  {
+   "route": "/extensions/websearch/",
+   "title": "网页搜索",
+   "path": "extensions/websearch.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/WebSearch.md"
+  },
+  {
+   "route": "/extensions/chat-vectorization/",
+   "title": "聊天记录向量化",
+   "path": "extensions/chat-vectorization.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Chat-vectorization.md"
+  },
+  {
+   "route": "/extensions/expression-images/",
+   "title": "角色表情",
+   "path": "extensions/expression-images.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Expression-Images.md"
+  },
+  {
+   "route": "/extensions/speech-recognition/",
+   "title": "语音识别",
+   "path": "extensions/speech-recognition.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "extensions/Speech-Recognition.md"
+  },
+  {
+   "route": "/usage/",
+   "title": "使用指南",
+   "path": "usage.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/index.md"
+  },
+  {
+   "route": "/usage/hotkeys/",
+   "title": "快捷键",
+   "path": "usage/hotkeys.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Chatting/hotkeys.md"
+  },
+  {
+   "route": "/usage/st-reverse-proxy-guide/",
+   "title": "反向代理",
+   "path": "usage/st-reverse-proxy-guide.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Administration/reverse-proxying.md"
+  },
+  {
+   "route": "/usage/remoteconnections/",
+   "title": "远程连接",
+   "path": "usage/remoteconnections.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Administration/remote-connections.md"
+  },
+  {
+   "route": "/usage/st-script/",
+   "title": "STscript 语言参考",
+   "path": "usage/st-script.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "For_Contributors/st-script.md"
+  },
+  {
+   "route": "/usage/how-to-use-a-self-hosted-model/",
+   "title": "自托管 AI 模型",
+   "path": "usage/how-to-use-a-self-hosted-model.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/API_Connections/self-hosted.md"
+  },
+  {
+   "route": "/usage/characters/",
+   "title": "角色",
+   "path": "usage/characters.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Characters/index.md"
+  },
+  {
+   "route": "/usage/user-settings/",
+   "title": "用户设置",
+   "path": "usage/user-settings.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/User_Settings/index.md"
+  },
+  {
+   "route": "/usage/user-settings/visual-novel/",
+   "title": "视觉小说（VN）模式",
+   "path": "usage/user-settings/visual-novel.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/User_Settings/Visual-Novel.md"
+  },
+  {
+   "route": "/usage/prompts/",
+   "title": "提示词",
+   "path": "usage/prompts.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Prompts/index.md"
+  },
+  {
+   "route": "/usage/prompts/reasoning/",
+   "title": "推理",
+   "path": "usage/prompts/reasoning.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Prompts/reasoning.md"
+  },
+  {
+   "route": "/usage/prompts/prompt-manager/",
+   "title": "提示词管理器",
+   "path": "usage/prompts/prompt-manager.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Prompts/prompt-manager.md"
+  },
+  {
+   "route": "/usage/prompts/cfg/",
+   "title": "CFG",
+   "path": "usage/prompts/cfg.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Prompts/CFG.md"
+  },
+  {
+   "route": "/usage/prompts/tokenizer/",
+   "title": "分词器",
+   "path": "usage/prompts/tokenizer.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Prompts/tokenizer.md"
+  },
+  {
+   "route": "/usage/prompts/context-template/",
+   "title": "上下文模板",
+   "path": "usage/prompts/context-template.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Prompts/context-template.md"
+  },
+  {
+   "route": "/usage/api-connections/",
+   "title": "API 连接",
+   "path": "usage/api-connections.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/API_Connections/index.md"
+  },
+  {
+   "route": "/usage/api-connections/openrouter/",
+   "title": "OpenRouter",
+   "path": "usage/api-connections/openrouter.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/API_Connections/OpenRouter.md"
+  },
+  {
+   "route": "/usage/api-connections/openai/",
+   "title": "Chat Completions",
+   "path": "usage/api-connections/openai.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/API_Connections/openai.md"
+  },
+  {
+   "route": "/usage/api-connections/horde/",
+   "title": "AI Horde",
+   "path": "usage/api-connections/horde.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/API_Connections/horde.md"
+  },
+  {
+   "route": "/usage/api-connections/dreamgen/",
+   "title": "DreamGen",
+   "path": "usage/api-connections/dreamgen.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/API_Connections/DreamGen.md"
+  },
+  {
+   "route": "/usage/api-connections/google/",
+   "title": "Google Gemini",
+   "path": "usage/api-connections/google.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/API_Connections/google.md"
+  },
+  {
+   "route": "/usage/api-connections/koboldcpp/",
+   "title": "KoboldCpp",
+   "path": "usage/api-connections/koboldcpp.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/API_Connections/koboldcpp.md"
+  },
+  {
+   "route": "/usage/api-connections/mancer/",
+   "title": "Mancer",
+   "path": "usage/api-connections/mancer.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/API_Connections/mancer.md"
+  },
+  {
+   "route": "/usage/api-connections/novelai/",
+   "title": "NovelAI",
+   "path": "usage/api-connections/novelai.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/API_Connections/novelai.md"
+  },
+  {
+   "route": "/usage/api-connections/tabbyapi/",
+   "title": "TabbyAPI",
+   "path": "usage/api-connections/tabbyapi.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/API_Connections/tabbyapi.md"
+  },
+  {
+   "route": "/usage/common-settings/",
+   "title": "通用设置",
+   "path": "usage/common-settings.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Common-Settings.md"
+  },
+  {
+   "route": "/usage/chatting/",
+   "title": "聊天",
+   "path": "usage/chatting.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Chatting/index.md"
+  },
+  {
+   "route": "/usage/faq/",
+   "title": "常见问题",
+   "path": "usage/faq.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/faq.md"
+  },
+  {
+   "route": "/usage/quick-start/",
+   "title": "快速入门",
+   "path": "usage/quick-start.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/quick-start.md"
+  },
+  {
+   "route": "/usage/core-concepts/",
+   "title": null,
+   "path": "usage/core-concepts.md",
+   "hasPage": false,
+   "synthetic": true,
+   "sourceRel": ""
+  },
+  {
+   "route": "/usage/core-concepts/uicustomization/",
+   "title": "界面自定义",
+   "path": "usage/core-concepts/uicustomization.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/User_Settings/uicustomization.md"
+  },
+  {
+   "route": "/usage/core-concepts/data-bank/",
+   "title": "数据银行（RAG）",
+   "path": "usage/core-concepts/data-bank.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Characters/data-bank.md"
+  },
+  {
+   "route": "/usage/core-concepts/authors-note/",
+   "title": "作者备注",
+   "path": "usage/core-concepts/authors-note.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Characters/Author's-Note.md"
+  },
+  {
+   "route": "/usage/core-concepts/tags/",
+   "title": "标签",
+   "path": "usage/core-concepts/tags.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Characters/tags.md"
+  },
+  {
+   "route": "/usage/core-concepts/groupchats/",
+   "title": "群组聊天",
+   "path": "usage/core-concepts/groupchats.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Characters/groupchats.md"
+  },
+  {
+   "route": "/usage/core-concepts/instructmode/",
+   "title": "指令模式",
+   "path": "usage/core-concepts/instructmode.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Prompts/instructmode.md"
+  },
+  {
+   "route": "/usage/core-concepts/chatfilemanagement/",
+   "title": "聊天文件管理",
+   "path": "usage/core-concepts/chatfilemanagement.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Characters/chatfilemanagement.md"
+  },
+  {
+   "route": "/usage/core-concepts/characterdesign/",
+   "title": "角色设计",
+   "path": "usage/core-concepts/characterdesign.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Characters/characterdesign.md"
+  },
+  {
+   "route": "/usage/core-concepts/connection-profiles/",
+   "title": "连接配置文件",
+   "path": "usage/core-concepts/connection-profiles.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/API_Connections/Connection-Profiles.md"
+  },
+  {
+   "route": "/usage/core-concepts/advancedformatting/",
+   "title": "高级格式化",
+   "path": "usage/core-concepts/advancedformatting.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Prompts/advancedformatting.md"
+  },
+  {
+   "route": "/usage/core-concepts/personas/",
+   "title": "身份",
+   "path": "usage/core-concepts/personas.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/personas.md"
+  },
+  {
+   "route": "/usage/core-concepts/worldinfo/",
+   "title": "世界信息",
+   "path": "usage/core-concepts/worldinfo.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/worldinfo.md"
+  },
+  {
+   "route": "/usage/core-concepts/macros/",
+   "title": "宏",
+   "path": "usage/core-concepts/macros.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/macros.md"
+  },
+  {
+   "route": "/usage/core-concepts/slashcommands/",
+   "title": "斜杠命令",
+   "path": "usage/core-concepts/slashcommands.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/Chatting/slashcommands.md"
+  },
+  {
+   "route": "/usage/welcome-assistants/",
+   "title": "欢迎页面助手",
+   "path": "usage/welcome-assistants.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Usage/welcome-assistants.md"
+  },
+  {
+   "route": "/installation/",
+   "title": "安装",
+   "path": "installation.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Installation/index.md"
+  },
+  {
+   "route": "/installation/updating/",
+   "title": "更新",
+   "path": "installation/updating.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Installation/Updating/index.md"
+  },
+  {
+   "route": "/installation/updating/node/",
+   "title": "如何更新 Node.js",
+   "path": "installation/updating/node.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Installation/Updating/node.md"
+  },
+  {
+   "route": "/installation/updating/migration-guide-1-09/",
+   "title": "1.9.0 迁移指南",
+   "path": "installation/updating/migration-guide-1-09.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Installation/Updating/migration-guide-1-09.md"
+  },
+  {
+   "route": "/installation/linuxmacos/",
+   "title": "MacOS & Linux",
+   "path": "installation/linuxmacos.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Installation/LinuxMacOS.md"
+  },
+  {
+   "route": "/installation/windows/",
+   "title": "Windows",
+   "path": "installation/windows.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Installation/Windows.md"
+  },
+  {
+   "route": "/installation/st-1.12.0-migration-guide/",
+   "title": "1.12.0 迁移指南",
+   "path": "installation/st-1.12.0-migration-guide.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Installation/Updating/ST-1.12.0-Migration-Guide.md"
+  },
+  {
+   "route": "/installation/android-(termux)/",
+   "title": "Android (Termux)",
+   "path": "installation/android-(termux).md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Installation/Android.md"
+  },
+  {
+   "route": "/installation/docker/",
+   "title": "Docker",
+   "path": "installation/docker.md",
+   "hasPage": true,
+   "synthetic": false,
+   "sourceRel": "Installation/Docker.md"
+  }
+ ],
+ "skipped": {
+  "redirect": [
+   "/installation/",
+   "/installation/updating/"
+  ],
+  "hidden": [],
+  "probe": [
+   "/verify/deletion-probe/",
+   "464a6412"
+  ],
+  "no_route": [
+   "52d9594f",
+   "0e2dedec"
+  ],
+  "empty": [],
+  "no_source": [
+   "/administration/config-yaml/",
+   "/administration/",
+   "/usage/remoteconnections/",
+   "/administration/sso/",
+   "/administration/tunneling/",
+   "/extensions/captioning/",
+   "/extensions/regex/",
+   "/extensions/stable-diffusion/",
+   "/for-contributors/function-calling/",
+   "/for-contributors/",
+   "/for-contributors/writing-extensions/",
+   "/usage/core-concepts/personas/",
+   "/usage/core-concepts/worldinfo/",
+   "/usage/api-connections/openai/",
+   "/usage/core-concepts/data-bank/",
+   "/usage/prompts/context-template/",
+   "/usage/prompts/",
+   "/usage/prompts/reasoning/",
+   "/usage/core-concepts/worldinfo/",
+   "/usage/prompts/cfg/"
+  ]
+ },
+ "unresolvedLinks": [],
+ "demotedLinks": [
+  "/extensions/ -> /extensions/translation/",
+  "/extensions/ -> /extensions/objective/",
+  "/usage/chatting/ -> /extensions/translation/",
+  "/usage/user-settings/ -> /extensions/translation/",
+  "/usage/core-concepts/data-bank/ -> /extensions/translation/"
+ ],
+ "assetSuffixes": [
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".svg",
+  ".ico",
+  ".css",
+  ".woff",
+  ".woff2",
+  ".ttf",
+  ".eot",
+  ".txt",
+  ".pdf"
+ ]
+}

@@ -14,6 +14,7 @@ import {
   ApiOutlined,
   SafetyOutlined,
   MessageOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons'
 import TestStageBanner from '../components/TestStageBanner'
 import UpdateNotice from '../components/UpdateNotice'
@@ -27,6 +28,7 @@ const { Header, Sider, Content } = Layout
 
 const baseMenuItems = [
   { key: '/', icon: <HomeOutlined />, label: '首页搜索' },
+  { key: '/docs', icon: <FileTextOutlined />, label: '文档中心' },
   { key: '/cards', icon: <UserOutlined />, label: '角色卡管理' },
   { key: '/worldbooks', icon: <BookOutlined />, label: '世界书管理' },
   { key: '/toolbox', icon: <ToolOutlined />, label: '工具箱' },

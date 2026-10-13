@@ -8,6 +8,7 @@ import WorldBooksPage from './pages/WorldBooksPage'
 import WorldBookEditPage from './pages/WorldBookEditPage'
 import ToolboxPage from './pages/ToolboxPage'
 import ToolDetailPage from './pages/ToolDetailPage'
+import DocsPage from './pages/DocsPage'
 import LoginPage from './pages/LoginPage'
 import AdminPage from './pages/AdminPage'
 import RequireLogin from './components/RequireLogin'
@@ -37,6 +38,9 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/toolbox" element={<ToolboxPage />} />
           <Route path="/toolbox/:toolId" element={<ToolDetailPage />} />
+          {/* 文档中心（官方文档中文译本）：和首页搜索一样**免登录** —— 路人也能读 */}
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/docs/*" element={<DocsPage />} />
           {/* 角色卡 / 世界书是私有数据：没登录就明说，而不是让接口回一串 401 */}
           <Route path="/cards" element={<RequireLogin><CardsPage /></RequireLogin>} />
           <Route path="/cards/:id" element={<RequireLogin><CardEditPage /></RequireLogin>} />

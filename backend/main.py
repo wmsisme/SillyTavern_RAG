@@ -145,6 +145,7 @@ from backend.api.auth import router as auth_router
 from backend.api.llm import router as llm_router
 from backend.api.admin import router as admin_router
 from backend.api.attachments import router as attachments_router
+from backend.api.docs import router as docs_router
 from backend.api.errors import router as errors_router
 from backend.api.feedback import router as feedback_router
 from backend.api.metrics import router as metrics_router
@@ -161,6 +162,7 @@ app.include_router(admin_router, prefix="/api", tags=["后台管理"])
 app.include_router(feedback_router, prefix="/api", tags=["用户反馈"])
 app.include_router(errors_router, prefix="/api", tags=["前端错误上报"])
 app.include_router(attachments_router, prefix="/api", tags=["反馈附件"])
+app.include_router(docs_router, prefix="/api", tags=["官方文档中心"])
 # /metrics 不挂 /api 前缀 —— Prometheus 的惯例就是根路径。
 # 它自带「只看本机」的判断（见 backend/api/metrics.py）：公网请求拿到的是 404。
 app.include_router(metrics_router, tags=["运维"])
