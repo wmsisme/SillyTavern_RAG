@@ -39,6 +39,10 @@ HEAVY_PREFIXES: tuple = (
                               # 否则一个坏掉的前端（比如某段代码自己触发崩溃循环）
                               # 能在一分钟内把 client_errors 表灌满
     "/api/attachments",       # 附件上传/下载：往站长磁盘写东西，必须防刷
+    # 文档中心的**文档内搜索**：要调一次 embedding + 一次 rerank（服务器自己的额度），
+    # 所以计进限流。⚠️ 只加这一条 —— /api/docs/tree|article|asset 是纯本地小文件读取，
+    # 一页正文要连带取图，计进去会让正常翻阅的人自己把自己限住。
+    "/api/docs/search",
 )
 AUTH_PREFIXES: tuple = (
     "/api/auth/login",

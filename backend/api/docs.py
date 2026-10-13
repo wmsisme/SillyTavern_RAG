@@ -104,6 +104,71 @@ async def docs_tree():
     })
 
 
+def _source_to_route(manifest: dict) -> dict:
+    """`sourceRel`（原文相对路径） → 文档路由，用于把向量库命中映射回"哪一篇"。
+
+    向量库是**按路径字面量建的**（`Administration/config-yaml.md`），
+    所以这里要用同一字面量做键 —— 只按标题/路由名去猜会漏命中。
+    清单里没有的（如**未收录**的孤儿页 `/extensions/translation/`）映射不出来，搜索时直接丢掉。
+    """
+    out = {}
+    for item in manifest.get("flat") or []:
+        rel = (item.get("sourceRel") or "").strip()
+        if rel and item.get("hasPage"):
+            out[rel] = item["route"]
+    return out
+
+
+@router.get("/docs/search")
+def docs_search(q: str = Query(..., min_length=1, max_length=100), top_k: int = Query(8, ge=1, le=20)):
+    """**只搜官方文档**的检索（文档中心顶部搜索框）。
+
+    为什么单独开一个接口而不是复用 `/api/rag/search`：
+      · 首页那个是"整库问答检索"（含正则书、QA 预补全等），结果要展示来源分档；
+      · 这里只要**文档**，而且要把命中块映射成"哪一篇文档"，前端点一下就直接跳到正文。
+    代价：走一次 embedding + 一次 rerank（服务器自己的免费额度，不用任何人的 Key），
+    所以它计进限流（见 ratelimit.HEAVY_PREFIXES）。
+    """
+    query = (q or "").strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="搜索词不能为空")
+
+    from ..services import rag_service  # 延迟导入：没装检索依赖时也不影响文档浏览
+
+    manifest = _load_manifest()
+    src2route = _source_to_route(manifest)
+    titles = {item["route"]: item.get("title") or item["route"] for item in (manifest.get("flat") or [])}
+
+    try:
+        hits = rag_service.search_docs(query, top_k=top_k)
+    except Exception as exc:  # 检索不可用时**明确报错**，别让搜索框静默无反应
+        _logger.error("文档内搜索失败: %s", exc)
+        raise HTTPException(status_code=503, detail="检索服务暂时不可用（索引或模型未就绪）")
+
+    # 同一个页面可能命中多个片段：保留最佳一条（同一篇在列表里出现两次反而更难选）
+    out, seen = [], set()
+    dropped = 0
+    for h in hits:
+        if h.get("source") and h["source"] != "translated_official_docs":
+            continue
+        route = src2route.get(h.get("source_file") or "") or src2route.get(h.get("module") or "")
+        if not route:
+            dropped += 1          # 未收录的页面：没地方可跳，丢掉（计数便于排查）
+            continue
+        if route in seen:
+            continue
+        seen.add(route)
+        out.append({
+            "route": route,
+            "title": titles.get(route, route),
+            "snippet": (h.get("content") or "").strip(),
+            "score": h.get("score", 0.0),
+            "sourceFile": h.get("source_file") or "",
+        })
+
+    return JSONResponse({"query": query, "count": len(out), "results": out, "unmapped": dropped})
+
+
 @router.get("/docs/article")
 async def docs_article(route: str = Query(..., min_length=1, max_length=300)):
     """按路由取一篇正文（含合成索引页）。"""

@@ -213,6 +213,34 @@ def check_api(m):
         ok("匿名可读（免登录）", f"HTTP {anon.status_code}") if anon.status_code == 200 else \
             bad("匿名可读（免登录）", f"HTTP {anon.status_code}")
 
+        # ---- 文档内搜索（走 embedding + rerank，慢，所以只打两枪） ----
+        r = c.get("/api/docs/search", params={"q": "宏怎么用", "top_k": 5}, timeout=60)
+        if r.status_code != 200:
+            bad("文档内搜索可用", f"HTTP {r.status_code}: {r.text[:120]}")
+        else:
+            data = r.json()
+            hits = data.get("results") or []
+            if not hits:
+                bad("文档内搜索有结果", "搜「宏怎么用」返回 0 条")
+            else:
+                # 三条硬要求，缺一条这个功能就会表现成"搜出来一堆点不开的东西"
+                bad_src = [h for h in hits if not h.get("sourceFile")]
+                bad_route = [h for h in hits if not str(h.get("route", "")).startswith("/")]
+                bad_snip = [h for h in hits if len((h.get("snippet") or "").strip()) < 20]
+                if bad_src or bad_route or bad_snip:
+                    bad("搜索结果每条都能跳转且带片段",
+                        f"缺来源 {len(bad_src)} / 缺路由 {len(bad_route)} / 片段过短 {len(bad_snip)}")
+                else:
+                    ok("搜索结果每条都能跳转且带片段", f"{len(hits)} 条，Top1={hits[0]['title']}")
+                # 只搜文档：命中的原文路径必须能在清单里映射回路由（映射不上的会被丢掉）
+                ok("只搜官方文档（不掺正则书/QA 块）",
+                   f"未映射丢弃 {data.get('unmapped')} 条")
+
+        # 负例：空搜索词必须 400（否则会白烧一次 embedding）
+        r = c.get("/api/docs/search", params={"q": "   "})
+        ok("空搜索词被拒", f"HTTP {r.status_code}") if r.status_code == 400 else \
+            bad("空搜索词被拒", f"HTTP {r.status_code}")
+
 
 def selftest_break_must_fail() -> int:
     """故意破坏自证：把产物改坏，确认上面的断言**真的会红**。

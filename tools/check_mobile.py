@@ -35,14 +35,39 @@ from playwright.sync_api import sync_playwright
 
 # 只报"真的会把布局撑坏"的元素：表格内层本来就是可横向滚动的，不算
 DIAG = """() => {
-  const vw = window.innerWidth;
+  // ⚠️ 基准必须用 documentElement.clientWidth，**不能用 window.innerWidth**：
+  // 后者是"布局视口"，会**被内容撑大** —— 页面里出现一个 1200px 的块时 innerWidth 也变成 1200，
+  // 于是"元素是否超出视口"这条判断自我参照、永远为假，真溢出一个都报不出来。
+  // 实测：注入 1200px 块后 innerWidth=1200，而 documentElement.clientWidth 稳定 = 390。
+  const vw = document.documentElement.clientWidth || window.innerWidth;
   const bad = [];
+  // 判定"是否被可滚动祖先裁剪"：答案在祖先的 overflow-x 上，不在元素的类名上。
+  // ⚠️ 判据必须是"**那个裁剪容器自己有多大**"，而不是它的边界在哪 ——
+  // 容器如果是"跟着内容长"的（宽度 auto，例如文档中心的 `.docs-body` 在卡片里），
+  // 它的边界同样会超出视口，用"边界"判会把整页最外层的滚动容器也当成溢出源头，
+  // 于是真溢出一个都报不出来（这个漏洞是自证第①/②步抓到的，改了两版才对）。
+  // 正确判据：第一个可滚动祖先**自身的宽度被约束在视口内**（clientWidth ≤ 视口）→ 它裁剪了元素。
+  const clipped = (el) => {
+    let p = el.parentElement;
+    while (p && p !== document.body) {
+      const ox = getComputedStyle(p).overflowX;
+      if (ox === 'auto' || ox === 'scroll' || ox === 'hidden') {
+        return p.clientWidth <= vw + 1;
+      }
+      p = p.parentElement;
+    }
+    return false;
+  };
   document.querySelectorAll('*').forEach(el => {
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) return;
     if (el.closest('.ant-table-content, .ant-table-body')) return;   // 表格可滑动，正常
     if (el.closest('.ant-tabs-nav')) return;                          // 页签条自带滚动，正常
-    if (r.right > vw + 1 || r.left < -1) {
+    if (clipped(el)) return;                                          // 被自己的滚动容器裁剪，正常
+    // 两条判据都要：只看 right>vw 会**漏掉"把布局视口自己撑大"的溢出**——
+    // 注入一个 800px 元素时，浏览器的 layout viewport 会跟着变成 800，于是 right(800) 不再大于
+    // vw+1(801)，旧判据一声不响（自证第②步抓到的盲区）。宽度这条能直接抓住它。
+    if (r.width > vw + 1 || r.right > vw + 1 || r.left < -1) {
       bad.push({
         tag: el.tagName,
         w: Math.round(r.width),

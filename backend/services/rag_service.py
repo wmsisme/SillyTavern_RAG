@@ -472,6 +472,37 @@ def search(query: str, top_k: int = TOP_K_FINAL) -> List[dict]:
     return results
 
 
+def search_docs(query: str, top_k: int = 5, candidate_pool: int = 60) -> List[dict]:
+    """**只在官方文档译文里**检索（文档中心顶部搜索框用）。
+
+    与 `search()` 只差两条，但都关键：
+
+    ① **只留文档块**。chromadb 1.5.9 上 `query(where=…)` 不能用（抛 `Error finding id`），
+       所以走"多取候选 + Python 侧过滤"这条既定路子：向量侧先取 `candidate_pool` 个候选，
+       再按 `source == translated_official_docs` 过滤；BM25 侧用 `_hash_to_meta` 取 metadata 过滤
+       （BM25 是本地算的，本来就没有 where 这一步）。
+       ⚠️ 池子必须放大：库里文档块只占约一半（1130/1959），取 40 的话过滤完常常只剩十几个。
+    ② **不写日志**。这里刻意不落 `query_logs` —— 那是"问答质量"的台账（含未解答判定与
+       知识库更新勾选），把文档浏览的搜索混进去会污染它。
+
+    记分与排序**不在这里重写**：仍是 `_retrieve_raw` 那一套（向量 Top-N ∪ BM25 Top-N → 精排 → 截断），
+    公式只有一份。
+    """
+    top_k = max(1, min(int(top_k or 5), 20))
+    docs, metas, scores, _sims = _retrieve_raw(query, top_k_final=top_k, candidate_pool=candidate_pool)
+    results = []
+    for i, (d, m) in enumerate(zip(docs, metas)):
+        results.append({
+            "content": d[:400],
+            "source": m.get("source", "unknown"),
+            # source_file 形如 `Administration/config-yaml.md` —— "命中哪一篇"的钥匙
+            "module": m.get("module", m.get("source_file", "")),
+            "source_file": m.get("source_file", ""),
+            "score": round(float(scores[i]), 4) if i < len(scores) else 0.0,
+        })
+    return results
+
+
 def _expand_chunk_context(metas: List[Dict], expand_radius: int = 2) -> List[str]:
     collection = _get_collection()
     expanded = {}
@@ -523,7 +554,8 @@ def _expand_chunk_context(metas: List[Dict], expand_radius: int = 2) -> List[str
     return [expanded[k] for k in sorted(expanded.keys())]
 
 
-def _retrieve_raw(query: str, top_k_final: int = TOP_K_FINAL
+def _retrieve_raw(query: str, top_k_final: int = TOP_K_FINAL,
+                  candidate_pool: int = TOP_K_RETRIEVAL
                   ) -> Tuple[List[str], List[Dict], List[float], List[float]]:
     """检索 → (docs, metas, 对外相关度, 向量相似度)。
 
@@ -534,6 +566,10 @@ def _retrieve_raw(query: str, top_k_final: int = TOP_K_FINAL
     第 3 个返回值是给前端显示/给接口返回的"相关度"，口径见 _apply_score_mode
     （有 reranker 时 = sigmoid(精排分)，决定顺序的就是它；降级时 = 向量余弦相似度）。
     第 4 个是向量余弦相似度（1 - distance），BM25 单独召回的块记 0（不编造）。
+
+    \candidate_pool\ = **每路召回的候选数**（默认 40）。调大它只有一个理由：
+    调用方还要在 Python 侧按 metadata 再过滤一次（例：只看官方文档译文的「文档内搜索」）——
+    库里文档块约占一半，池子太小的话过滤完就剩不下东西了。
     """
     collection = _get_collection()
     # 预热：只有**本机模型那条路**需要先把模型加载起来，免得第一次查询多等几秒。
@@ -544,7 +580,12 @@ def _retrieve_raw(query: str, top_k_final: int = TOP_K_FINAL
     _build_bm25()
 
     qe = _encode_query(query)
-    raw = collection.query(query_embeddings=[qe], n_results=TOP_K_RETRIEVAL,
+    # candidate_pool：每路召回的候选数。默认 40（与 循环测试.py 同口径）；
+    # 调用方若要"先召回再按 metadata 过滤"（如文档内搜索），需要更大的池子。
+    # ⚠️ 别改成 `where=` 过滤：chromadb 1.5.9 上 `query(where=…)` 会抛
+    # `InternalError: Error finding id`（同一份数据 `get(where=…)` 却正常）。
+    pool = max(int(candidate_pool or TOP_K_RETRIEVAL), top_k_final)
+    raw = collection.query(query_embeddings=[qe], n_results=pool,
                           include=["documents", "metadatas", "distances"])
     vec_docs = raw["documents"][0]
     vec_metas = raw["metadatas"][0]

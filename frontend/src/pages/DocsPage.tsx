@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Breadcrumb, Button, Card, Collapse, Empty, Grid, Spin, Tree, Typography, Alert, Tag } from 'antd'
+import { Breadcrumb, Button, Card, Collapse, Empty, Grid, Input, Spin, Tree, Typography, Alert, Tag } from 'antd'
 import type { DataNode } from 'antd/es/tree'
 import { FileTextOutlined, LinkOutlined, UnorderedListOutlined } from '@ant-design/icons'
 import ReactMarkdown from 'react-markdown'
@@ -45,6 +45,14 @@ interface Article {
   topLevel?: boolean
   source: string
   content: string
+}
+
+interface SearchHit {
+  route: string
+  title: string
+  snippet: string
+  score: number
+  sourceFile: string
 }
 
 const API = '/api/docs'
@@ -93,6 +101,37 @@ export default function DocsPage() {
   useEffect(() => {
     setTocOpen(!isMobile)
   }, [isMobile])
+
+  // 文档内搜索：只搜官方文档（后端按 source 过滤），结果按页面去重后给"哪一篇 + 片段"
+  const [q, setQ] = useState('')
+  const [searching, setSearching] = useState(false)
+  const [hits, setHits] = useState<SearchHit[] | null>(null)
+  const [searchErr, setSearchErr] = useState<string | null>(null)
+
+  const runSearch = useCallback(async (keyword: string) => {
+    const kw = keyword.trim()
+    if (!kw) {
+      setHits(null)
+      setSearchErr(null)
+      return
+    }
+    setSearching(true)
+    setSearchErr(null)
+    try {
+      const r = await fetch(`${API}/search?q=${encodeURIComponent(kw)}&top_k=8`)
+      if (!r.ok) {
+        const t = await r.text().catch(() => '')
+        throw new Error(r.status === 429 ? '搜索太频繁，稍等一下再试' : `搜索失败（HTTP ${r.status}）${t.slice(0, 80)}`)
+      }
+      const data = await r.json()
+      setHits(data.results || [])
+    } catch (e) {
+      setHits(null)
+      setSearchErr(e instanceof Error ? e.message : String(e))
+    } finally {
+      setSearching(false)
+    }
+  }, [])
 
   // ① 拉导航树（只拉一次）
   useEffect(() => {
@@ -297,6 +336,70 @@ export default function DocsPage() {
         SillyTavern 官方文档的全量中文译文，共 {meta?.pages ?? '—'} 页
         {meta?.commit ? <Tag style={{ marginLeft: 8 }}>对应上游 {meta.commit.slice(0, 7)}</Tag> : null}
       </Paragraph>
+
+      <Input.Search
+        placeholder="在官方文档里搜索（例如：宏 / 世界书 / 反向代理）"
+        allowClear
+        enterButton="搜索"
+        size="large"
+        value={q}
+        loading={searching}
+        onChange={e => {
+          setQ(e.target.value)
+          if (!e.target.value) {
+            setHits(null)
+            setSearchErr(null)
+          }
+        }}
+        onSearch={runSearch}
+        style={{ maxWidth: 560, marginBottom: 12 }}
+      />
+
+      {/* 搜索结果：只搜官方文档；点一条直接跳到那一篇 */}
+      {searchErr ? (
+        <Alert type="warning" showIcon style={{ marginBottom: 12 }} message={searchErr} />
+      ) : hits ? (
+        <Card
+          size="small"
+          style={{ marginBottom: 16 }}
+          title={`搜索结果：${hits.length} 篇`}
+          extra={<a onClick={() => { setQ(''); setHits(null) }}>收起</a>}
+        >
+          {hits.length === 0 ? (
+            <Text type="secondary">文档里没有找到相关内容，换个说法再试（例如用官方术语而不是口语）。</Text>
+          ) : (
+            <div>
+              {hits.map(h => (
+                <div
+                  key={h.route}
+                  onClick={() => {
+                    setHits(null)
+                    setQ('')
+                    navigate(`/docs${h.route}`)
+                  }}
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    borderBottom: '1px solid #f0f0f0',
+                  }}
+                  className="docs-search-hit"
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                    <Text strong>{h.title}</Text>
+                    <Text type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+                      相关度 {(h.score * 100).toFixed(0)}%
+                    </Text>
+                  </div>
+                  <Text type="secondary" style={{ fontSize: 13 }}>
+                    {h.snippet.slice(0, 160)}
+                  </Text>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      ) : null}
 
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         {/* 左：目录树（窄屏收进折叠面板，点开才占位置） */}
